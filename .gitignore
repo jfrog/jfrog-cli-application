@@ -1,0 +1,10 @@
+# IDEs
+.idea
+.vscode
+.jfrog
+*.iml
+bin
+.tools
+
+# Go
+*_mock.go

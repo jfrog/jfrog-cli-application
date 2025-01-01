@@ -1,0 +1,48 @@
+name: Go Tests
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  workflow_dispatch:
+# Ensures that only the latest commit is running for each PR at a time.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Go Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: go-${{ hashFiles('**/go.sum') }}
+          restore-keys: go-
+
+      - name: Run Tests
+        env:
+          XUNIT_OUTFILE: test-reports/unit.xml
+        run: |
+          test -d "$(dirname $XUNIT_OUTFILE)" || mkdir -p "$(dirname $XUNIT_OUTFILE)"
+          .github/scripts/gotest.sh ./...
+
+      - name: Publish Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Unit Tests Results
+          files: |
+            test-reports/unit.xml
