@@ -49,8 +49,8 @@ prereq::
 	GOBIN=${TOOLS_DIR} $(GOCMD) install go.uber.org/mock/mockgen@v0.5.0
 
 build::
-	go env GOOS GOARCH
-	go build -ldflags="${LINKERFLAGS}" -gcflags ${COMPILERFLAGS} -o ${BINARY_CLI}/application-cli-plugin main.go
+	$(GOCMD) env GOOS GOARCH
+	$(GOCMD) build -ldflags="${LINKERFLAGS}" -gcflags ${COMPILERFLAGS} -o ${BINARY_CLI}/application-cli-plugin main.go
 
 
 build-install:: build

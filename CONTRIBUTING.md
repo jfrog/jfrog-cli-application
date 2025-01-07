@@ -117,9 +117,8 @@ Finally, execute `go mod tidy` to update the Go module files. Please note that G
 ### Before submitting the pull request, ensure:
 
 - Your changes are covered by `unit` and `integration` tests. If not, please add new tests.
-- The code compiles, by running `go vet ./...`.
-- To format the code, by running `go fmt ./...`.
 - The documentation covers the changes, if not please add and make changes at [The documentation repository](https://github.com/jfrog/documentation)
+- Run the go linter with --fix flag `golangci-lint run --fix` 
 
 ### When creating the pull request, ensure:
 

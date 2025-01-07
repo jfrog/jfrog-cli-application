@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+
 	"github.com/jfrog/jfrog-cli-application/application/http"
 )
 
@@ -9,8 +10,7 @@ type SystemService interface {
 	Ping(ctx *Context) error
 }
 
-type systemService struct {
-}
+type systemService struct{}
 
 func NewSystemService() SystemService {
 	return &systemService{}

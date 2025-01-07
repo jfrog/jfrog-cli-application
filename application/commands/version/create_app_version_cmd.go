@@ -2,6 +2,7 @@ package version
 
 import (
 	"encoding/json"
+
 	"github.com/jfrog/jfrog-cli-application/application/app"
 	"github.com/jfrog/jfrog-cli-application/application/commands"
 	"github.com/jfrog/jfrog-cli-application/application/commands/utils"
@@ -98,9 +99,7 @@ func loadPackagesFromSpec(ctx *components.Context, packages *[]model.CreateVersi
 	}
 
 	// add spec packages to the packages list
-	for _, pkg := range spec.Packages {
-		*packages = append(*packages, pkg)
-	}
+	*packages = append(*packages, spec.Packages...)
 	return nil
 }
 

@@ -3,6 +3,8 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	commonCliConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-client-go/auth"
@@ -11,7 +13,6 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
-	"net/http"
 )
 
 const applicationApiPath = "application/api"
@@ -61,7 +62,6 @@ func NewAppHttpClient(serverDetails *commonCliConfig.ServerDetails) (AppHttpClie
 		SetRetries(serviceConfig.GetHttpRetries()).
 		SetRetryWaitMilliSecs(serviceConfig.GetHttpRetryWaitMilliSecs()).
 		Build()
-
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +117,7 @@ func (c *appHttpClient) toJsonBytes(payload interface{}) ([]byte, error) {
 }
 
 func (c *appHttpClient) getJsonHttpClientDetails() *httputils.HttpClientDetails {
-	var httpClientDetails httputils.HttpClientDetails
-	httpClientDetails = c.authDetails.CreateHttpClientDetails()
+	httpClientDetails := c.authDetails.CreateHttpClientDetails()
 	httpClientDetails.SetContentTypeApplicationJson()
 	return &httpClientDetails
 }

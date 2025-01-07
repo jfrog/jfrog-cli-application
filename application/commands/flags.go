@@ -1,11 +1,14 @@
 package commands
 
-import pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
-import "github.com/jfrog/jfrog-cli-core/v2/plugins/components"
+import (
+	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
+	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
+)
 
 const (
-	Ping             = "ping"
-	CreateAppVersion = "create-app-version"
+	Ping              = "ping"
+	CreateAppVersion  = "create-app-version"
+	PromoteAppVersion = "promote-app-version"
 )
 
 const (
@@ -22,6 +25,7 @@ const (
 	PackageRepositoryFlag = "package-repository"
 	SpecFlag              = "spec"
 	SpecVarsFlag          = "spec-vars"
+	EnvironmentVarsFlag   = "env"
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -40,6 +44,7 @@ var flagsMap = map[string]components.Flag{
 	PackageRepositoryFlag: components.NewStringFlag(PackageRepositoryFlag, "Package storing repository.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SpecFlag:              components.NewStringFlag(SpecFlag, "A path to the specification file.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SpecVarsFlag:          components.NewStringFlag(SpecVarsFlag, "List of semicolon-separated(;) variables in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes) to be replaced in the File Spec. In the File Spec, the variables should be used as follows: ${key1}.` `", func(f *components.StringFlag) { f.Mandatory = false }),
+	EnvironmentVarsFlag:   components.NewStringFlag(EnvironmentVarsFlag, "Environment.", func(f *components.StringFlag) { f.Mandatory = true }),
 }
 
 var commandFlags = map[string][]string{
@@ -56,6 +61,15 @@ var commandFlags = map[string][]string{
 		PackageRepositoryFlag,
 		SpecFlag,
 		SpecVarsFlag,
+	},
+	PromoteAppVersion: {
+		url,
+		user,
+		accessToken,
+		ServerId,
+		ProjectFlag,
+		ApplicationKeyFlag,
+		EnvironmentVarsFlag,
 	},
 
 	Ping: {

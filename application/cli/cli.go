@@ -7,8 +7,8 @@ import (
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 )
 
-const category = "Application Lifecycle"
-
+//const category = "Application Lifecycle"
+//
 //
 //func GetJfrogApplicationCli() components.App {
 //	appContext := app.NewAppContext()
@@ -32,11 +32,12 @@ func GetJfrogApplicationCli() components.App {
 	appContext := app.NewAppContext()
 	appEntity := components.CreateApp(
 		"app",
-		"1.0.0",
+		"1.0.2",
 		"JFrog Application CLI",
 		[]components.Command{
 			system.GetPingCommand(appContext),
 			version.GetCreateAppVersionCommand(appContext),
+			version.GetPromoteAppVersionCommand(appContext),
 		},
 	)
 	return appEntity
