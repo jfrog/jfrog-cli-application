@@ -1,48 +1,48 @@
 # Options for analysis running
 # More info could be found at https://golangci-lint.run/usage/configuration/
 run:
-    # timeout for analysis, e.g. 30s, 5m, default is 1m
-    timeout: 5m
-    modules-download-mode: readonly
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  timeout: 5m
+  modules-download-mode: readonly
 
 # List of useful linters could be found at https://github.com/golangci/awesome-go-linters
 linters:
-    disable-all: true
-    enable:
-        - errcheck
-        - copyloopvar
-        - gofumpt
-        - goimports
-        - gosimple
-        - govet
-        - ineffassign
-        - makezero
-        - misspell
-        - noctx
-        - nolintlint
-        - rowserrcheck
-        - sqlclosecheck
-        - staticcheck
-        - unconvert
-        - unused
-        - wastedassign
-        - gosec
+  disable-all: true
+  enable:
+    - errcheck
+    - copyloopvar
+    - gofumpt
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - makezero
+    - misspell
+    - noctx
+    - nolintlint
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unconvert
+    - unused
+    - wastedassign
+    - gosec
 
 linters-settings:
-    staticcheck:
-        # https://staticcheck.io/docs/options#checks
-        checks: [ "all","-SA1019","-SA1029" ]
-    gosec:
-        excludes: ["G204", "G301", "G302", "G304", "G306", "G601", "G101", "G407"]
-        exclude-generated: true
-        exclude-test-files: true
-        config:
-            global:
-                nosec: true
+  staticcheck:
+    # https://staticcheck.io/docs/options#checks
+    checks: [ "all","-SA1019","-SA1029" ]
+  gosec:
+    excludes: [ "G204", "G301", "G302", "G304", "G306", "G601", "G101", "G407" ]
+    exclude-generated: true
+    exclude-test-files: true
+    config:
+      global:
+        nosec: true
 
 issues:
-    exclude-use-default: false
-    # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
-    max-issues-per-linter: 0
-    # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
-    max-same-issues: 0
+  exclude-use-default: false
+  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 0
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0

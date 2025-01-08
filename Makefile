@@ -5,7 +5,7 @@ export PROJECT_DIR ?= $(CURDIR)
 BINARY_CLI = bin
 WORKSPACE_ROOT = $(shell cd "${PROJECT_DIR}" && pwd)
 TOOLS_DIR := $(CURDIR)/.tools
-SCRIPTS_DIR = ${PROJECT_DIR}/.github/scripts
+SCRIPTS_DIR = ${PROJECT_DIR}/scripts
 TARGET_DIR = ${PROJECT_DIR}/target
 LINKERFLAGS = -s -w
 COMPILERFLAGS = all=-trimpath=$(WORKSPACE_ROOT)
@@ -34,7 +34,7 @@ GOIMPORTS:
 ########## ANALYSE ##########
 
 GOLANGCI_LINT         = ${TOOLS_DIR}/golangci-lint
-GOLANGCI_LINT_VERSION = 1.62.2
+GOLANGCI_LINT_VERSION = 1.63.4
 
 verify: GOLANGCI_LINT
 	echo $(GO_SOURCES)
@@ -45,8 +45,9 @@ GOLANGCI_LINT:
 
 ########## BUILD ##########
 prereq::
-	$(GOCMD) install github.com/jstemmer/go-junit-report@v1.0.0
+	$(GOCMD) install github.com/jstemmer/go-junit-report/v2@latest
 	GOBIN=${TOOLS_DIR} $(GOCMD) install go.uber.org/mock/mockgen@v0.5.0
+	${TOOLS_DIR}/mockgen --version
 
 build::
 	$(GOCMD) env GOOS GOARCH
@@ -63,26 +64,23 @@ build-install:: build
 .PHONY: clean-mock
 clean-mock:
 	@echo Cleaning generated mock files
-	find . -path "*/mocks/*.go" -delete
+	@find . -name "*_mock.go" -delete
+
+.PHONY: clean
+clean:: clean-mock
+	@echo Cleaning generated files
+	@rm -rf ${BINARY_CLI}
 
 .PHONY: generate-mock
-generate-mock: clean-mock
+generate-mock: prereq clean-mock
 	@echo Generating test mocks
 	TOOLS_DIR=$(TOOLS_DIR) go generate ./...
 
-test-prereq: prereq generate-mock
-	mkdir -p target/reports
+test-prereq: generate-mock
 
 test: PACKAGES=./...
-test: TEST_ARGS=-short
-test: test-prereq do-run-tests
+test: test-prereq
+	go test ./...
+test-ci: test-prereq
+	go test -v 2>&1 ./... | go-junit-report -set-exit-code -iocopy -out utests-report.xml
 
-itest: PACKAGES=./test/...
-itest: TAGS=-tags=itest
-itest: TEST_ARGS=-count=1 -p=1
-itest:: test-prereq do-run-tests
-
-do-run-tests::
-	$(SCRIPTS_DIR)/gotest.sh $$(go list $(TAGS) $(PACKAGES) | grep -v "^.*/mocks$$") -timeout 30m -coverpkg=github.com/jfrog/jfrog-cli-application/... -coverprofile=$(TARGET_DIR)/reports/coverage.out $(TEST_ARGS) $(TAGS)
-
-.PHONY: $(MAKECMDGOALS)

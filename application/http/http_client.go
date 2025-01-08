@@ -1,5 +1,7 @@
 package http
 
+//go:generate ${PROJECT_DIR}/scripts/mockgen.sh ${GOFILE}
+
 import (
 	"encoding/json"
 	"fmt"

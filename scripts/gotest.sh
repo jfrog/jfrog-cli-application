@@ -69,18 +69,16 @@ fi
 
 echoDebug "Running ${GOCMD} test ${modargs[*]}"
 # Disable log coloring (ANSI codes are invalid xml characters)
-(2>&1 DEV_DISABLE_LOG_COLORS=true ${GOCMD} test ${modargs[*]} || echo "$?" > "${exitCodeFile}") | tee "${OUTFILE}"
+(2>&1 DEV_DISABLE_LOG_COLORS=true ${GOCMD} test "${modargs[*]}" || echo "$?" > "${exitCodeFile}") | tee "${OUTFILE}"
 exitCode="$(cat "${exitCodeFile}")"
 echoDebug "Tests Exit Code: $exitCode"
 
 if [[ -n "${JSON_OUTFILE}" ]]; then
-  echoDebug "Gernerating JSON test report at: ${JSON_OUTFILE}"
+  echoDebug "Generating JSON test report at: ${JSON_OUTFILE}"
   go tool test2json < "${OUTFILE}" > "${JSON_OUTFILE}"
 fi
 
 if [[ -n "${XUNIT_OUTFILE}" ]]; then
-  echoDebug "Ensuring jstemmer/go-junit-report is installed"
-  ${GOCMD} install github.com/jstemmer/go-junit-report@v1.0.0
   echoDebug "Generating xUnit test report at: ${XUNIT_OUTFILE}"
   go-junit-report < "${OUTFILE}" > "${XUNIT_OUTFILE}"
 fi
