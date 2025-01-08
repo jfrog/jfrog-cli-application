@@ -33,11 +33,8 @@ jobs:
           restore-keys: go-
 
       - name: Run Tests
-        env:
-          XUNIT_OUTFILE: test-reports/unit.xml
         run: |
-          test -d "$(dirname $XUNIT_OUTFILE)" || mkdir -p "$(dirname $XUNIT_OUTFILE)"
-          .github/scripts/gotest.sh ./...
+          make test-ci
 
       - name: Publish Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -45,4 +42,4 @@ jobs:
         with:
           check_name: Unit Tests Results
           files: |
-            test-reports/unit.xml
+            utests-report.xml

@@ -1,23 +1,30 @@
 package system
 
+//go:generate ${PROJECT_DIR}/scripts/mockgen.sh ${GOFILE}
+
 import (
 	"github.com/jfrog/jfrog-cli-application/application/app"
 	"github.com/jfrog/jfrog-cli-application/application/commands"
 	"github.com/jfrog/jfrog-cli-application/application/commands/utils"
 	"github.com/jfrog/jfrog-cli-application/application/common"
 	"github.com/jfrog/jfrog-cli-application/application/service"
+	"github.com/jfrog/jfrog-cli-application/application/service/systems"
 	commonCLiCommands "github.com/jfrog/jfrog-cli-core/v2/common/commands"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 )
 
 type pingCommand struct {
-	systemService service.SystemService
+	systemService systems.SystemService
 	serverDetails *coreConfig.ServerDetails
 }
 
 func (pc *pingCommand) Run() error {
-	ctx := &service.Context{ServerDetails: pc.serverDetails}
+	ctx, err := service.NewContext(*pc.serverDetails)
+	if err != nil {
+		return err
+	}
+
 	return pc.systemService.Ping(ctx)
 }
 

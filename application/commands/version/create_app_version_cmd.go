@@ -3,6 +3,8 @@ package version
 import (
 	"encoding/json"
 
+	"github.com/jfrog/jfrog-cli-application/application/service/versions"
+
 	"github.com/jfrog/jfrog-cli-application/application/app"
 	"github.com/jfrog/jfrog-cli-application/application/commands"
 	"github.com/jfrog/jfrog-cli-application/application/commands/utils"
@@ -19,7 +21,7 @@ import (
 )
 
 type createAppVersionCommand struct {
-	versionService service.VersionService
+	versionService versions.VersionService
 	serverDetails  *coreConfig.ServerDetails
 	requestPayload *model.CreateAppVersionRequest
 }
@@ -29,7 +31,11 @@ type createVersionSpec struct {
 }
 
 func (cv *createAppVersionCommand) Run() error {
-	ctx := &service.Context{ServerDetails: cv.serverDetails}
+	ctx, err := service.NewContext(*cv.serverDetails)
+	if err != nil {
+		return err
+	}
+
 	return cv.versionService.CreateAppVersion(ctx, cv.requestPayload)
 }
 

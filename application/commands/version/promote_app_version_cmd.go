@@ -1,5 +1,7 @@
 package version
 
+//go:generate ${PROJECT_DIR}/scripts/mockgen.sh ${GOFILE}
+
 import (
 	"github.com/jfrog/jfrog-cli-application/application/app"
 	"github.com/jfrog/jfrog-cli-application/application/commands"
@@ -7,6 +9,7 @@ import (
 	"github.com/jfrog/jfrog-cli-application/application/common"
 	"github.com/jfrog/jfrog-cli-application/application/model"
 	"github.com/jfrog/jfrog-cli-application/application/service"
+	"github.com/jfrog/jfrog-cli-application/application/service/versions"
 	commonCLiCommands "github.com/jfrog/jfrog-cli-core/v2/common/commands"
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
@@ -15,13 +18,17 @@ import (
 )
 
 type promoteAppVersionCommand struct {
-	versionService service.VersionService
+	versionService versions.VersionService
 	serverDetails  *coreConfig.ServerDetails
 	requestPayload *model.PromoteAppVersionRequest
 }
 
 func (pv *promoteAppVersionCommand) Run() error {
-	ctx := &service.Context{ServerDetails: pv.serverDetails}
+	ctx, err := service.NewContext(*pv.serverDetails)
+	if err != nil {
+		return err
+	}
+
 	return pv.versionService.PromoteAppVersion(ctx, pv.requestPayload)
 }
 
