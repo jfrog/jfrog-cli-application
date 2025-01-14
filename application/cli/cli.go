@@ -32,7 +32,7 @@ func GetJfrogApplicationCli() components.App {
 	appContext := app.NewAppContext()
 	appEntity := components.CreateApp(
 		"app",
-		"1.0.2",
+		"1.0.3",
 		"JFrog Application CLI",
 		[]components.Command{
 			system.GetPingCommand(appContext),

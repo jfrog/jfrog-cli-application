@@ -37,7 +37,7 @@ var flagsMap = map[string]components.Flag{
 	accessToken: components.NewStringFlag(accessToken, "JFrog access token.", func(f *components.StringFlag) { f.Mandatory = false }),
 	ProjectFlag: components.NewStringFlag(ProjectFlag, "Project key associated with the created evidence.", func(f *components.StringFlag) { f.Mandatory = false }),
 
-	ApplicationKeyFlag:    components.NewStringFlag(ApplicationKeyFlag, "Application key.", func(f *components.StringFlag) { f.Mandatory = true }),
+	ApplicationKeyFlag:    components.NewStringFlag(ApplicationKeyFlag, "Application key.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PackageTypeFlag:       components.NewStringFlag(PackageTypeFlag, "Package type.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PackageNameFlag:       components.NewStringFlag(PackageNameFlag, "Package name.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PackageVersionFlag:    components.NewStringFlag(PackageVersionFlag, "Package version.", func(f *components.StringFlag) { f.Mandatory = false }),
