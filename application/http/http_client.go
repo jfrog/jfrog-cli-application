@@ -47,6 +47,7 @@ func NewAppHttpClient(serverDetails *commonCliConfig.ServerDetails) (AppHttpClie
 		SetServiceDetails(authDetails).
 		SetCertificatesPath(certsPath).
 		SetInsecureTls(serverDetails.InsecureTls).
+		SetHttpRetries(1).
 		Build()
 	if err != nil {
 		return nil, err
