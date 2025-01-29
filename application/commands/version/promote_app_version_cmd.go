@@ -70,7 +70,7 @@ func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context)
 	return &model.PromoteAppVersionRequest{
 		ApplicationKey: ctx.GetStringFlagValue(commands.ApplicationKeyFlag),
 		Version:        ctx.Arguments[0],
-		Environment:    ctx.GetStringFlagValue(commands.EnvironmentVarsFlag),
+		Environment:    ctx.GetStringFlagValue(commands.StageVarsFlag),
 	}, nil
 }
 
