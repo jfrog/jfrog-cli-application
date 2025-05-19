@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/jfrog/jfrog-cli-application/application/app"
+	"github.com/jfrog/jfrog-cli-application/application/commands/application"
 	"github.com/jfrog/jfrog-cli-application/application/commands/system"
 	"github.com/jfrog/jfrog-cli-application/application/commands/version"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
@@ -38,6 +39,7 @@ func GetJfrogApplicationCli() components.App {
 			system.GetPingCommand(appContext),
 			version.GetCreateAppVersionCommand(appContext),
 			version.GetPromoteAppVersionCommand(appContext),
+			application.GetCreateAppCommand(appContext),
 		},
 	)
 	return appEntity
