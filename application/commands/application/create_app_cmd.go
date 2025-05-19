@@ -1,6 +1,8 @@
 package application
 
 import (
+	"slices"
+
 	"github.com/jfrog/jfrog-cli-application/application/commands/utils"
 	"github.com/jfrog/jfrog-cli-application/application/model"
 	"github.com/jfrog/jfrog-cli-application/application/service"
@@ -9,7 +11,6 @@ import (
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-	"slices"
 
 	"github.com/jfrog/jfrog-cli-application/application/app"
 	"github.com/jfrog/jfrog-cli-application/application/commands"

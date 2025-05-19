@@ -4,8 +4,9 @@ package applications
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"net/http"
+
+	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 
 	"github.com/jfrog/jfrog-cli-application/application/model"
 	"github.com/jfrog/jfrog-cli-application/application/service"
