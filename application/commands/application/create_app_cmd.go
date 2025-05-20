@@ -59,7 +59,7 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 	businessCriticality := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
 	if businessCriticality == "" {
 		// Default to "unspecified" if not provided
-		businessCriticality = model.BusinessCriticalityValues[0]
+		businessCriticality = model.BusinessCriticalityUnspecified
 	} else if !slices.Contains(model.BusinessCriticalityValues, businessCriticality) {
 		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.BusinessCriticalityFlag, businessCriticality, coreutils.ListToText(model.BusinessCriticalityValues))
 	}
@@ -67,7 +67,7 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 	maturityLevel := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
 	if maturityLevel == "" {
 		// Default to "unspecified" if not provided
-		maturityLevel = model.MaturityLevelValues[0]
+		maturityLevel = model.MaturityLevelUnspecified
 	} else if !slices.Contains(model.MaturityLevelValues, maturityLevel) {
 		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.MaturityLevelFlag, maturityLevel, coreutils.ListToText(model.MaturityLevelValues))
 	}
