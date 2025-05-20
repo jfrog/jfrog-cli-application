@@ -2,6 +2,8 @@ package application
 
 import (
 	"errors"
+	"flag"
+	"github.com/urfave/cli"
 	"testing"
 
 	"github.com/jfrog/jfrog-cli-application/application/model"
@@ -64,6 +66,9 @@ func TestCreateAppCommand_Error(t *testing.T) {
 func TestCreateAppCommand_WrongNumberOfArguments(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	app := cli.NewApp()
+	set := flag.NewFlagSet("test", 0)
+	ctx := cli.NewContext(app, set, nil)
 
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
 	cmd := &createAppCommand{
@@ -71,10 +76,10 @@ func TestCreateAppCommand_WrongNumberOfArguments(t *testing.T) {
 	}
 
 	// Test with no arguments
-	ctx := &components.Context{
-		Arguments: []string{},
-	}
-	err := cmd.prepareAndRunCommand(ctx)
+	context, err := components.ConvertContext(ctx)
+	assert.NoError(t, err)
+
+	err = cmd.prepareAndRunCommand(context)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "exactly one application key is required")
+	assert.Contains(t, err.Error(), "Wrong number of arguments")
 }
