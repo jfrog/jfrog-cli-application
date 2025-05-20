@@ -97,6 +97,10 @@ var commandFlags = map[string][]string{
 	},
 
 	CreateApp: {
+		url,
+		user,
+		accessToken,
+		ServerId,
 		DisplayNameFlag,
 		ProjectFlag,
 		DescriptionFlag,
