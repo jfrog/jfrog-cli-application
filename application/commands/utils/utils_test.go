@@ -53,3 +53,64 @@ func TestParseMapFlag(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateEnumFlag(t *testing.T) {
+	tests := []struct {
+		name          string
+		flagName      string
+		value         string
+		validValues   []string
+		defaultValue  string
+		expectError   bool
+		expectedValue string
+	}{
+		{
+			name:          "valid value",
+			flagName:      "test-flag",
+			value:         "foo",
+			validValues:   []string{"foo", "bar", "baz"},
+			defaultValue:  "",
+			expectError:   false,
+			expectedValue: "foo",
+		},
+		{
+			name:          "invalid value with default",
+			flagName:      "test-flag",
+			value:         "invalid",
+			validValues:   []string{"foo", "bar", "baz"},
+			defaultValue:  "bar",
+			expectError:   true,
+			expectedValue: "",
+		},
+		{
+			name:          "invalid value without default",
+			flagName:      "test-flag",
+			value:         "invalid",
+			validValues:   []string{"foo", "bar", "baz"},
+			defaultValue:  "",
+			expectError:   true,
+			expectedValue: "",
+		},
+		{
+			name:          "empty value with default",
+			flagName:      "test-flag",
+			value:         "",
+			validValues:   []string{"foo", "bar", "baz"},
+			defaultValue:  "baz",
+			expectError:   false,
+			expectedValue: "baz",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := ValidateEnumFlag(tt.flagName, tt.value, tt.defaultValue, tt.validValues)
+			if tt.expectError {
+				assert.Error(t, err, "ValidateEnumFlag(%q) expected error, got nil", tt.value)
+				return
+			}
+			assert.NoError(t, err, "ValidateEnumFlag(%q) unexpected error: %v", tt.value, err)
+			assert.Equal(t, tt.expectedValue, result, "ValidateEnumFlag(%q) = %v, want %v", tt.value, result, tt.expectedValue)
+		})
+	}
+}
