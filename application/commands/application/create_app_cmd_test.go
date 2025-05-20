@@ -6,6 +6,7 @@ import (
 
 	"github.com/jfrog/jfrog-cli-application/application/model"
 	mockapps "github.com/jfrog/jfrog-cli-application/application/service/applications/mocks"
+	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -35,7 +36,7 @@ func TestCreateAppCommand_Run(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestCreateAppCommand_Run_Error(t *testing.T) {
+func TestCreateAppCommand_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -58,4 +59,22 @@ func TestCreateAppCommand_Run_Error(t *testing.T) {
 	err := cmd.Run()
 	assert.Error(t, err)
 	assert.Equal(t, "failed to create an application. Status code: 500", err.Error())
+}
+
+func TestCreateAppCommand_WrongNumberOfArguments(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockAppService := mockapps.NewMockApplicationService(ctrl)
+	cmd := &createAppCommand{
+		applicationService: mockAppService,
+	}
+
+	// Test with no arguments
+	ctx := &components.Context{
+		Arguments: []string{},
+	}
+	err := cmd.prepareAndRunCommand(ctx)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "exactly one application key is required")
 }

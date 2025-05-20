@@ -1,6 +1,7 @@
 package application
 
 import (
+	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"slices"
 
 	"github.com/jfrog/jfrog-cli-application/application/commands/utils"
@@ -92,8 +93,8 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 }
 
 func (cac *createAppCommand) prepareAndRunCommand(ctx *components.Context) error {
-	if len(ctx.Arguments) < 1 {
-		return errorutils.CheckErrorf("application key is required")
+	if len(ctx.Arguments) != 1 {
+		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 
 	var err error
