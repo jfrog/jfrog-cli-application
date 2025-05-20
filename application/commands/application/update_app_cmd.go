@@ -46,7 +46,7 @@ func (uac *updateAppCommand) CommandName() string {
 
 func (uac *updateAppCommand) buildRequestPayload(ctx *components.Context) (*model.AppDescriptor, error) {
 	applicationKey := ctx.Arguments[0]
-	displayName := ctx.GetStringFlagValue(commands.DisplayNameFlag)
+	applicationName := ctx.GetStringFlagValue(commands.ApplicationNameFlag)
 
 	businessCriticality := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
 	if businessCriticality != "" && !slices.Contains(model.BusinessCriticalityValues, businessCriticality) {
@@ -68,7 +68,7 @@ func (uac *updateAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 
 	return &model.AppDescriptor{
 		ApplicationKey:      applicationKey,
-		ApplicationName:     displayName,
+		ApplicationName:     applicationName,
 		Description:         description,
 		MaturityLevel:       maturityLevel,
 		BusinessCriticality: businessCriticality,
