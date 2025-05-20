@@ -1,8 +1,9 @@
 package application
 
 import (
-	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"slices"
+
+	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 
 	"github.com/jfrog/jfrog-cli-application/application/app"
 	"github.com/jfrog/jfrog-cli-application/application/commands"

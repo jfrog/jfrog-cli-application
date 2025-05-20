@@ -3,8 +3,9 @@ package application
 import (
 	"errors"
 	"flag"
-	"github.com/urfave/cli"
 	"testing"
+
+	"github.com/urfave/cli"
 
 	"github.com/jfrog/jfrog-cli-application/application/model"
 	mockapps "github.com/jfrog/jfrog-cli-application/application/service/applications/mocks"

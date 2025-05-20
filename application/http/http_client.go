@@ -5,8 +5,9 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
+
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	commonCliConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
