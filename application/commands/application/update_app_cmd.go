@@ -1,8 +1,6 @@
 package application
 
 import (
-	"slices"
-
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 
 	"github.com/jfrog/jfrog-cli-application/application/app"
@@ -15,8 +13,6 @@ import (
 	commonCLiCommands "github.com/jfrog/jfrog-cli-core/v2/common/commands"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
-	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 const UpdateApp = "update-app"
@@ -48,14 +44,24 @@ func (uac *updateAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 	applicationKey := ctx.Arguments[0]
 	applicationName := ctx.GetStringFlagValue(commands.ApplicationNameFlag)
 
-	businessCriticality := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
-	if businessCriticality != "" && !slices.Contains(model.BusinessCriticalityValues, businessCriticality) {
-		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.BusinessCriticalityFlag, businessCriticality, coreutils.ListToText(model.BusinessCriticalityValues))
+	businessCriticalityStr := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
+	businessCriticality, err := utils.ValidateEnumFlag(
+		commands.BusinessCriticalityFlag,
+		businessCriticalityStr,
+		"",
+		model.BusinessCriticalityValues)
+	if err != nil {
+		return nil, err
 	}
 
-	maturityLevel := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
-	if maturityLevel != "" && !slices.Contains(model.MaturityLevelValues, maturityLevel) {
-		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.MaturityLevelFlag, maturityLevel, coreutils.ListToText(model.MaturityLevelValues))
+	maturityLevelStr := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
+	maturityLevel, err := utils.ValidateEnumFlag(
+		commands.MaturityLevelFlag,
+		maturityLevelStr,
+		model.MaturityLevelUnspecified,
+		model.MaturityLevelValues)
+	if err != nil {
+		return nil, err
 	}
 
 	description := ctx.GetStringFlagValue(commands.DescriptionFlag)
