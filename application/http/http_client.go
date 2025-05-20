@@ -5,6 +5,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 	"net/http"
 
 	commonCliConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
@@ -23,6 +24,7 @@ type AppHttpClient interface {
 	GetHttpClient() *jfroghttpclient.JfrogHttpClient
 	Post(path string, requestBody interface{}) (resp *http.Response, body []byte, err error)
 	Get(path string) (resp *http.Response, body []byte, err error)
+	Patch(path string, requestBody interface{}) (resp *http.Response, body []byte, err error)
 }
 
 type appHttpClient struct {
@@ -93,7 +95,7 @@ func (c *appHttpClient) Post(path string, requestBody interface{}) (resp *http.R
 		return nil, nil, err
 	}
 
-	println("url: ", url)
+	log.Debug("Sending POST request to:", url)
 	return c.client.SendPost(url, requestContent, c.getJsonHttpClientDetails())
 }
 
@@ -103,8 +105,24 @@ func (c *appHttpClient) Get(path string) (resp *http.Response, body []byte, err 
 		return nil, nil, err
 	}
 
+	log.Debug("Sending GET request to:", url)
 	response, body, _, err := c.client.SendGet(url, false, c.getJsonHttpClientDetails())
 	return response, body, err
+}
+
+func (c *appHttpClient) Patch(path string, requestBody interface{}) (resp *http.Response, body []byte, err error) {
+	url, err := utils.BuildUrl(c.serverDetails.Url, appTrustApiPath+path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	requestContent, err := c.toJsonBytes(requestBody)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	log.Debug("Sending PATCH request to:", url)
+	return c.client.SendPatch(url, requestContent, c.getJsonHttpClientDetails())
 }
 
 func (c *appHttpClient) toJsonBytes(payload interface{}) ([]byte, error) {

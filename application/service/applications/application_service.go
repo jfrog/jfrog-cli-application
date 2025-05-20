@@ -13,7 +13,8 @@ import (
 )
 
 type ApplicationService interface {
-	CreateApplication(ctx service.Context, requestBody *model.CreateAppRequest) error
+	CreateApplication(ctx service.Context, requestBody *model.AppDescriptor) error
+	UpdateApplication(ctx service.Context, requestBody *model.AppDescriptor) error
 }
 
 type applicationService struct{}
@@ -22,7 +23,7 @@ func NewApplicationService() ApplicationService {
 	return &applicationService{}
 }
 
-func (as *applicationService) CreateApplication(ctx service.Context, requestBody *model.CreateAppRequest) error {
+func (as *applicationService) CreateApplication(ctx service.Context, requestBody *model.AppDescriptor) error {
 	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications", requestBody)
 	if err != nil {
 		return err
@@ -30,6 +31,22 @@ func (as *applicationService) CreateApplication(ctx service.Context, requestBody
 
 	if response.StatusCode != http.StatusCreated {
 		return errorutils.CheckErrorf("failed to create an application. Status code: %d.\n%s",
+			response.StatusCode, responseBody)
+	}
+
+	fmt.Println(string(responseBody))
+	return nil
+}
+
+func (as *applicationService) UpdateApplication(ctx service.Context, requestBody *model.AppDescriptor) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s", requestBody.ApplicationKey)
+	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, requestBody)
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return errorutils.CheckErrorf("failed to update application. Status code: %d.\n%s",
 			response.StatusCode, responseBody)
 	}
 

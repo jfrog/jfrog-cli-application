@@ -1,9 +1,9 @@
 package model
 
-type CreateAppRequest struct {
-	ApplicationName     string            `json:"application_name"`
+type AppDescriptor struct {
 	ApplicationKey      string            `json:"application_key"`
-	ProjectKey          string            `json:"project_key"`
+	ApplicationName     string            `json:"application_name,omitempty"`
+	ProjectKey          string            `json:"project_key,omitempty"`
 	Description         string            `json:"description,omitempty"`
 	MaturityLevel       string            `json:"maturity_level,omitempty"`
 	BusinessCriticality string            `json:"criticality,omitempty"`

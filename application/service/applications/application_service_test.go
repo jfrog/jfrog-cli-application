@@ -55,7 +55,7 @@ func TestApplicationService_CreateApplication(t *testing.T) {
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
 			as := NewApplicationService()
-			err := as.CreateApplication(mockCtx, &model.CreateAppRequest{ApplicationKey: "app-123"})
+			err := as.CreateApplication(mockCtx, &model.AppDescriptor{ApplicationKey: "app-123"})
 
 			if tt.expectedError != "" {
 				assert.EqualError(t, err, tt.expectedError)

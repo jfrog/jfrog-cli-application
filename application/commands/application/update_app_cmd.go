@@ -4,70 +4,56 @@ import (
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"slices"
 
+	"github.com/jfrog/jfrog-cli-application/application/app"
+	"github.com/jfrog/jfrog-cli-application/application/commands"
 	"github.com/jfrog/jfrog-cli-application/application/commands/utils"
+	"github.com/jfrog/jfrog-cli-application/application/common"
 	"github.com/jfrog/jfrog-cli-application/application/model"
 	"github.com/jfrog/jfrog-cli-application/application/service"
+	"github.com/jfrog/jfrog-cli-application/application/service/applications"
 	commonCLiCommands "github.com/jfrog/jfrog-cli-core/v2/common/commands"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
-
-	"github.com/jfrog/jfrog-cli-application/application/app"
-	"github.com/jfrog/jfrog-cli-application/application/commands"
-	"github.com/jfrog/jfrog-cli-application/application/common"
-	"github.com/jfrog/jfrog-cli-application/application/service/applications"
 )
 
-type createAppCommand struct {
+const UpdateApp = "update-app"
+
+type updateAppCommand struct {
 	serverDetails      *coreConfig.ServerDetails
 	applicationService applications.ApplicationService
 	requestBody        *model.AppDescriptor
 }
 
-func (cac *createAppCommand) Run() error {
-	ctx, err := service.NewContext(*cac.serverDetails)
+func (uac *updateAppCommand) Run() error {
+	ctx, err := service.NewContext(*uac.serverDetails)
 	if err != nil {
 		return err
 	}
 
-	return cac.applicationService.CreateApplication(ctx, cac.requestBody)
+	return uac.applicationService.UpdateApplication(ctx, uac.requestBody)
 }
 
-func (cac *createAppCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
-	return cac.serverDetails, nil
+func (uac *updateAppCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
+	return uac.serverDetails, nil
 }
 
-func (cac *createAppCommand) CommandName() string {
-	return commands.CreateApp
+func (uac *updateAppCommand) CommandName() string {
+	return UpdateApp
 }
 
-func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*model.AppDescriptor, error) {
-	appKey := ctx.Arguments[0]
+func (uac *updateAppCommand) buildRequestPayload(ctx *components.Context) (*model.AppDescriptor, error) {
+	applicationKey := ctx.Arguments[0]
 	displayName := ctx.GetStringFlagValue(commands.DisplayNameFlag)
-	if displayName == "" {
-		// Default to the application key if display name is not provided
-		displayName = appKey
-	}
-
-	project := ctx.GetStringFlagValue(commands.ProjectFlag)
-	if project == "" {
-		return nil, errorutils.CheckErrorf("--%s is mandatory", commands.ProjectFlag)
-	}
 
 	businessCriticality := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
-	if businessCriticality == "" {
-		// Default to "unspecified" if not provided
-		businessCriticality = model.BusinessCriticalityValues[0]
-	} else if !slices.Contains(model.BusinessCriticalityValues, businessCriticality) {
+	if businessCriticality != "" && !slices.Contains(model.BusinessCriticalityValues, businessCriticality) {
 		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.BusinessCriticalityFlag, businessCriticality, coreutils.ListToText(model.BusinessCriticalityValues))
 	}
 
 	maturityLevel := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
-	if maturityLevel == "" {
-		// Default to "unspecified" if not provided
-		maturityLevel = model.MaturityLevelValues[0]
-	} else if !slices.Contains(model.MaturityLevelValues, maturityLevel) {
+	if maturityLevel != "" && !slices.Contains(model.MaturityLevelValues, maturityLevel) {
 		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.MaturityLevelFlag, maturityLevel, coreutils.ListToText(model.MaturityLevelValues))
 	}
 
@@ -80,10 +66,9 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 	}
 
 	return &model.AppDescriptor{
+		ApplicationKey:      applicationKey,
 		ApplicationName:     displayName,
-		ApplicationKey:      appKey,
 		Description:         description,
-		ProjectKey:          project,
 		MaturityLevel:       maturityLevel,
 		BusinessCriticality: businessCriticality,
 		Labels:              labelsMap,
@@ -92,41 +77,41 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 	}, nil
 }
 
-func (cac *createAppCommand) prepareAndRunCommand(ctx *components.Context) error {
+func (uac *updateAppCommand) prepareAndRunCommand(ctx *components.Context) error {
 	if len(ctx.Arguments) != 1 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 
 	var err error
-	cac.requestBody, err = cac.buildRequestPayload(ctx)
+	uac.requestBody, err = uac.buildRequestPayload(ctx)
 	if err != nil {
 		return err
 	}
 
-	cac.serverDetails, err = utils.ServerDetailsByFlags(ctx)
+	uac.serverDetails, err = utils.ServerDetailsByFlags(ctx)
 	if err != nil {
 		return err
 	}
 
-	return commonCLiCommands.Exec(cac)
+	return commonCLiCommands.Exec(uac)
 }
 
-func GetCreateAppCommand(appContext app.Context) components.Command {
-	cmd := &createAppCommand{
+func GetUpdateAppCommand(appContext app.Context) components.Command {
+	cmd := &updateAppCommand{
 		applicationService: appContext.GetApplicationService(),
 	}
 	return components.Command{
-		Name:        "create",
-		Description: "Create a new application",
+		Name:        "update",
+		Description: "Update an existing application",
 		Category:    common.CategoryApplication,
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
-				Description: "The key of the application to create",
+				Description: "The key of the application to update",
 				Optional:    false,
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.CreateApp),
+		Flags:  commands.GetCommandFlags(commands.UpdateApp),
 		Action: cmd.prepareAndRunCommand,
 	}
 }

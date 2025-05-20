@@ -12,10 +12,11 @@ const (
 	CreateAppVersion  = "create-app-version"
 	PromoteAppVersion = "promote-app-version"
 	CreateApp         = "create-app"
+	UpdateApp         = "update-app"
 )
 
 const (
-	ServerId    = "server-id"
+	serverId    = "server-id"
 	url         = "url"
 	user        = "user"
 	accessToken = "access-token"
@@ -42,7 +43,7 @@ const (
 // Flag keys mapped to their corresponding components.Flag definition.
 var flagsMap = map[string]components.Flag{
 	// Common commands flags
-	ServerId:    components.NewStringFlag(ServerId, "Server ID configured using the config command.", func(f *components.StringFlag) { f.Mandatory = false }),
+	serverId:    components.NewStringFlag(serverId, "Server ID configured using the config command.", func(f *components.StringFlag) { f.Mandatory = false }),
 	url:         components.NewStringFlag(url, "JFrog Platform URL.", func(f *components.StringFlag) { f.Mandatory = false }),
 	user:        components.NewStringFlag(user, "JFrog username.", func(f *components.StringFlag) { f.Mandatory = false }),
 	accessToken: components.NewStringFlag(accessToken, "JFrog access token.", func(f *components.StringFlag) { f.Mandatory = false }),
@@ -71,7 +72,7 @@ var commandFlags = map[string][]string{
 		url,
 		user,
 		accessToken,
-		ServerId,
+		serverId,
 		ApplicationKeyFlag,
 		PackageTypeFlag,
 		PackageNameFlag,
@@ -84,7 +85,7 @@ var commandFlags = map[string][]string{
 		url,
 		user,
 		accessToken,
-		ServerId,
+		serverId,
 		ApplicationKeyFlag,
 		StageVarsFlag,
 	},
@@ -93,16 +94,33 @@ var commandFlags = map[string][]string{
 		url,
 		user,
 		accessToken,
-		ServerId,
+		serverId,
 	},
 
 	CreateApp: {
 		url,
 		user,
 		accessToken,
-		ServerId,
+		serverId,
 		DisplayNameFlag,
 		ProjectFlag,
+		DescriptionFlag,
+		BusinessCriticalityFlag,
+		MaturityLevelFlag,
+		LabelsFlag,
+		UserOwnersFlag,
+		GroupOwnersFlag,
+		SigningKeyFlag,
+		SpecFlag,
+		SpecVarsFlag,
+	},
+
+	UpdateApp: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		DisplayNameFlag,
 		DescriptionFlag,
 		BusinessCriticalityFlag,
 		MaturityLevelFlag,
