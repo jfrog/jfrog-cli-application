@@ -1,8 +1,6 @@
 package application
 
 import (
-	"slices"
-
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 
 	"github.com/jfrog/jfrog-cli-application/application/commands/utils"
@@ -11,7 +9,6 @@ import (
 	commonCLiCommands "github.com/jfrog/jfrog-cli-core/v2/common/commands"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
-	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 
 	"github.com/jfrog/jfrog-cli-application/application/app"
@@ -56,20 +53,24 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 		return nil, errorutils.CheckErrorf("--%s is mandatory", commands.ProjectFlag)
 	}
 
-	businessCriticality := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
-	if businessCriticality == "" {
-		// Default to "unspecified" if not provided
-		businessCriticality = model.BusinessCriticalityUnspecified
-	} else if !slices.Contains(model.BusinessCriticalityValues, businessCriticality) {
-		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.BusinessCriticalityFlag, businessCriticality, coreutils.ListToText(model.BusinessCriticalityValues))
+	businessCriticalityStr := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
+	businessCriticality, err := utils.ValidateEnumFlag(
+		commands.BusinessCriticalityFlag,
+		businessCriticalityStr,
+		model.BusinessCriticalityUnspecified,
+		model.BusinessCriticalityValues)
+	if err != nil {
+		return nil, err
 	}
 
-	maturityLevel := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
-	if maturityLevel == "" {
-		// Default to "unspecified" if not provided
-		maturityLevel = model.MaturityLevelUnspecified
-	} else if !slices.Contains(model.MaturityLevelValues, maturityLevel) {
-		return nil, errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s", commands.MaturityLevelFlag, maturityLevel, coreutils.ListToText(model.MaturityLevelValues))
+	maturityLevelStr := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
+	maturityLevel, err := utils.ValidateEnumFlag(
+		commands.MaturityLevelFlag,
+		maturityLevelStr,
+		model.MaturityLevelUnspecified,
+		model.MaturityLevelValues)
+	if err != nil {
+		return nil, err
 	}
 
 	description := ctx.GetStringFlagValue(commands.DescriptionFlag)

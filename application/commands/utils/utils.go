@@ -2,12 +2,14 @@ package utils
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	commonCliUtils "github.com/jfrog/jfrog-cli-core/v2/common/cliutils"
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
@@ -62,4 +64,20 @@ func ParseMapFlag(flagValue string) (map[string]string, error) {
 		result[strings.TrimSpace(keyValue[0])] = strings.TrimSpace(keyValue[1])
 	}
 	return result, nil
+}
+
+// ValidateEnumFlag validates that a flag value is in the list of allowed values.
+// If the value is empty, returns the default value.
+// Otherwise, returns an error if the value is not in the allowed values.
+func ValidateEnumFlag(flagName, value string, defaultValue string, allowedValues []string) (string, error) {
+	if value == "" {
+		return defaultValue, nil
+	}
+
+	if slices.Contains(allowedValues, value) {
+		return value, nil
+	}
+
+	return "", errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s",
+		flagName, value, coreutils.ListToText(allowedValues))
 }
