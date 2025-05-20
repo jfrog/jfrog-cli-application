@@ -1,26 +1,34 @@
 package app
 
 import (
+	"github.com/jfrog/jfrog-cli-application/application/service/applications"
 	"github.com/jfrog/jfrog-cli-application/application/service/systems"
 	"github.com/jfrog/jfrog-cli-application/application/service/versions"
 )
 
 type Context interface {
+	GetApplicationService() applications.ApplicationService
 	GetVersionService() versions.VersionService
 	GetSystemService() systems.SystemService
 	GetConfig() interface{}
 }
 
 type context struct {
-	versionService versions.VersionService
-	systemService  systems.SystemService
+	applicationService applications.ApplicationService
+	versionService     versions.VersionService
+	systemService      systems.SystemService
 }
 
 func NewAppContext() Context {
 	return &context{
-		versionService: versions.NewVersionService(),
-		systemService:  systems.NewSystemService(),
+		applicationService: applications.NewApplicationService(),
+		versionService:     versions.NewVersionService(),
+		systemService:      systems.NewSystemService(),
 	}
+}
+
+func (c *context) GetApplicationService() applications.ApplicationService {
+	return c.applicationService
 }
 
 func (c *context) GetVersionService() versions.VersionService {

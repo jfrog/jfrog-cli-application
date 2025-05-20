@@ -17,7 +17,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/io/httputils"
 )
 
-const applicationApiPath = "application/api"
+const appTrustApiPath = "apptrust/api"
 
 type AppHttpClient interface {
 	GetHttpClient() *jfroghttpclient.JfrogHttpClient
@@ -83,7 +83,7 @@ func (c *appHttpClient) GetHttpClient() *jfroghttpclient.JfrogHttpClient {
 }
 
 func (c *appHttpClient) Post(path string, requestBody interface{}) (resp *http.Response, body []byte, err error) {
-	url, err := utils.BuildUrl(c.serverDetails.Url, applicationApiPath+path, nil)
+	url, err := utils.BuildUrl(c.serverDetails.Url, appTrustApiPath+path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -98,7 +98,7 @@ func (c *appHttpClient) Post(path string, requestBody interface{}) (resp *http.R
 }
 
 func (c *appHttpClient) Get(path string) (resp *http.Response, body []byte, err error) {
-	url, err := utils.BuildUrl(c.serverDetails.Url, applicationApiPath+path, nil)
+	url, err := utils.BuildUrl(c.serverDetails.Url, appTrustApiPath+path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
