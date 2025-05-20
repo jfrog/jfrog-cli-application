@@ -118,7 +118,6 @@ func GetCreateAppCommand(appContext app.Context) components.Command {
 		Name:        "create",
 		Description: "Create a new application",
 		Category:    common.CategoryApplication,
-		Aliases:     []string{"ca"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
