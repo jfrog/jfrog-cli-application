@@ -44,11 +44,11 @@ func (cac *createAppCommand) CommandName() string {
 }
 
 func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*model.CreateAppRequest, error) {
-	appKey := ctx.Arguments[0]
-	displayName := ctx.GetStringFlagValue(commands.DisplayNameFlag)
-	if displayName == "" {
-		// Default to the application key if display name is not provided
-		displayName = appKey
+	applicationKey := ctx.Arguments[0]
+	applicationName := ctx.GetStringFlagValue(commands.ApplicationNameFlag)
+	if applicationName == "" {
+		// Default to the application key if application name is not provided
+		applicationName = applicationKey
 	}
 
 	project := ctx.GetStringFlagValue(commands.ProjectFlag)
@@ -81,8 +81,8 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 	}
 
 	return &model.CreateAppRequest{
-		ApplicationName:     displayName,
-		ApplicationKey:      appKey,
+		ApplicationName:     applicationName,
+		ApplicationKey:      applicationKey,
 		Description:         description,
 		ProjectKey:          project,
 		MaturityLevel:       maturityLevel,

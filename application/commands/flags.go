@@ -21,7 +21,7 @@ const (
 	accessToken = "access-token"
 	ProjectFlag = "project"
 
-	ApplicationKeyFlag      = "app-key"
+	ApplicationKeyFlag      = "application-key"
 	PackageTypeFlag         = "package-type"
 	PackageNameFlag         = "package-name"
 	PackageVersionFlag      = "package-version"
@@ -29,7 +29,7 @@ const (
 	SpecFlag                = "spec"
 	SpecVarsFlag            = "spec-vars"
 	StageVarsFlag           = "stage"
-	DisplayNameFlag         = "display-name"
+	ApplicationNameFlag     = "application-name"
 	DescriptionFlag         = "desc"
 	BusinessCriticalityFlag = "business-criticality"
 	MaturityLevelFlag       = "maturity-level"
@@ -56,7 +56,7 @@ var flagsMap = map[string]components.Flag{
 	SpecFlag:                components.NewStringFlag(SpecFlag, "A path to the specification file.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SpecVarsFlag:            components.NewStringFlag(SpecVarsFlag, "List of semicolon-separated (;) variables in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes) to be replaced in the File Spec. In the File Spec, the variables should be used as follows: ${key1}.", func(f *components.StringFlag) { f.Mandatory = false }),
 	StageVarsFlag:           components.NewStringFlag(StageVarsFlag, "Promotion stage.", func(f *components.StringFlag) { f.Mandatory = true }),
-	DisplayNameFlag:         components.NewStringFlag(DisplayNameFlag, "The display name of the application.", func(f *components.StringFlag) { f.Mandatory = false }),
+	ApplicationNameFlag:     components.NewStringFlag(ApplicationNameFlag, "The display name of the application.", func(f *components.StringFlag) { f.Mandatory = false }),
 	DescriptionFlag:         components.NewStringFlag(DescriptionFlag, "The description of the application.", func(f *components.StringFlag) { f.Mandatory = false }),
 	BusinessCriticalityFlag: components.NewStringFlag(BusinessCriticalityFlag, "The business criticality level. The following values are supported: "+coreutils.ListToText(model.BusinessCriticalityValues), func(f *components.StringFlag) { f.DefaultValue = model.BusinessCriticalityValues[0] }),
 	MaturityLevelFlag:       components.NewStringFlag(MaturityLevelFlag, "The maturity level.", func(f *components.StringFlag) { f.DefaultValue = model.MaturityLevelValues[0] }),
@@ -101,7 +101,7 @@ var commandFlags = map[string][]string{
 		user,
 		accessToken,
 		ServerId,
-		DisplayNameFlag,
+		ApplicationNameFlag,
 		ProjectFlag,
 		DescriptionFlag,
 		BusinessCriticalityFlag,
