@@ -13,6 +13,7 @@ const (
 	PromoteAppVersion = "promote-app-version"
 	CreateApp         = "create-app"
 	UpdateApp         = "update-app"
+	DeleteApp         = "delete-app"
 )
 
 const (

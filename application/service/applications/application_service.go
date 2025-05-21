@@ -15,6 +15,7 @@ import (
 type ApplicationService interface {
 	CreateApplication(ctx service.Context, requestBody *model.AppDescriptor) error
 	UpdateApplication(ctx service.Context, requestBody *model.AppDescriptor) error
+	DeleteApplication(ctx service.Context, applicationKey string) error
 }
 
 type applicationService struct{}
@@ -51,5 +52,21 @@ func (as *applicationService) UpdateApplication(ctx service.Context, requestBody
 	}
 
 	fmt.Println(string(responseBody))
+	return nil
+}
+
+func (as *applicationService) DeleteApplication(ctx service.Context, applicationKey string) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s", applicationKey)
+	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint)
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != http.StatusNoContent {
+		return errorutils.CheckErrorf("failed to delete application. Status code: %d.\n%s",
+			response.StatusCode, responseBody)
+	}
+
+	fmt.Println("Application deleted successfully")
 	return nil
 }

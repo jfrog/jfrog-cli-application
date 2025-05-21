@@ -41,6 +41,7 @@ func GetJfrogApplicationCli() components.App {
 			version.GetPromoteAppVersionCommand(appContext),
 			application.GetCreateAppCommand(appContext),
 			application.GetUpdateAppCommand(appContext),
+			application.GetDeleteAppCommand(appContext),
 		},
 	)
 	return appEntity
