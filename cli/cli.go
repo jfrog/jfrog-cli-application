@@ -14,7 +14,7 @@ import (
 //		"apptrust",
 //		nil,
 //		components.Namespace{
-//			Name:        string(cliutils.At),
+//			Name:        "app",
 //			Description: "AppTrust commands.",
 //			Category:    "Command Namespaces",
 //			Commands: []components.Command{
