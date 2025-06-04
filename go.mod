@@ -6,6 +6,7 @@ require (
 	github.com/jfrog/jfrog-cli-core/v2 v2.57.6
 	github.com/jfrog/jfrog-client-go v1.49.0
 	github.com/stretchr/testify v1.10.0
+	github.com/urfave/cli v1.22.16
 	go.uber.org/mock v0.5.0
 )
 
@@ -74,7 +75,6 @@ require (
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
-	github.com/urfave/cli v1.22.16 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
