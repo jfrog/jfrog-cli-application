@@ -55,15 +55,12 @@ func (dv *deleteAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 }
 
 func GetDeleteAppVersionCommand(appContext app.Context) components.Command {
-	cmd := &deleteAppVersionCommand{
-		versionService: appContext.GetVersionService(),
-	}
-	// TODO: app version commands are planned to be re-organized
+	cmd := &deleteAppVersionCommand{versionService: appContext.GetVersionService()}
 	return components.Command{
 		Name:        commands.DeleteAppVersion,
 		Description: "Delete application version",
 		Category:    common.CategoryVersion,
-		Aliases:     []string{"dav"},
+		Aliases:     []string{"vd"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",

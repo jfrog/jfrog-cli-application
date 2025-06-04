@@ -9,12 +9,12 @@ import (
 
 const (
 	Ping              = "ping"
-	CreateAppVersion  = "create-app-version"
-	PromoteAppVersion = "promote-app-version"
-	DeleteAppVersion  = "delete-app-version"
-	CreateApp         = "create-app"
-	UpdateApp         = "update-app"
-	DeleteApp         = "delete-app"
+	CreateAppVersion  = "version-create"
+	PromoteAppVersion = "version-promote"
+	DeleteAppVersion  = "version-delete"
+	CreateApp         = "app-create"
+	UpdateApp         = "app-update"
+	DeleteApp         = "app-delete"
 )
 
 const (

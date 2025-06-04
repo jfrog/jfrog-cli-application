@@ -80,7 +80,7 @@ func GetPromoteAppVersionCommand(appContext app.Context) components.Command {
 		Name:        commands.PromoteAppVersion,
 		Description: "Promote application version",
 		Category:    common.CategoryVersion,
-		Aliases:     []string{"pav"},
+		Aliases:     []string{"vp"},
 		Arguments: []components.Argument{
 			{
 				Name:        "version-name",
