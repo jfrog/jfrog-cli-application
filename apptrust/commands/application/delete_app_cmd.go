@@ -61,6 +61,7 @@ func GetDeleteAppCommand(appContext app.Context) components.Command {
 		Name:        "delete",
 		Description: "Delete an application",
 		Category:    common.CategoryApplication,
+		Aliases:     []string{"d"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
