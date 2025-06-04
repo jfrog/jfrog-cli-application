@@ -40,6 +40,7 @@ func GetJfrogCliApptrustApp() components.App {
 			system.GetPingCommand(appContext),
 			version.GetCreateAppVersionCommand(appContext),
 			version.GetPromoteAppVersionCommand(appContext),
+			version.GetDeleteAppVersionCommand(appContext),
 			application.GetCreateAppCommand(appContext),
 			application.GetUpdateAppCommand(appContext),
 			application.GetDeleteAppCommand(appContext),

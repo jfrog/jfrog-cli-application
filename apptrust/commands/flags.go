@@ -11,6 +11,7 @@ const (
 	Ping              = "ping"
 	CreateAppVersion  = "create-app-version"
 	PromoteAppVersion = "promote-app-version"
+	DeleteAppVersion  = "delete-app-version"
 	CreateApp         = "create-app"
 	UpdateApp         = "update-app"
 	DeleteApp         = "delete-app"
@@ -89,6 +90,12 @@ var commandFlags = map[string][]string{
 		serverId,
 		ApplicationKeyFlag,
 		StageVarsFlag,
+	},
+	DeleteAppVersion: {
+		url,
+		user,
+		accessToken,
+		serverId,
 	},
 
 	Ping: {
