@@ -143,7 +143,7 @@ func GetCreateAppVersionCommand(appContext app.Context) components.Command {
 		Name:        commands.CreateAppVersion,
 		Description: "Create application version",
 		Category:    common.CategoryVersion,
-		Aliases:     []string{"cav"},
+		Aliases:     []string{"vc"},
 		Arguments: []components.Argument{
 			{
 				Name:        "version-name",

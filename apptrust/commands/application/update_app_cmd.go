@@ -111,6 +111,7 @@ func GetUpdateAppCommand(appContext app.Context) components.Command {
 		Name:        "update",
 		Description: "Update an existing application",
 		Category:    common.CategoryApplication,
+		Aliases:     []string{"u"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",

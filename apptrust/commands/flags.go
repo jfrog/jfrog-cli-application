@@ -9,11 +9,12 @@ import (
 
 const (
 	Ping              = "ping"
-	CreateAppVersion  = "create-app-version"
-	PromoteAppVersion = "promote-app-version"
-	CreateApp         = "create-app"
-	UpdateApp         = "update-app"
-	DeleteApp         = "delete-app"
+	CreateAppVersion  = "version-create"
+	PromoteAppVersion = "version-promote"
+	DeleteAppVersion  = "version-delete"
+	CreateApp         = "app-create"
+	UpdateApp         = "app-update"
+	DeleteApp         = "app-delete"
 )
 
 const (
@@ -89,6 +90,12 @@ var commandFlags = map[string][]string{
 		serverId,
 		ApplicationKeyFlag,
 		StageVarsFlag,
+	},
+	DeleteAppVersion: {
+		url,
+		user,
+		accessToken,
+		serverId,
 	},
 
 	Ping: {
