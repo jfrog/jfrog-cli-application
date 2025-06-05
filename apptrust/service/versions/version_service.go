@@ -23,7 +23,7 @@ func NewVersionService() VersionService {
 }
 
 func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error {
-	response, responseBody, err := ctx.GetHttpClient().Post("/v1/version", request)
+	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/version", request)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.C
 }
 
 func (vs *versionService) PromoteAppVersion(ctx service.Context, payload *model.PromoteAppVersionRequest) error {
-	response, responseBody, err := ctx.GetHttpClient().Post("/v1/version/promote", payload)
+	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/version/promote", payload)
 	if err != nil {
 		return err
 	}
