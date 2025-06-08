@@ -3,6 +3,7 @@ package cli
 import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/app"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/application"
+	packagecmds "github.com/jfrog/jfrog-cli-application/apptrust/commands/package"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/system"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/version"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
@@ -41,6 +42,7 @@ func GetJfrogCliApptrustApp() components.App {
 			version.GetCreateAppVersionCommand(appContext),
 			version.GetPromoteAppVersionCommand(appContext),
 			version.GetDeleteAppVersionCommand(appContext),
+			packagecmds.GetBindPackageCommand(appContext),
 			application.GetCreateAppCommand(appContext),
 			application.GetUpdateAppCommand(appContext),
 			application.GetDeleteAppCommand(appContext),

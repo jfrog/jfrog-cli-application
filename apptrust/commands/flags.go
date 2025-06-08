@@ -12,6 +12,7 @@ const (
 	CreateAppVersion  = "version-create"
 	PromoteAppVersion = "version-promote"
 	DeleteAppVersion  = "version-delete"
+	PackageBind       = "package-bind"
 	CreateApp         = "app-create"
 	UpdateApp         = "app-update"
 	DeleteApp         = "app-delete"
@@ -92,6 +93,13 @@ var commandFlags = map[string][]string{
 		StageVarsFlag,
 	},
 	DeleteAppVersion: {
+		url,
+		user,
+		accessToken,
+		serverId,
+	},
+
+	PackageBind: {
 		url,
 		user,
 		accessToken,

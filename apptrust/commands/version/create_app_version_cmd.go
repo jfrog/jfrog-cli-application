@@ -110,9 +110,6 @@ func loadPackagesFromSpec(ctx *components.Context, packages *[]model.CreateVersi
 }
 
 func validateCreateAppVersionContext(ctx *components.Context) error {
-	if show, err := pluginsCommon.ShowCmdHelpIfNeeded(ctx, ctx.Arguments); show || err != nil {
-		return err
-	}
 	if len(ctx.Arguments) != 1 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
