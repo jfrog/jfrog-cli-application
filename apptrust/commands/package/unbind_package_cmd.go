@@ -36,7 +36,7 @@ func (up *unbindPackageCommand) CommandName() string {
 }
 
 func (up *unbindPackageCommand) prepareAndRunCommand(ctx *components.Context) error {
-	if len(ctx.Arguments) != 4 {
+	if len(ctx.Arguments) < 3 || len(ctx.Arguments) > 4 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 
@@ -73,8 +73,8 @@ func GetUnbindPackageCommand(appContext app.Context) components.Command {
 				Description: "Package name.",
 			},
 			{
-				Name:        "package-version",
-				Description: "Package version.",
+				Name:        "package-versions",
+				Description: "Comma-separated versions of the package to unbind (e.g., '1.0.0,1.1.0,1.2.0'). If omitted, all versions will be unbound.",
 			},
 		},
 		Flags:  commands.GetCommandFlags(commands.PackageUnbind),

@@ -73,8 +73,8 @@ func GetBindPackageCommand(appContext app.Context) components.Command {
 				Description: "Package name.",
 			},
 			{
-				Name:        "package-version",
-				Description: "Package version.",
+				Name:        "package-versions",
+				Description: "Comma-separated versions of the package to bind (e.g., '1.0.0,1.1.0,1.2.0').",
 			},
 		},
 		Flags:  commands.GetCommandFlags(commands.PackageBind),
