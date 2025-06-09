@@ -12,6 +12,7 @@ import (
 
 type PackageService interface {
 	BindPackage(ctx service.Context, request *model.BindPackageRequest) error
+	UnbindPackage(ctx service.Context, request *model.BindPackageRequest) error
 }
 
 type packageService struct{}
@@ -28,7 +29,22 @@ func (ps *packageService) BindPackage(ctx service.Context, request *model.BindPa
 	}
 
 	if response.StatusCode != http.StatusCreated {
-		return fmt.Errorf("failed to bind package. Status code: %d. \n%s",
+		return fmt.Errorf("failed to bind package. Status code: %d.\n%s",
+			response.StatusCode, responseBody)
+	}
+
+	return nil
+}
+
+func (ps *packageService) UnbindPackage(ctx service.Context, request *model.BindPackageRequest) error {
+	endpoint := "/v1/package"
+	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint, request)
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("failed to unbind package. Status code: %d.\n%s",
 			response.StatusCode, responseBody)
 	}
 

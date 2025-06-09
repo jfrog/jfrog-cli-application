@@ -22,6 +22,8 @@ import (
 //				system.GetPingCommand(appContext),
 //				version.GetCreateAppVersionCommand(appContext),
 //				version.GetPromoteAppVersionCommand(appContext),
+//				version.GetDeleteAppVersionCommand(appContext),
+//				packagecmds.GetBindPackageCommand(appContext),
 //				application.GetCreateAppCommand(appContext),
 //				application.GetUpdateAppCommand(appContext),
 //				application.GetDeleteAppCommand(appContext),
@@ -34,7 +36,7 @@ import (
 func GetJfrogCliApptrustApp() components.App {
 	appContext := app.NewAppContext()
 	appEntity := components.CreateApp(
-		"apptrust",
+		"app",
 		"1.0.5",
 		"JFrog AppTrust CLI",
 		[]components.Command{
@@ -43,6 +45,7 @@ func GetJfrogCliApptrustApp() components.App {
 			version.GetPromoteAppVersionCommand(appContext),
 			version.GetDeleteAppVersionCommand(appContext),
 			packagecmds.GetBindPackageCommand(appContext),
+			packagecmds.GetUnbindPackageCommand(appContext),
 			application.GetCreateAppCommand(appContext),
 			application.GetUpdateAppCommand(appContext),
 			application.GetDeleteAppCommand(appContext),

@@ -13,6 +13,7 @@ const (
 	PromoteAppVersion = "version-promote"
 	DeleteAppVersion  = "version-delete"
 	PackageBind       = "package-bind"
+	PackageUnbind     = "package-unbind"
 	CreateApp         = "app-create"
 	UpdateApp         = "app-update"
 	DeleteApp         = "app-delete"
@@ -106,6 +107,13 @@ var commandFlags = map[string][]string{
 		serverId,
 	},
 
+	PackageUnbind: {
+		url,
+		user,
+		accessToken,
+		serverId,
+	},
+
 	Ping: {
 		url,
 		user,
@@ -146,6 +154,13 @@ var commandFlags = map[string][]string{
 		SigningKeyFlag,
 		SpecFlag,
 		SpecVarsFlag,
+	},
+
+	DeleteApp: {
+		url,
+		user,
+		accessToken,
+		serverId,
 	},
 }
 

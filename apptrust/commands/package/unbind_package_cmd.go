@@ -13,56 +13,56 @@ import (
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 )
 
-type bindPackageCommand struct {
+type unbindPackageCommand struct {
 	packageService packages.PackageService
 	serverDetails  *coreConfig.ServerDetails
 	requestPayload *model.BindPackageRequest
 }
 
-func (bp *bindPackageCommand) Run() error {
-	ctx, err := service.NewContext(*bp.serverDetails)
+func (up *unbindPackageCommand) Run() error {
+	ctx, err := service.NewContext(*up.serverDetails)
 	if err != nil {
 		return err
 	}
-	return bp.packageService.BindPackage(ctx, bp.requestPayload)
+	return up.packageService.UnbindPackage(ctx, up.requestPayload)
 }
 
-func (bp *bindPackageCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
-	return bp.serverDetails, nil
+func (up *unbindPackageCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
+	return up.serverDetails, nil
 }
 
-func (bp *bindPackageCommand) CommandName() string {
-	return commands.PackageBind
+func (up *unbindPackageCommand) CommandName() string {
+	return commands.PackageUnbind
 }
 
-func (bp *bindPackageCommand) prepareAndRunCommand(ctx *components.Context) error {
+func (up *unbindPackageCommand) prepareAndRunCommand(ctx *components.Context) error {
 	if len(ctx.Arguments) != 4 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 
 	var err error
-	bp.serverDetails, err = utils.ServerDetailsByFlags(ctx)
+	up.serverDetails, err = utils.ServerDetailsByFlags(ctx)
 	if err != nil {
 		return err
 	}
-	bp.requestPayload, err = BuildPackageRequestPayload(ctx)
+	up.requestPayload, err = BuildPackageRequestPayload(ctx)
 	if err != nil {
 		return err
 	}
 
-	return commonCLiCommands.Exec(bp)
+	return commonCLiCommands.Exec(up)
 }
 
-func GetBindPackageCommand(appContext app.Context) components.Command {
-	cmd := &bindPackageCommand{packageService: appContext.GetPackageService()}
+func GetUnbindPackageCommand(appContext app.Context) components.Command {
+	cmd := &unbindPackageCommand{packageService: appContext.GetPackageService()}
 	return components.Command{
-		Name:        commands.PackageBind,
-		Description: "Bind packages to an application.",
-		Aliases:     []string{"pb"},
+		Name:        commands.PackageUnbind,
+		Description: "Unbind packages from an application.",
+		Aliases:     []string{"pu"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
-				Description: "The key of the application to bind the package to.",
+				Description: "The key of the application to unbind the package from.",
 			},
 			{
 				Name:        "package-type",
@@ -77,7 +77,7 @@ func GetBindPackageCommand(appContext app.Context) components.Command {
 				Description: "Package version.",
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.PackageBind),
+		Flags:  commands.GetCommandFlags(commands.PackageUnbind),
 		Action: cmd.prepareAndRunCommand,
 	}
 }
