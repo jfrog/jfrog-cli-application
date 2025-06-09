@@ -20,7 +20,7 @@ func TestUnbindPackageCommand_Run(t *testing.T) {
 		ApplicationKey: "app-key",
 		Type:           "npm",
 		Name:           "test-package",
-		Version:        "1.0.0",
+		Versions:       []string{"1.0.0"},
 	}
 
 	mockPackageService := mockpackages.NewMockPackageService(ctrl)
@@ -46,7 +46,7 @@ func TestUnbindPackageCommand_Run_Error(t *testing.T) {
 		ApplicationKey: "app-key",
 		Type:           "npm",
 		Name:           "test-package",
-		Version:        "1.0.0",
+		Versions:       []string{"1.0.0"},
 	}
 
 	mockPackageService := mockpackages.NewMockPackageService(ctrl)

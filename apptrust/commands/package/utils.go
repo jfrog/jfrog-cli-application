@@ -18,6 +18,6 @@ func BuildPackageRequestPayload(ctx *components.Context) (*model.BindPackageRequ
 		ApplicationKey: applicationKey,
 		Type:           packageType,
 		Name:           packageName,
-		Version:        packageVersion,
+		Versions:       []string{packageVersion},
 	}, nil
 }
