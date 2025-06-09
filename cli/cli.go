@@ -24,6 +24,7 @@ import (
 //				version.GetPromoteAppVersionCommand(appContext),
 //				version.GetDeleteAppVersionCommand(appContext),
 //				packagecmds.GetBindPackageCommand(appContext),
+//				packagecmds.GetUnbindPackageCommand(appContext),
 //				application.GetCreateAppCommand(appContext),
 //				application.GetUpdateAppCommand(appContext),
 //				application.GetDeleteAppCommand(appContext),
