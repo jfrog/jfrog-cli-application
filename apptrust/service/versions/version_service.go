@@ -52,7 +52,7 @@ func (vs *versionService) PromoteAppVersion(ctx service.Context, payload *model.
 
 func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey string, version string) error {
 	url := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
-	response, responseBody, err := ctx.GetHttpClient().Delete(url)
+	response, responseBody, err := ctx.GetHttpClient().Delete(url, nil)
 	if err != nil {
 		return err
 	}

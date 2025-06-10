@@ -41,8 +41,8 @@ func (pv *promoteAppVersionCommand) CommandName() string {
 }
 
 func (pv *promoteAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
-	if err := validatePromoteAppVersionContext(ctx); err != nil {
-		return err
+	if len(ctx.Arguments) != 1 {
+		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 	serverDetails, err := utils.ServerDetailsByFlags(ctx)
 	if err != nil {
@@ -54,16 +54,6 @@ func (pv *promoteAppVersionCommand) prepareAndRunCommand(ctx *components.Context
 		return err
 	}
 	return commonCLiCommands.Exec(pv)
-}
-
-func validatePromoteAppVersionContext(ctx *components.Context) error {
-	if show, err := pluginsCommon.ShowCmdHelpIfNeeded(ctx, ctx.Arguments); show || err != nil {
-		return err
-	}
-	if len(ctx.Arguments) != 1 {
-		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
-	}
-	return nil
 }
 
 func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.PromoteAppVersionRequest, error) {
