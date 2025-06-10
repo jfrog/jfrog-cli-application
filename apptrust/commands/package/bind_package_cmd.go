@@ -4,6 +4,7 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/app"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
+	"github.com/jfrog/jfrog-cli-application/apptrust/common"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service/packages"
@@ -57,7 +58,8 @@ func GetBindPackageCommand(appContext app.Context) components.Command {
 	cmd := &bindPackageCommand{packageService: appContext.GetPackageService()}
 	return components.Command{
 		Name:        commands.PackageBind,
-		Description: "Bind packages to an application.",
+		Description: "Bind packages to an application",
+		Category:    common.CategoryPackage,
 		Aliases:     []string{"pb"},
 		Arguments: []components.Argument{
 			{

@@ -2,6 +2,7 @@ package common
 
 const (
 	CategorySystem      = "system"
-	CategoryVersion     = "version"
 	CategoryApplication = "application"
+	CategoryVersion     = "version"
+	CategoryPackage     = "package"
 )
