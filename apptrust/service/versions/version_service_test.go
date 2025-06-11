@@ -81,31 +81,75 @@ func TestPromoteAppVersion(t *testing.T) {
 
 	tests := []struct {
 		name             string
+		applicationKey   string
+		version          string
 		payload          *model.PromoteAppVersionRequest
+		sync             bool
+		expectedEndpoint string
 		mockResponse     *http.Response
 		mockResponseBody string
 		mockError        error
 		expectedError    string
 	}{
 		{
-			name:             "success",
-			payload:          &model.PromoteAppVersionRequest{},
+			name:           "success with sync=true",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			payload: &model.PromoteAppVersionRequest{
+				Stage:                  "prod",
+				PromotionType:          model.PromotionTypeCopy,
+				IncludedRepositoryKeys: []string{"repo1", "repo2"},
+				ExcludedRepositoryKeys: []string{"repo3"},
+			},
+			sync:             true,
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=false",
 			mockResponse:     &http.Response{StatusCode: 200},
 			mockResponseBody: "{}",
 			mockError:        nil,
 			expectedError:    "",
 		},
 		{
-			name:             "failure",
-			payload:          &model.PromoteAppVersionRequest{},
+			name:           "success with sync=false",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			payload: &model.PromoteAppVersionRequest{
+				Stage:                  "prod",
+				PromotionType:          model.PromotionTypeCopy,
+				IncludedRepositoryKeys: []string{"repo1", "repo2"},
+				ExcludedRepositoryKeys: []string{"repo3"},
+			},
+			sync:             false,
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=true",
+			mockResponse:     &http.Response{StatusCode: 202},
+			mockResponseBody: "{}",
+			mockError:        nil,
+			expectedError:    "",
+		},
+		{
+			name:           "failure",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			payload: &model.PromoteAppVersionRequest{
+				Stage:         "prod",
+				PromotionType: model.PromotionTypeCopy,
+			},
+			sync:             true,
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=false",
 			mockResponse:     &http.Response{StatusCode: 400},
 			mockResponseBody: "error",
 			mockError:        nil,
 			expectedError:    "failed to promote app version",
 		},
 		{
-			name:             "http client error",
-			payload:          &model.PromoteAppVersionRequest{},
+			name:           "http client error",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			payload: &model.PromoteAppVersionRequest{
+				Stage:         "prod",
+				PromotionType: model.PromotionTypeCopy,
+			},
+			sync:             false,
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=true",
 			mockResponse:     nil,
 			mockResponseBody: "",
 			mockError:        errors.New("http client error"),
@@ -116,13 +160,13 @@ func TestPromoteAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications/version/promote", tt.payload).
+			mockHttpClient.EXPECT().Post(tt.expectedEndpoint, tt.payload).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			err := service.PromoteAppVersion(mockCtx, tt.payload)
+			err := service.PromoteAppVersion(mockCtx, tt.applicationKey, tt.version, tt.payload, tt.sync)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {

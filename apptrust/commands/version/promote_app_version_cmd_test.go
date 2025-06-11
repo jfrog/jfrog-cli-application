@@ -1,6 +1,7 @@
 package version
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
@@ -8,40 +9,92 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
-	coreconfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRun(t *testing.T) {
+func TestPromoteAppVersionCommand_Run(t *testing.T) {
+	tests := []struct {
+		name string
+		sync bool
+	}{
+		{
+			name: "sync flag true",
+			sync: true,
+		},
+		{
+			name: "sync flag false",
+			sync: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serverDetails := &config.ServerDetails{Url: "https://example.com"}
+			applicationKey := "app-key"
+			version := "1.0.0"
+			requestPayload := &model.PromoteAppVersionRequest{
+				Stage: "prod",
+			}
+
+			mockVersionService := mockversions.NewMockVersionService(ctrl)
+			mockVersionService.EXPECT().PromoteAppVersion(gomock.Any(), applicationKey, version, requestPayload, tt.sync).
+				Return(nil).Times(1)
+
+			cmd := &promoteAppVersionCommand{
+				versionService: mockVersionService,
+				serverDetails:  serverDetails,
+				applicationKey: applicationKey,
+				version:        version,
+				requestPayload: requestPayload,
+				sync:           tt.sync,
+			}
+
+			err := cmd.Run()
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestPromoteAppVersionCommand_Run_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	serverDetails := &coreconfig.ServerDetails{}
+	serverDetails := &config.ServerDetails{Url: "https://example.com"}
+	applicationKey := "app-key"
+	version := "1.0.0"
 	requestPayload := &model.PromoteAppVersionRequest{
-		ApplicationKey: "app",
-		Version:        "1.0.0",
-		Environment:    "env",
+		Stage: "prod",
 	}
+	sync := true
+	expectedError := errors.New("service error occurred")
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().PromoteAppVersion(gomock.Any(), requestPayload).
-		Return(nil).Times(1)
+	mockVersionService.EXPECT().PromoteAppVersion(gomock.Any(), applicationKey, version, requestPayload, sync).
+		Return(expectedError).Times(1)
 
 	cmd := &promoteAppVersionCommand{
 		versionService: mockVersionService,
 		serverDetails:  serverDetails,
+		applicationKey: applicationKey,
+		version:        version,
 		requestPayload: requestPayload,
+		sync:           sync,
 	}
 
 	err := cmd.Run()
-	assert.NoError(t, err)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "service error occurred")
 }
 
-func TestServerDetails(t *testing.T) {
+func TestPromoteAppVersionCommand_ServerDetails(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	serverDetails := &coreconfig.ServerDetails{}
+	serverDetails := &config.ServerDetails{}
 	cmd := &promoteAppVersionCommand{
 		serverDetails: serverDetails,
 	}
@@ -51,7 +104,7 @@ func TestServerDetails(t *testing.T) {
 	assert.Equal(t, serverDetails, details)
 }
 
-func TestCommandName(t *testing.T) {
+func TestPromoteAppVersionCommand_CommandName(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

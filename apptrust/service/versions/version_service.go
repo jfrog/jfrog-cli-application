@@ -4,15 +4,15 @@ package versions
 
 import (
 	"fmt"
-
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
+	"strconv"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 )
 
 type VersionService interface {
 	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error
-	PromoteAppVersion(ctx service.Context, payload *model.PromoteAppVersionRequest) error
+	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
 }
 
@@ -36,8 +36,9 @@ func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.C
 	return nil
 }
 
-func (vs *versionService) PromoteAppVersion(ctx service.Context, payload *model.PromoteAppVersionRequest) error {
-	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/version/promote", payload)
+func (vs *versionService) PromoteAppVersion(ctx service.Context, applicationKey, version string, request *model.PromoteAppVersionRequest, sync bool) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/promote?async=%s", applicationKey, version, strconv.FormatBool(!sync))
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request)
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func (vs *versionService) PromoteAppVersion(ctx service.Context, payload *model.
 	return nil
 }
 
-func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey string, version string) error {
+func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, version string) error {
 	url := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
 	response, responseBody, err := ctx.GetHttpClient().Delete(url, nil)
 	if err != nil {

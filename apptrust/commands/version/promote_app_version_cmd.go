@@ -20,7 +20,10 @@ import (
 type promoteAppVersionCommand struct {
 	versionService versions.VersionService
 	serverDetails  *coreConfig.ServerDetails
+	applicationKey string
+	version        string
 	requestPayload *model.PromoteAppVersionRequest
+	sync           bool
 }
 
 func (pv *promoteAppVersionCommand) Run() error {
@@ -29,7 +32,7 @@ func (pv *promoteAppVersionCommand) Run() error {
 		return err
 	}
 
-	return pv.versionService.PromoteAppVersion(ctx, pv.requestPayload)
+	return pv.versionService.PromoteAppVersion(ctx, pv.applicationKey, pv.version, pv.requestPayload, pv.sync)
 }
 
 func (pv *promoteAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
@@ -41,9 +44,17 @@ func (pv *promoteAppVersionCommand) CommandName() string {
 }
 
 func (pv *promoteAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
-	if len(ctx.Arguments) != 1 {
+	if len(ctx.Arguments) != 3 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
+
+	// Extract from arguments
+	pv.applicationKey = ctx.Arguments[0]
+	pv.version = ctx.Arguments[1]
+
+	// Extract sync flag value
+	pv.sync = ctx.GetBoolTFlagValue(commands.SyncFlag)
+
 	serverDetails, err := utils.ServerDetailsByFlags(ctx)
 	if err != nil {
 		return err
@@ -57,10 +68,37 @@ func (pv *promoteAppVersionCommand) prepareAndRunCommand(ctx *components.Context
 }
 
 func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.PromoteAppVersionRequest, error) {
+	stage := ctx.Arguments[2]
+
+	var includedRepos []string
+	var excludedRepos []string
+
+	if includeReposStr := ctx.GetStringFlagValue(commands.IncludeReposFlag); includeReposStr != "" {
+		includedRepos = utils.ParseSliceFlag(includeReposStr)
+	}
+
+	if excludeReposStr := ctx.GetStringFlagValue(commands.ExcludeReposFlag); excludeReposStr != "" {
+		excludedRepos = utils.ParseSliceFlag(excludeReposStr)
+	}
+
+	// Validate promotion type flag
+	promotionType := ctx.GetStringFlagValue(commands.PromotionTypeFlag)
+	validatedPromotionType, err := utils.ValidateEnumFlag(commands.PromotionTypeFlag, promotionType, model.PromotionTypeCopy, model.PromotionTypeValues)
+	if err != nil {
+		return nil, err
+	}
+
+	// If dry-run is true, override with dry_run
+	dryRun := ctx.GetBoolFlagValue(commands.DryRunFlag)
+	if dryRun {
+		validatedPromotionType = model.PromotionTypeDryRun
+	}
+
 	return &model.PromoteAppVersionRequest{
-		ApplicationKey: ctx.GetStringFlagValue(commands.ApplicationKeyFlag),
-		Version:        ctx.Arguments[0],
-		Environment:    ctx.GetStringFlagValue(commands.StageVarsFlag),
+		Stage:                  stage,
+		PromotionType:          validatedPromotionType,
+		IncludedRepositoryKeys: includedRepos,
+		ExcludedRepositoryKeys: excludedRepos,
 	}, nil
 }
 
@@ -73,8 +111,18 @@ func GetPromoteAppVersionCommand(appContext app.Context) components.Command {
 		Aliases:     []string{"vp"},
 		Arguments: []components.Argument{
 			{
-				Name:        "version-name",
-				Description: "The name of the version",
+				Name:        "application-key",
+				Description: "The application key",
+				Optional:    false,
+			},
+			{
+				Name:        "version",
+				Description: "The version to promote",
+				Optional:    false,
+			},
+			{
+				Name:        "target-stage",
+				Description: "The target stage to which the application version should be promoted",
 				Optional:    false,
 			},
 		},
