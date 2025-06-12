@@ -49,7 +49,7 @@ func TestApplicationService_CreateApplication(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications", gomock.Any()).Return(tt.mockResponse, tt.mockBody, tt.mockError)
+			mockHttpClient.EXPECT().Post("/v1/applications", gomock.Any(), nil).Return(tt.mockResponse, tt.mockBody, tt.mockError)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)

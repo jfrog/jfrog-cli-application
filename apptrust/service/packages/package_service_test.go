@@ -67,7 +67,7 @@ func TestBindPackage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/package", tt.request).
+			mockHttpClient.EXPECT().Post("/v1/package", tt.request, nil).
 				Return(tt.mockResponse, []byte(""), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
