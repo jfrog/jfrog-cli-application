@@ -23,7 +23,7 @@ func NewVersionService() VersionService {
 }
 
 func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error {
-	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/version", request)
+	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/version", request, nil)
 	if err != nil {
 		return err
 	}
@@ -37,8 +37,8 @@ func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.C
 }
 
 func (vs *versionService) PromoteAppVersion(ctx service.Context, applicationKey, version string, request *model.PromoteAppVersionRequest, sync bool) error {
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/promote?async=%s", applicationKey, version, strconv.FormatBool(!sync))
-	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request)
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/promote", applicationKey, version)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{"async": strconv.FormatBool(!sync)})
 	if err != nil {
 		return err
 	}

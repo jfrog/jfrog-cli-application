@@ -25,7 +25,7 @@ func NewApplicationService() ApplicationService {
 }
 
 func (as *applicationService) CreateApplication(ctx service.Context, requestBody *model.AppDescriptor) error {
-	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications", requestBody)
+	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications", requestBody, nil)
 	if err != nil {
 		return err
 	}

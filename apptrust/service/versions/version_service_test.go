@@ -3,6 +3,7 @@ package versions
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"testing"
 
 	mockhttp "github.com/jfrog/jfrog-cli-application/apptrust/http/mocks"
@@ -56,7 +57,7 @@ func TestCreateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications/version", tt.request).
+			mockHttpClient.EXPECT().Post("/v1/applications/version", tt.request, nil).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
@@ -102,7 +103,7 @@ func TestPromoteAppVersion(t *testing.T) {
 				ExcludedRepositoryKeys: []string{"repo3"},
 			},
 			sync:             true,
-			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=false",
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
 			mockResponse:     &http.Response{StatusCode: 200},
 			mockResponseBody: "{}",
 			mockError:        nil,
@@ -119,7 +120,7 @@ func TestPromoteAppVersion(t *testing.T) {
 				ExcludedRepositoryKeys: []string{"repo3"},
 			},
 			sync:             false,
-			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=true",
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
 			mockResponse:     &http.Response{StatusCode: 202},
 			mockResponseBody: "{}",
 			mockError:        nil,
@@ -134,7 +135,7 @@ func TestPromoteAppVersion(t *testing.T) {
 				PromotionType: model.PromotionTypeCopy,
 			},
 			sync:             true,
-			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=false",
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
 			mockResponse:     &http.Response{StatusCode: 400},
 			mockResponseBody: "error",
 			mockError:        nil,
@@ -149,7 +150,7 @@ func TestPromoteAppVersion(t *testing.T) {
 				PromotionType: model.PromotionTypeCopy,
 			},
 			sync:             false,
-			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote?async=true",
+			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
 			mockResponse:     nil,
 			mockResponseBody: "",
 			mockError:        errors.New("http client error"),
@@ -160,7 +161,7 @@ func TestPromoteAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post(tt.expectedEndpoint, tt.payload).
+			mockHttpClient.EXPECT().Post(tt.expectedEndpoint, tt.payload, map[string]string{"async": strconv.FormatBool(!tt.sync)}).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)

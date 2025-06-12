@@ -23,7 +23,7 @@ func NewPackageService() PackageService {
 
 func (ps *packageService) BindPackage(ctx service.Context, request *model.BindPackageRequest) error {
 	endpoint := "/v1/package"
-	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, nil)
 	if err != nil {
 		return err
 	}
