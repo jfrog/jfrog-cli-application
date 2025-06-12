@@ -8,12 +8,10 @@ const (
 	PromotionTypeDryRun = "dry_run"
 )
 
-var (
-	PromotionTypeValues = []string{
-		PromotionTypeCopy,
-		PromotionTypeMove,
-	}
-)
+var PromotionTypeValues = []string{
+	PromotionTypeCopy,
+	PromotionTypeMove,
+}
 
 type PromoteAppVersionRequest struct {
 	Stage                  string   `json:"stage"`

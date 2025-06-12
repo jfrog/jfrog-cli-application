@@ -4,8 +4,9 @@ package versions
 
 import (
 	"fmt"
-	"github.com/jfrog/jfrog-cli-application/apptrust/service"
 	"strconv"
+
+	"github.com/jfrog/jfrog-cli-application/apptrust/service"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 )
