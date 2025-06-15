@@ -4,7 +4,8 @@ const (
 	PromotionTypeCopy = "copy"
 	PromotionTypeMove = "move"
 
-	// This is not a valid value for the --promotion-type flag, but is passed to the API if the --dry-run flag is set.
+	// This value cannot be set via the --promotion-type flag in the CLI.
+	// It is sent to the promotion_type field in the REST API only when the --dry-run flag is used.
 	PromotionTypeDryRun = "dry_run"
 )
 
