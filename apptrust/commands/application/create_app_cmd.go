@@ -37,7 +37,7 @@ func (cac *createAppCommand) ServerDetails() (*coreConfig.ServerDetails, error) 
 }
 
 func (cac *createAppCommand) CommandName() string {
-	return commands.CreateApp
+	return commands.AppCreate
 }
 
 func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*model.AppDescriptor, error) {
@@ -118,18 +118,18 @@ func GetCreateAppCommand(appContext app.Context) components.Command {
 		applicationService: appContext.GetApplicationService(),
 	}
 	return components.Command{
-		Name:        "create",
-		Description: "Create a new application",
+		Name:        commands.AppCreate,
+		Description: "Create a new application.",
 		Category:    common.CategoryApplication,
-		Aliases:     []string{"c"},
+		Aliases:     []string{"ac"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
-				Description: "The key of the application to create",
+				Description: "The key of the application to create.",
 				Optional:    false,
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.CreateApp),
+		Flags:  commands.GetCommandFlags(commands.AppCreate),
 		Action: cmd.prepareAndRunCommand,
 	}
 }

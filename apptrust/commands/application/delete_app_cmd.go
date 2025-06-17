@@ -34,7 +34,7 @@ func (dac *deleteAppCommand) ServerDetails() (*coreConfig.ServerDetails, error) 
 }
 
 func (dac *deleteAppCommand) CommandName() string {
-	return commands.DeleteApp
+	return commands.AppDelete
 }
 
 func (dac *deleteAppCommand) prepareAndRunCommand(ctx *components.Context) error {
@@ -58,14 +58,14 @@ func GetDeleteAppCommand(appContext app.Context) components.Command {
 		applicationService: appContext.GetApplicationService(),
 	}
 	return components.Command{
-		Name:        "delete",
-		Description: "Delete an application",
+		Name:        commands.AppDelete,
+		Description: "Delete an application.",
 		Category:    common.CategoryApplication,
-		Aliases:     []string{"d"},
+		Aliases:     []string{"ad"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
-				Description: "The key of the application to delete",
+				Description: "The key of the application to delete.",
 				Optional:    false,
 			},
 		},
