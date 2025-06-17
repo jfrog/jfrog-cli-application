@@ -16,7 +16,7 @@ import (
 //		nil,
 //		components.Namespace{
 //			Name:        "apptrust",
-//			//Aliases:     []string{"at"},
+//			Aliases:     []string{"at"},
 //			Description: "AppTrust commands.",
 //			Category:    "Command Namespaces",
 //			Commands: []components.Command{
