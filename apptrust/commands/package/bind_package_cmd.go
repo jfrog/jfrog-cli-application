@@ -58,7 +58,7 @@ func GetBindPackageCommand(appContext app.Context) components.Command {
 	cmd := &bindPackageCommand{packageService: appContext.GetPackageService()}
 	return components.Command{
 		Name:        commands.PackageBind,
-		Description: "Bind packages to an application",
+		Description: "Bind packages to an application.",
 		Category:    common.CategoryPackage,
 		Aliases:     []string{"pb"},
 		Arguments: []components.Argument{

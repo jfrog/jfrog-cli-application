@@ -44,7 +44,7 @@ func (cv *createAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, e
 }
 
 func (cv *createAppVersionCommand) CommandName() string {
-	return commands.CreateAppVersion
+	return commands.VersionCreate
 }
 
 func (cv *createAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
@@ -137,18 +137,18 @@ func validateCreateAppVersionContext(ctx *components.Context) error {
 func GetCreateAppVersionCommand(appContext app.Context) components.Command {
 	cmd := &createAppVersionCommand{versionService: appContext.GetVersionService()}
 	return components.Command{
-		Name:        commands.CreateAppVersion,
-		Description: "Create application version",
+		Name:        commands.VersionCreate,
+		Description: "Create application version.",
 		Category:    common.CategoryVersion,
 		Aliases:     []string{"vc"},
 		Arguments: []components.Argument{
 			{
 				Name:        "version-name",
-				Description: "The name of the version",
+				Description: "The name of the version.",
 				Optional:    false,
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.CreateAppVersion),
+		Flags:  commands.GetCommandFlags(commands.VersionCreate),
 		Action: cmd.prepareAndRunCommand,
 	}
 }

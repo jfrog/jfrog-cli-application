@@ -8,15 +8,15 @@ import (
 )
 
 const (
-	Ping              = "ping"
-	CreateAppVersion  = "version-create"
-	PromoteAppVersion = "version-promote"
-	DeleteAppVersion  = "version-delete"
-	PackageBind       = "package-bind"
-	PackageUnbind     = "package-unbind"
-	CreateApp         = "app-create"
-	UpdateApp         = "app-update"
-	DeleteApp         = "app-delete"
+	Ping           = "ping"
+	VersionCreate  = "version-create"
+	VersionPromote = "version-promote"
+	VersionDelete  = "version-delete"
+	PackageBind    = "package-bind"
+	PackageUnbind  = "package-unbind"
+	AppCreate      = "app-create"
+	AppUpdate      = "app-update"
+	AppDelete      = "app-delete"
 )
 
 const (
@@ -82,7 +82,7 @@ var flagsMap = map[string]components.Flag{
 }
 
 var commandFlags = map[string][]string{
-	CreateAppVersion: {
+	VersionCreate: {
 		url,
 		user,
 		accessToken,
@@ -95,7 +95,7 @@ var commandFlags = map[string][]string{
 		SpecFlag,
 		SpecVarsFlag,
 	},
-	PromoteAppVersion: {
+	VersionPromote: {
 		url,
 		user,
 		accessToken,
@@ -106,7 +106,7 @@ var commandFlags = map[string][]string{
 		ExcludeReposFlag,
 		IncludeReposFlag,
 	},
-	DeleteAppVersion: {
+	VersionDelete: {
 		url,
 		user,
 		accessToken,
@@ -134,7 +134,7 @@ var commandFlags = map[string][]string{
 		serverId,
 	},
 
-	CreateApp: {
+	AppCreate: {
 		url,
 		user,
 		accessToken,
@@ -152,7 +152,7 @@ var commandFlags = map[string][]string{
 		SpecVarsFlag,
 	},
 
-	UpdateApp: {
+	AppUpdate: {
 		url,
 		user,
 		accessToken,
@@ -169,7 +169,7 @@ var commandFlags = map[string][]string{
 		SpecVarsFlag,
 	},
 
-	DeleteApp: {
+	AppDelete: {
 		url,
 		user,
 		accessToken,

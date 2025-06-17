@@ -15,7 +15,8 @@ import (
 //		"apptrust",
 //		nil,
 //		components.Namespace{
-//			Name:        "app",
+//			Name:        "apptrust",
+//			Aliases:     []string{"at"},
 //			Description: "AppTrust commands.",
 //			Category:    "Command Namespaces",
 //			Commands: []components.Command{
@@ -37,7 +38,7 @@ import (
 func GetJfrogCliApptrustApp() components.App {
 	appContext := app.NewAppContext()
 	appEntity := components.CreateApp(
-		"app",
+		"apptrust",
 		"1.0.5",
 		"JFrog AppTrust CLI",
 		[]components.Command{

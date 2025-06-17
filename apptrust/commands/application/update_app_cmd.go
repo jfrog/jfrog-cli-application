@@ -15,8 +15,6 @@ import (
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 )
 
-const UpdateApp = "update-app"
-
 type updateAppCommand struct {
 	serverDetails      *coreConfig.ServerDetails
 	applicationService applications.ApplicationService
@@ -37,7 +35,7 @@ func (uac *updateAppCommand) ServerDetails() (*coreConfig.ServerDetails, error) 
 }
 
 func (uac *updateAppCommand) CommandName() string {
-	return UpdateApp
+	return commands.AppUpdate
 }
 
 func (uac *updateAppCommand) buildRequestPayload(ctx *components.Context) (*model.AppDescriptor, error) {
@@ -108,10 +106,10 @@ func GetUpdateAppCommand(appContext app.Context) components.Command {
 		applicationService: appContext.GetApplicationService(),
 	}
 	return components.Command{
-		Name:        "update",
+		Name:        commands.AppUpdate,
 		Description: "Update an existing application",
 		Category:    common.CategoryApplication,
-		Aliases:     []string{"u"},
+		Aliases:     []string{"au"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
@@ -119,7 +117,7 @@ func GetUpdateAppCommand(appContext app.Context) components.Command {
 				Optional:    false,
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.UpdateApp),
+		Flags:  commands.GetCommandFlags(commands.AppUpdate),
 		Action: cmd.prepareAndRunCommand,
 	}
 }
