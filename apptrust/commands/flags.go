@@ -77,7 +77,7 @@ var flagsMap = map[string]components.Flag{
 	GroupOwnersFlag:         components.NewStringFlag(GroupOwnersFlag, "Comma-separated list of group owners.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SigningKeyFlag:          components.NewStringFlag(SigningKeyFlag, "The GPG/RSA key-pair name given in Artifactory.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SyncFlag:                components.NewBoolFlag(SyncFlag, "Whether to synchronize the operation.", components.WithBoolDefaultValueTrue()),
-	PromotionTypeFlag:       components.NewStringFlag(PromotionTypeFlag, "The promotion type. The following values are supported: "+coreutils.ListToText(model.PromotionTypeValues)+" and dry_run for simulation", func(f *components.StringFlag) { f.Mandatory = false; f.DefaultValue = model.PromotionTypeCopy }),
+	PromotionTypeFlag:       components.NewStringFlag(PromotionTypeFlag, "The promotion type. The following values are supported: "+coreutils.ListToText(model.PromotionTypeValues), func(f *components.StringFlag) { f.Mandatory = false; f.DefaultValue = model.PromotionTypeCopy }),
 	DryRunFlag:              components.NewBoolFlag(DryRunFlag, "Perform a simulation of the operation.", components.WithBoolDefaultValueFalse()),
 	ExcludeReposFlag:        components.NewStringFlag(ExcludeReposFlag, "Semicolon-separated list of repositories to exclude.", func(f *components.StringFlag) { f.Mandatory = false }),
 	IncludeReposFlag:        components.NewStringFlag(IncludeReposFlag, "Semicolon-separated list of repositories to include.", func(f *components.StringFlag) { f.Mandatory = false }),
