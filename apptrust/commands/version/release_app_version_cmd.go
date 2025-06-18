@@ -53,7 +53,7 @@ func (rv *releaseAppVersionCommand) prepareAndRunCommand(ctx *components.Context
 	rv.version = ctx.Arguments[1]
 
 	// Extract sync flag value
-	rv.sync = ctx.GetBoolFlagValue(commands.SyncFlag)
+	rv.sync = ctx.GetBoolTFlagValue(commands.SyncFlag)
 
 	serverDetails, err := utils.ServerDetailsByFlags(ctx)
 	if err != nil {
@@ -100,6 +100,12 @@ func (rv *releaseAppVersionCommand) buildRequestPayload(ctx *components.Context)
 		return nil, err
 	}
 
+	// If dry-run is true, override with dry_run
+	dryRun := ctx.GetBoolFlagValue(commands.DryRunFlag)
+	if dryRun {
+		validatedPromotionType = model.PromotionTypeDryRun
+	}
+
 	return &model.ReleaseAppVersionRequest{
 		PromotionType:                validatedPromotionType,
 		IncludedRepositoryKeys:       includedRepos,
@@ -112,18 +118,18 @@ func GetReleaseAppVersionCommand(appContext app.Context) components.Command {
 	cmd := &releaseAppVersionCommand{versionService: appContext.GetVersionService()}
 	return components.Command{
 		Name:        commands.VersionRelease,
-		Description: "Release application version",
+		Description: "Release application version.",
 		Category:    common.CategoryVersion,
 		Aliases:     []string{"vr"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
-				Description: "The application key",
+				Description: "The application key.",
 				Optional:    false,
 			},
 			{
 				Name:        "version",
-				Description: "The version to release",
+				Description: "The version to release.",
 				Optional:    false,
 			},
 		},
