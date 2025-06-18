@@ -81,7 +81,7 @@ var flagsMap = map[string]components.Flag{
 	DryRunFlag:              components.NewBoolFlag(DryRunFlag, "Perform a simulation of the operation.", components.WithBoolDefaultValueFalse()),
 	ExcludeReposFlag:        components.NewStringFlag(ExcludeReposFlag, "Semicolon-separated list of repositories to exclude.", func(f *components.StringFlag) { f.Mandatory = false }),
 	IncludeReposFlag:        components.NewStringFlag(IncludeReposFlag, "Semicolon-separated list of repositories to include.", func(f *components.StringFlag) { f.Mandatory = false }),
-	PropsFlag:               components.NewStringFlag(PropsFlag, "Semicolon-separated list of properties in the format \"key1=value1;key2=value2;...\" to be added to each artifact.", func(f *components.StringFlag) { f.Mandatory = false }),
+	PropsFlag:               components.NewStringFlag(PropsFlag, "Semicolon-separated list of properties in the form of 'key1=value1;key2=value2;...' to be added to each artifact.", func(f *components.StringFlag) { f.Mandatory = false }),
 }
 
 var commandFlags = map[string][]string{

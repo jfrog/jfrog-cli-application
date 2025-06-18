@@ -17,7 +17,7 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
-type ReleaseAppVersionCommand struct {
+type releaseAppVersionCommand struct {
 	versionService versions.VersionService
 	serverDetails  *coreConfig.ServerDetails
 	applicationKey string
@@ -26,7 +26,7 @@ type ReleaseAppVersionCommand struct {
 	sync           bool
 }
 
-func (rv *ReleaseAppVersionCommand) Run() error {
+func (rv *releaseAppVersionCommand) Run() error {
 	ctx, err := service.NewContext(*rv.serverDetails)
 	if err != nil {
 		return err
@@ -35,15 +35,15 @@ func (rv *ReleaseAppVersionCommand) Run() error {
 	return rv.versionService.ReleaseAppVersion(ctx, rv.applicationKey, rv.version, rv.requestPayload, rv.sync)
 }
 
-func (rv *ReleaseAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
+func (rv *releaseAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
 	return rv.serverDetails, nil
 }
 
-func (rv *ReleaseAppVersionCommand) CommandName() string {
+func (rv *releaseAppVersionCommand) CommandName() string {
 	return commands.ReleaseAppVersion
 }
 
-func (rv *ReleaseAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
+func (rv *releaseAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
 	if len(ctx.Arguments) != 2 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
@@ -67,7 +67,7 @@ func (rv *ReleaseAppVersionCommand) prepareAndRunCommand(ctx *components.Context
 	return commonCLiCommands.Exec(rv)
 }
 
-func (rv *ReleaseAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.ReleaseAppVersionRequest, error) {
+func (rv *releaseAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.ReleaseAppVersionRequest, error) {
 	var includedRepos []string
 	var excludedRepos []string
 	var artifactProps map[string]string
@@ -84,7 +84,7 @@ func (rv *ReleaseAppVersionCommand) buildRequestPayload(ctx *components.Context)
 		var err error
 		artifactProps, err = utils.ParseMapFlag(propsStr)
 		if err != nil {
-			return nil, err
+			return nil, errorutils.CheckErrorf("failed to parse properties: %s", err.Error())
 		}
 	}
 
@@ -109,7 +109,7 @@ func (rv *ReleaseAppVersionCommand) buildRequestPayload(ctx *components.Context)
 }
 
 func GetReleaseAppVersionCommand(appContext app.Context) components.Command {
-	cmd := &ReleaseAppVersionCommand{versionService: appContext.GetVersionService()}
+	cmd := &releaseAppVersionCommand{versionService: appContext.GetVersionService()}
 	return components.Command{
 		Name:        commands.ReleaseAppVersion,
 		Description: "Release application version",
