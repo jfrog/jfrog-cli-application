@@ -60,34 +60,51 @@ func TestReleaseAppVersionCommand_Run(t *testing.T) {
 }
 
 func TestReleaseAppVersionCommand_Run_Error(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	serverDetails := &config.ServerDetails{Url: "https://example.com"}
-	applicationKey := "app-key"
-	version := "1.0.0"
-	requestPayload := &model.ReleaseAppVersionRequest{
-		PromotionType: model.PromotionTypeCopy,
-	}
-	sync := true
-	expectedError := errors.New("service error occurred")
-
-	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().ReleaseAppVersion(gomock.Any(), applicationKey, version, requestPayload, sync).
-		Return(expectedError).Times(1)
-
-	cmd := &ReleaseAppVersionCommand{
-		versionService: mockVersionService,
-		serverDetails:  serverDetails,
-		applicationKey: applicationKey,
-		version:        version,
-		requestPayload: requestPayload,
-		sync:           sync,
+	tests := []struct {
+		name string
+		sync bool
+	}{
+		{
+			name: "sync flag true - error",
+			sync: true,
+		},
+		{
+			name: "sync flag false - error",
+			sync: false,
+		},
 	}
 
-	err := cmd.Run()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "service error occurred")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			serverDetails := &config.ServerDetails{Url: "https://example.com"}
+			applicationKey := "app-key"
+			version := "1.0.0"
+			requestPayload := &model.ReleaseAppVersionRequest{
+				PromotionType: model.PromotionTypeCopy,
+			}
+			expectedError := errors.New("service error occurred")
+
+			mockVersionService := mockversions.NewMockVersionService(ctrl)
+			mockVersionService.EXPECT().ReleaseAppVersion(gomock.Any(), applicationKey, version, requestPayload, tt.sync).
+				Return(expectedError).Times(1)
+
+			cmd := &ReleaseAppVersionCommand{
+				versionService: mockVersionService,
+				serverDetails:  serverDetails,
+				applicationKey: applicationKey,
+				version:        version,
+				requestPayload: requestPayload,
+				sync:           tt.sync,
+			}
+
+			err := cmd.Run()
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "service error occurred")
+		})
+	}
 }
 
 func TestReleaseAppVersionCommand_ServerDetails(t *testing.T) {
