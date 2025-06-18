@@ -40,7 +40,7 @@ func (rv *releaseAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, 
 }
 
 func (rv *releaseAppVersionCommand) CommandName() string {
-	return commands.ReleaseAppVersion
+	return commands.VersionRelease
 }
 
 func (rv *releaseAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
@@ -111,7 +111,7 @@ func (rv *releaseAppVersionCommand) buildRequestPayload(ctx *components.Context)
 func GetReleaseAppVersionCommand(appContext app.Context) components.Command {
 	cmd := &releaseAppVersionCommand{versionService: appContext.GetVersionService()}
 	return components.Command{
-		Name:        commands.ReleaseAppVersion,
+		Name:        commands.VersionRelease,
 		Description: "Release application version",
 		Category:    common.CategoryVersion,
 		Aliases:     []string{"vr"},
@@ -127,7 +127,7 @@ func GetReleaseAppVersionCommand(appContext app.Context) components.Command {
 				Optional:    false,
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.ReleaseAppVersion),
+		Flags:  commands.GetCommandFlags(commands.VersionRelease),
 		Action: cmd.prepareAndRunCommand,
 	}
 }

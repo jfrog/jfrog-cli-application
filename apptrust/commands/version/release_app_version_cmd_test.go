@@ -127,7 +127,7 @@ func TestReleaseAppVersionCommand_CommandName(t *testing.T) {
 	defer ctrl.Finish()
 
 	cmd := &releaseAppVersionCommand{}
-	assert.Equal(t, commands.ReleaseAppVersion, cmd.CommandName())
+	assert.Equal(t, commands.VersionRelease, cmd.CommandName())
 }
 
 func TestReleaseAppVersionCommand_BuildRequestPayload(t *testing.T) {

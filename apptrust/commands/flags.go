@@ -8,16 +8,16 @@ import (
 )
 
 const (
-	Ping              = "ping"
-	VersionCreate     = "version-create"
-	VersionPromote    = "version-promote"
-	VersionDelete     = "version-delete"
-	ReleaseAppVersion = "version-release"
-	PackageBind       = "package-bind"
-	PackageUnbind     = "package-unbind"
-	AppCreate         = "app-create"
-	AppUpdate         = "app-update"
-	AppDelete         = "app-delete"
+	Ping           = "ping"
+	VersionCreate  = "version-create"
+	VersionPromote = "version-promote"
+	VersionDelete  = "version-delete"
+	VersionRelease = "version-release"
+	PackageBind    = "package-bind"
+	PackageUnbind  = "package-unbind"
+	AppCreate      = "app-create"
+	AppUpdate      = "app-update"
+	AppDelete      = "app-delete"
 )
 
 const (
@@ -109,7 +109,7 @@ var commandFlags = map[string][]string{
 		ExcludeReposFlag,
 		IncludeReposFlag,
 	},
-	ReleaseAppVersion: {
+	VersionRelease: {
 		url,
 		user,
 		accessToken,
