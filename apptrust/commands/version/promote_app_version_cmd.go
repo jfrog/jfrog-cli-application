@@ -40,7 +40,7 @@ func (pv *promoteAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, 
 }
 
 func (pv *promoteAppVersionCommand) CommandName() string {
-	return commands.PromoteAppVersion
+	return commands.VersionPromote
 }
 
 func (pv *promoteAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
@@ -105,28 +105,28 @@ func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context)
 func GetPromoteAppVersionCommand(appContext app.Context) components.Command {
 	cmd := &promoteAppVersionCommand{versionService: appContext.GetVersionService()}
 	return components.Command{
-		Name:        commands.PromoteAppVersion,
-		Description: "Promote application version",
+		Name:        commands.VersionPromote,
+		Description: "Promote application version.",
 		Category:    common.CategoryVersion,
 		Aliases:     []string{"vp"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
-				Description: "The application key",
+				Description: "The application key.",
 				Optional:    false,
 			},
 			{
 				Name:        "version",
-				Description: "The version to promote",
+				Description: "The version to promote.",
 				Optional:    false,
 			},
 			{
 				Name:        "target-stage",
-				Description: "The target stage to which the application version should be promoted",
+				Description: "The target stage to which the application version should be promoted.",
 				Optional:    false,
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.PromoteAppVersion),
+		Flags:  commands.GetCommandFlags(commands.VersionPromote),
 		Action: cmd.prepareAndRunCommand,
 	}
 }

@@ -58,7 +58,7 @@ func GetUnbindPackageCommand(appContext app.Context) components.Command {
 	cmd := &unbindPackageCommand{packageService: appContext.GetPackageService()}
 	return components.Command{
 		Name:        commands.PackageUnbind,
-		Description: "Unbind packages from an application",
+		Description: "Unbind packages from an application.",
 		Category:    common.CategoryPackage,
 		Aliases:     []string{"pu"},
 		Arguments: []components.Argument{

@@ -34,7 +34,7 @@ func (dv *deleteAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, e
 }
 
 func (dv *deleteAppVersionCommand) CommandName() string {
-	return commands.DeleteAppVersion
+	return commands.VersionDelete
 }
 
 func (dv *deleteAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
@@ -57,23 +57,23 @@ func (dv *deleteAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 func GetDeleteAppVersionCommand(appContext app.Context) components.Command {
 	cmd := &deleteAppVersionCommand{versionService: appContext.GetVersionService()}
 	return components.Command{
-		Name:        commands.DeleteAppVersion,
-		Description: "Delete application version",
+		Name:        commands.VersionDelete,
+		Description: "Delete application version.",
 		Category:    common.CategoryVersion,
 		Aliases:     []string{"vd"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
-				Description: "The application key",
+				Description: "The application key.",
 				Optional:    false,
 			},
 			{
 				Name:        "version",
-				Description: "The name of the version to delete",
+				Description: "The name of the version to delete.",
 				Optional:    false,
 			},
 		},
-		Flags:  commands.GetCommandFlags(commands.DeleteAppVersion),
+		Flags:  commands.GetCommandFlags(commands.VersionDelete),
 		Action: cmd.prepareAndRunCommand,
 	}
 }

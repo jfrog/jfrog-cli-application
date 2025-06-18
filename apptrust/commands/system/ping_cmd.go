@@ -49,7 +49,7 @@ func GetPingCommand(appContext app.Context) components.Command {
 	cmd := &pingCommand{systemService: appContext.GetSystemService()}
 	return components.Command{
 		Name:        commands.Ping,
-		Description: "Ping the application server",
+		Description: "Ping AppTrust server.",
 		Category:    common.CategorySystem,
 		Aliases:     []string{"p"},
 		Arguments:   []components.Argument{},

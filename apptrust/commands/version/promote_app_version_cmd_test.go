@@ -109,5 +109,5 @@ func TestPromoteAppVersionCommand_CommandName(t *testing.T) {
 	defer ctrl.Finish()
 
 	cmd := &promoteAppVersionCommand{}
-	assert.Equal(t, commands.PromoteAppVersion, cmd.CommandName())
+	assert.Equal(t, commands.VersionPromote, cmd.CommandName())
 }
