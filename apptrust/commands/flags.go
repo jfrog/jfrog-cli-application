@@ -8,16 +8,16 @@ import (
 )
 
 const (
-	Ping           = "ping"
-	VersionCreate  = "version-create"
-	VersionPromote = "version-promote"
-	VersionDelete  = "version-delete"
+	Ping              = "ping"
+	VersionCreate     = "version-create"
+	VersionPromote    = "version-promote"
+	VersionDelete     = "version-delete"
 	ReleaseAppVersion = "version-release"
-	PackageBind    = "package-bind"
-	PackageUnbind  = "package-unbind"
-	AppCreate      = "app-create"
-	AppUpdate      = "app-update"
-	AppDelete      = "app-delete"
+	PackageBind       = "package-bind"
+	PackageUnbind     = "package-unbind"
+	AppCreate         = "app-create"
+	AppUpdate         = "app-update"
+	AppDelete         = "app-delete"
 )
 
 const (

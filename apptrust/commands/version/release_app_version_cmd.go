@@ -90,11 +90,11 @@ func (rv *ReleaseAppVersionCommand) buildRequestPayload(ctx *components.Context)
 
 	// Validate promotion type flag
 	promotionType := ctx.GetStringFlagValue(commands.PromotionTypeFlag)
-	
+
 	// For validation, we need to add the dry_run option
 	allowedValues := append([]string{}, model.PromotionTypeValues...)
 	allowedValues = append(allowedValues, model.PromotionTypeDryRun)
-	
+
 	validatedPromotionType, err := utils.ValidateEnumFlag(commands.PromotionTypeFlag, promotionType, model.PromotionTypeCopy, allowedValues)
 	if err != nil {
 		return nil, err
