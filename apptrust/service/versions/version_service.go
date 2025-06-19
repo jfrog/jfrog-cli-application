@@ -11,8 +11,13 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 )
 
+const (
+	asyncHeader      = "async"
+	signingKeyHeader = "X-JFrog-Signing-Key-Name"
+)
+
 type VersionService interface {
-	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error
+	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, signingKey string, sync bool) error
 	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
 }
@@ -23,8 +28,14 @@ func NewVersionService() VersionService {
 	return &versionService{}
 }
 
-func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error {
-	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/version", request, nil)
+func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, signingKey string, sync bool) error {
+	headers := map[string]string{asyncHeader: strconv.FormatBool(!sync)}
+	if signingKey != "" {
+		headers[signingKeyHeader] = signingKey
+	}
+
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/", request.ApplicationKey)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, headers)
 	if err != nil {
 		return err
 	}

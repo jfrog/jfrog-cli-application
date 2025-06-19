@@ -57,13 +57,14 @@ func TestCreateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications/version", tt.request, nil).
+			mockHttpClient.EXPECT().Post("/v1/applications//versions/", tt.request,
+				map[string]string{"async": "false"}).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			err := service.CreateAppVersion(mockCtx, tt.request)
+			err := service.CreateAppVersion(mockCtx, tt.request, "", true)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {

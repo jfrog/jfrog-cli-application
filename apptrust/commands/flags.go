@@ -47,6 +47,13 @@ const (
 	DryRunFlag              = "dry-run"
 	ExcludeReposFlag        = "exclude-repos"
 	IncludeReposFlag        = "include-repos"
+	PropsFlag               = "props"
+	TagFlag                 = "tag"
+	BuildsFlag              = "builds"
+	ReleaseBundlesFlag      = "release-bundles"
+	SourceVersionFlag       = "source-version"
+	ExcludeFlag             = "exclude"
+	PromoteFlag             = "promote"
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -64,7 +71,7 @@ var flagsMap = map[string]components.Flag{
 	PackageVersionFlag:      components.NewStringFlag(PackageVersionFlag, "Package version.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PackageRepositoryFlag:   components.NewStringFlag(PackageRepositoryFlag, "Package storing repository.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SpecFlag:                components.NewStringFlag(SpecFlag, "A path to the specification file.", func(f *components.StringFlag) { f.Mandatory = false }),
-	SpecVarsFlag:            components.NewStringFlag(SpecVarsFlag, "List of semicolon-separated (;) variables in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes) to be replaced in the File Spec. In the File Spec, the variables should be used as follows: ${key1}.", func(f *components.StringFlag) { f.Mandatory = false }),
+	SpecVarsFlag:            components.NewStringFlag(SpecVarsFlag, "List of semicolon-separated (;) variables in the form of 'key1=value1;key2=value2;...' (wrapped by quotes) to be replaced in the File Spec. In the File Spec, the variables should be used as follows: ${key1}.", func(f *components.StringFlag) { f.Mandatory = false }),
 	StageVarsFlag:           components.NewStringFlag(StageVarsFlag, "Promotion stage.", func(f *components.StringFlag) { f.Mandatory = true }),
 	ApplicationNameFlag:     components.NewStringFlag(ApplicationNameFlag, "The display name of the application.", func(f *components.StringFlag) { f.Mandatory = false }),
 	DescriptionFlag:         components.NewStringFlag(DescriptionFlag, "The description of the application.", func(f *components.StringFlag) { f.Mandatory = false }),
@@ -79,6 +86,13 @@ var flagsMap = map[string]components.Flag{
 	DryRunFlag:              components.NewBoolFlag(DryRunFlag, "Perform a simulation of the operation.", components.WithBoolDefaultValueFalse()),
 	ExcludeReposFlag:        components.NewStringFlag(ExcludeReposFlag, "Semicolon-separated list of repositories to exclude.", func(f *components.StringFlag) { f.Mandatory = false }),
 	IncludeReposFlag:        components.NewStringFlag(IncludeReposFlag, "Semicolon-separated list of repositories to include.", func(f *components.StringFlag) { f.Mandatory = false }),
+	PropsFlag:               components.NewStringFlag(PropsFlag, "Semicolon-separated list of properties in the form of 'key1=value1;key2=value2;...' to be added to each artifact.", func(f *components.StringFlag) { f.Mandatory = false }),
+	TagFlag:                 components.NewStringFlag(TagFlag, "A tag to associate with the version.", func(f *components.StringFlag) { f.Mandatory = false }),
+	BuildsFlag:              components.NewStringFlag(BuildsFlag, "List of builds in format 'name1:number1[:timestamp1];name2:number2[:timestamp2]'", func(f *components.StringFlag) { f.Mandatory = false }),
+	ReleaseBundlesFlag:      components.NewStringFlag(ReleaseBundlesFlag, "List of release bundles in format 'name1:version1;name2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
+	SourceVersionFlag:       components.NewStringFlag(SourceVersionFlag, "Source versions in format 'app1:version1;app2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
+	ExcludeFlag:             components.NewStringFlag(ExcludeFlag, "Excluded packages in format 'package1:version1;package2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
+	PromoteFlag:             components.NewStringFlag(PromoteFlag, "Promotion stage for immediate promotion after creation", func(f *components.StringFlag) { f.Mandatory = false }),
 }
 
 var commandFlags = map[string][]string{
@@ -88,12 +102,20 @@ var commandFlags = map[string][]string{
 		accessToken,
 		serverId,
 		ApplicationKeyFlag,
+		TagFlag,
 		PackageTypeFlag,
 		PackageNameFlag,
 		PackageVersionFlag,
 		PackageRepositoryFlag,
+		BuildsFlag,
+		ReleaseBundlesFlag,
+		SourceVersionFlag,
+		ExcludeFlag,
+		PromoteFlag,
+		SigningKeyFlag,
 		SpecFlag,
 		SpecVarsFlag,
+		SyncFlag,
 	},
 	VersionPromote: {
 		url,
