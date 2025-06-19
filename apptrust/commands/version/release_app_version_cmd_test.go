@@ -37,9 +37,12 @@ func TestReleaseAppVersionCommand_Run(t *testing.T) {
 			serverDetails := &config.ServerDetails{Url: "https://example.com"}
 			applicationKey := "app-key"
 			version := "1.0.0"
-			requestPayload := &model.ReleaseAppVersionRequest{
-				PromotionType: model.PromotionTypeCopy,
-			}
+			requestPayload := model.NewReleaseAppVersionRequest(
+				model.PromotionTypeCopy,
+				nil, // includedRepos
+				nil, // excludedRepos
+				nil, // artifactProps
+			)
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			mockVersionService.EXPECT().ReleaseAppVersion(gomock.Any(), applicationKey, version, requestPayload, tt.sync).
@@ -83,9 +86,12 @@ func TestReleaseAppVersionCommand_Run_Error(t *testing.T) {
 			serverDetails := &config.ServerDetails{Url: "https://example.com"}
 			applicationKey := "app-key"
 			version := "1.0.0"
-			requestPayload := &model.ReleaseAppVersionRequest{
-				PromotionType: model.PromotionTypeCopy,
-			}
+			requestPayload := model.NewReleaseAppVersionRequest(
+				model.PromotionTypeCopy,
+				nil, // includedRepos
+				nil, // excludedRepos
+				nil, // artifactProps
+			)
 			expectedError := errors.New("service error occurred")
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)

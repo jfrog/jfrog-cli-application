@@ -68,54 +68,29 @@ func (rv *releaseAppVersionCommand) prepareAndRunCommand(ctx *components.Context
 }
 
 func (rv *releaseAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.ReleaseAppVersionRequest, error) {
-	var includedRepos []string
-	var excludedRepos []string
-	var artifactProps map[string]string
-
-	if includeReposStr := ctx.GetStringFlagValue(commands.IncludeReposFlag); includeReposStr != "" {
-		includedRepos = utils.ParseSliceFlag(includeReposStr)
-	}
-
-	if excludeReposStr := ctx.GetStringFlagValue(commands.ExcludeReposFlag); excludeReposStr != "" {
-		excludedRepos = utils.ParseSliceFlag(excludeReposStr)
-	}
-
-	if propsStr := ctx.GetStringFlagValue(commands.PropsFlag); propsStr != "" {
-		var err error
-		artifactProps, err = utils.ParseMapFlag(propsStr)
-		if err != nil {
-			return nil, errorutils.CheckErrorf("failed to parse properties: %s", err.Error())
-		}
-	}
-
-	// Validate promotion type flag
-	promotionType := ctx.GetStringFlagValue(commands.PromotionTypeFlag)
-
-	// For validation, we need to add the dry_run option
-	allowedValues := append([]string{}, model.PromotionTypeValues...)
-	allowedValues = append(allowedValues, model.PromotionTypeDryRun)
-
-	validatedPromotionType, err := utils.ValidateEnumFlag(commands.PromotionTypeFlag, promotionType, model.PromotionTypeCopy, allowedValues)
+	promotionType, includedRepos, excludedRepos, err := BuildPromotionParams(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// If dry-run is true, override with dry_run
-	dryRun := ctx.GetBoolFlagValue(commands.DryRunFlag)
-	if dryRun {
-		validatedPromotionType = model.PromotionTypeDryRun
+	artifactProps, err := ParseArtifactProps(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	return &model.ReleaseAppVersionRequest{
-		PromotionType:                validatedPromotionType,
-		IncludedRepositoryKeys:       includedRepos,
-		ExcludedRepositoryKeys:       excludedRepos,
-		ArtifactAdditionalProperties: artifactProps,
-	}, nil
+	// Create the release request
+	return model.NewReleaseAppVersionRequest(
+		promotionType,
+		includedRepos,
+		excludedRepos,
+		artifactProps,
+	), nil
 }
 
 func GetReleaseAppVersionCommand(appContext app.Context) components.Command {
-	cmd := &releaseAppVersionCommand{versionService: appContext.GetVersionService()}
+	cmd := &releaseAppVersionCommand{
+		versionService: appContext.GetVersionService(),
+	}
 	return components.Command{
 		Name:        commands.VersionRelease,
 		Description: "Release application version.",

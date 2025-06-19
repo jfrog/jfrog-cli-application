@@ -15,8 +15,9 @@ var PromotionTypeValues = []string{
 }
 
 type PromoteAppVersionRequest struct {
-	Stage                  string   `json:"stage"`
-	PromotionType          string   `json:"promotion_type,omitempty"`
-	IncludedRepositoryKeys []string `json:"included_repository_keys,omitempty"`
-	ExcludedRepositoryKeys []string `json:"excluded_repository_keys,omitempty"`
+	Stage                        string            `json:"stage"`
+	PromotionType                string            `json:"promotion_type,omitempty"`
+	IncludedRepositoryKeys       []string          `json:"included_repository_keys,omitempty"`
+	ExcludedRepositoryKeys       []string          `json:"excluded_repository_keys,omitempty"`
+	ArtifactAdditionalProperties map[string]string `json:"artifact_additional_properties,omitempty"`
 }
