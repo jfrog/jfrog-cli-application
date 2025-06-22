@@ -9,8 +9,6 @@ type ReleaseAppVersionRequest struct {
 	CommonPromoteAppVersion
 }
 
-// NewReleaseAppVersionRequest constructs a ReleaseAppVersionRequest.
-// The provided parameters are identical to those used for promotion, but the stage is always production.
 func NewReleaseAppVersionRequest(
 	promotionType string,
 	includedRepositoryKeys []string,
