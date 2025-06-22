@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPromoteAppVersionCommand_Run(t *testing.T) {
+func TestReleaseAppVersionCommand_Run(t *testing.T) {
 	tests := []struct {
 		name string
 		sync bool
@@ -35,15 +35,18 @@ func TestPromoteAppVersionCommand_Run(t *testing.T) {
 			serverDetails := &config.ServerDetails{Url: "https://example.com"}
 			applicationKey := "app-key"
 			version := "1.0.0"
-			requestPayload := &model.PromoteAppVersionRequest{
-				Stage: "prod",
-			}
+			requestPayload := model.NewReleaseAppVersionRequest(
+				model.PromotionTypeCopy,
+				nil, // includedRepos
+				nil, // excludedRepos
+				nil, // artifactProps
+			)
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
-			mockVersionService.EXPECT().PromoteAppVersion(gomock.Any(), applicationKey, version, requestPayload, tt.sync).
+			mockVersionService.EXPECT().ReleaseAppVersion(gomock.Any(), applicationKey, version, requestPayload, tt.sync).
 				Return(nil).Times(1)
 
-			cmd := &promoteAppVersionCommand{
+			cmd := &releaseAppVersionCommand{
 				versionService: mockVersionService,
 				serverDetails:  serverDetails,
 				applicationKey: applicationKey,
@@ -58,30 +61,32 @@ func TestPromoteAppVersionCommand_Run(t *testing.T) {
 	}
 }
 
-func TestPromoteAppVersionCommand_Run_Error(t *testing.T) {
+func TestReleaseAppVersionCommand_Run_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	serverDetails := &config.ServerDetails{Url: "https://example.com"}
 	applicationKey := "app-key"
 	version := "1.0.0"
-	requestPayload := &model.PromoteAppVersionRequest{
-		Stage: "prod",
-	}
-	sync := true
+	requestPayload := model.NewReleaseAppVersionRequest(
+		model.PromotionTypeCopy,
+		nil, // includedRepos
+		nil, // excludedRepos
+		nil, // artifactProps
+	)
 	expectedError := errors.New("service error occurred")
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().PromoteAppVersion(gomock.Any(), applicationKey, version, requestPayload, sync).
+	mockVersionService.EXPECT().ReleaseAppVersion(gomock.Any(), applicationKey, version, requestPayload, false).
 		Return(expectedError).Times(1)
 
-	cmd := &promoteAppVersionCommand{
+	cmd := &releaseAppVersionCommand{
 		versionService: mockVersionService,
 		serverDetails:  serverDetails,
 		applicationKey: applicationKey,
 		version:        version,
 		requestPayload: requestPayload,
-		sync:           sync,
+		sync:           false,
 	}
 
 	err := cmd.Run()

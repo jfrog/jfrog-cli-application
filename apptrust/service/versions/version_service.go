@@ -14,6 +14,7 @@ import (
 type VersionService interface {
 	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error
 	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
+	ReleaseAppVersion(ctx service.Context, applicationKey string, version string, request *model.ReleaseAppVersionRequest, sync bool) error
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
 }
 
@@ -47,6 +48,21 @@ func (vs *versionService) PromoteAppVersion(ctx service.Context, applicationKey,
 
 	if response.StatusCode >= 400 {
 		return fmt.Errorf("failed to promote app version. Status code: %d. \n%s",
+			response.StatusCode, responseBody)
+	}
+
+	return nil
+}
+
+func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey, version string, request *model.ReleaseAppVersionRequest, sync bool) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/release", applicationKey, version)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{"async": strconv.FormatBool(!sync)})
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode >= 400 {
+		return fmt.Errorf("failed to release app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
 

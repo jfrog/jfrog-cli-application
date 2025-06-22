@@ -12,6 +12,7 @@ const (
 	VersionCreate  = "version-create"
 	VersionPromote = "version-promote"
 	VersionDelete  = "version-delete"
+	VersionRelease = "version-release"
 	PackageBind    = "package-bind"
 	PackageUnbind  = "package-unbind"
 	AppCreate      = "app-create"
@@ -124,6 +125,18 @@ var commandFlags = map[string][]string{
 		DryRunFlag,
 		ExcludeReposFlag,
 		IncludeReposFlag,
+		PropsFlag,
+	},
+	VersionRelease: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		SyncFlag,
+		PromotionTypeFlag,
+		ExcludeReposFlag,
+		IncludeReposFlag,
+		PropsFlag,
 	},
 	VersionDelete: {
 		url,

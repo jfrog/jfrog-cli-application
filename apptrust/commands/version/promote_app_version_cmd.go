@@ -70,35 +70,24 @@ func (pv *promoteAppVersionCommand) prepareAndRunCommand(ctx *components.Context
 func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.PromoteAppVersionRequest, error) {
 	stage := ctx.Arguments[2]
 
-	var includedRepos []string
-	var excludedRepos []string
-
-	if includeReposStr := ctx.GetStringFlagValue(commands.IncludeReposFlag); includeReposStr != "" {
-		includedRepos = utils.ParseSliceFlag(includeReposStr)
-	}
-
-	if excludeReposStr := ctx.GetStringFlagValue(commands.ExcludeReposFlag); excludeReposStr != "" {
-		excludedRepos = utils.ParseSliceFlag(excludeReposStr)
-	}
-
-	// Validate promotion type flag
-	promotionType := ctx.GetStringFlagValue(commands.PromotionTypeFlag)
-	validatedPromotionType, err := utils.ValidateEnumFlag(commands.PromotionTypeFlag, promotionType, model.PromotionTypeCopy, model.PromotionTypeValues)
+	promotionType, includedRepos, excludedRepos, err := BuildPromotionParams(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// If dry-run is true, override with dry_run
-	dryRun := ctx.GetBoolFlagValue(commands.DryRunFlag)
-	if dryRun {
-		validatedPromotionType = model.PromotionTypeDryRun
+	artifactProps, err := ParseArtifactProps(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	return &model.PromoteAppVersionRequest{
-		Stage:                  stage,
-		PromotionType:          validatedPromotionType,
-		IncludedRepositoryKeys: includedRepos,
-		ExcludedRepositoryKeys: excludedRepos,
+		Stage: stage,
+		CommonPromoteAppVersion: model.CommonPromoteAppVersion{
+			PromotionType:                promotionType,
+			IncludedRepositoryKeys:       includedRepos,
+			ExcludedRepositoryKeys:       excludedRepos,
+			ArtifactAdditionalProperties: artifactProps,
+		},
 	}, nil
 }
 
