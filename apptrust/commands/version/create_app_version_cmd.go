@@ -26,8 +26,6 @@ type createAppVersionCommand struct {
 	versionService versions.VersionService
 	serverDetails  *coreConfig.ServerDetails
 	requestPayload *model.CreateAppVersionRequest
-	signingKey     string
-	sync           bool
 }
 
 type createVersionSpec struct {
@@ -44,7 +42,7 @@ func (cv *createAppVersionCommand) Run() error {
 		return err
 	}
 
-	return cv.versionService.CreateAppVersion(ctx, cv.requestPayload, cv.signingKey, cv.sync)
+	return cv.versionService.CreateAppVersion(ctx, cv.requestPayload)
 }
 
 func (cv *createAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
@@ -59,10 +57,6 @@ func (cv *createAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 	if err := validateCreateAppVersionContext(ctx); err != nil {
 		return err
 	}
-
-	cv.signingKey = ctx.GetStringFlagValue(commands.SigningKeyFlag)
-	cv.sync = ctx.GetBoolFlagValue(commands.SyncFlag)
-
 	serverDetails, err := utils.ServerDetailsByFlags(ctx)
 	if err != nil {
 		return err
@@ -78,8 +72,6 @@ func (cv *createAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 func (cv *createAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.CreateAppVersionRequest, error) {
 	sources := &model.CreateVersionSources{}
 	var err error
-
-	// Handle spec file if provided
 	if ctx.IsFlagSet(commands.SpecFlag) {
 		sources, err = cv.loadFromSpec(ctx)
 		if errorutils.CheckError(err) != nil {

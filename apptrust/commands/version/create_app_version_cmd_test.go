@@ -34,15 +34,13 @@ func TestCreateAppVersionCommand_Run(t *testing.T) {
 	}
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload, "", true).
+	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload).
 		Return(nil).Times(1)
 
 	cmd := &createAppVersionCommand{
 		versionService: mockVersionService,
 		serverDetails:  serverDetails,
 		requestPayload: requestPayload,
-		signingKey:     "",
-		sync:           true,
 	}
 
 	err := cmd.Run()
@@ -70,15 +68,13 @@ func TestCreateAppVersionCommand_Run_WithSigningKey(t *testing.T) {
 	}
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload, "key1", true).
+	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload).
 		Return(nil).Times(1)
 
 	cmd := &createAppVersionCommand{
 		versionService: mockVersionService,
 		serverDetails:  serverDetails,
 		requestPayload: requestPayload,
-		signingKey:     "key1",
-		sync:           true,
 	}
 
 	err := cmd.Run()
@@ -106,15 +102,13 @@ func TestCreateAppVersionCommand_Run_Async(t *testing.T) {
 	}
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload, "", false).
+	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload).
 		Return(nil).Times(1)
 
 	cmd := &createAppVersionCommand{
 		versionService: mockVersionService,
 		serverDetails:  serverDetails,
 		requestPayload: requestPayload,
-		signingKey:     "",
-		sync:           false,
 	}
 
 	err := cmd.Run()
@@ -142,15 +136,13 @@ func TestCreateAppVersionCommand_Run_ContextError(t *testing.T) {
 	}
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload, "", true).
+	mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), requestPayload).
 		Return(errors.New("context error")).Times(1)
 
 	cmd := &createAppVersionCommand{
 		versionService: mockVersionService,
 		serverDetails:  serverDetails,
 		requestPayload: requestPayload,
-		signingKey:     "",
-		sync:           true,
 	}
 
 	err := cmd.Run()
