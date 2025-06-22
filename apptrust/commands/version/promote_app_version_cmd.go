@@ -75,11 +75,17 @@ func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context)
 		return nil, err
 	}
 
+	artifactProps, err := ParseArtifactProps(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &model.PromoteAppVersionRequest{
-		Stage:                  stage,
-		PromotionType:          promotionType,
-		IncludedRepositoryKeys: includedRepos,
-		ExcludedRepositoryKeys: excludedRepos,
+		Stage:                        stage,
+		PromotionType:                promotionType,
+		IncludedRepositoryKeys:       includedRepos,
+		ExcludedRepositoryKeys:       excludedRepos,
+		ArtifactAdditionalProperties: artifactProps,
 	}, nil
 }
 

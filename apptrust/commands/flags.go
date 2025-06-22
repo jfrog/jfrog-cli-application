@@ -108,6 +108,7 @@ var commandFlags = map[string][]string{
 		DryRunFlag,
 		ExcludeReposFlag,
 		IncludeReposFlag,
+		PropsFlag,
 	},
 	VersionRelease: {
 		url,
