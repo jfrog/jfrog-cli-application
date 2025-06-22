@@ -22,14 +22,9 @@ func BuildPromotionParams(ctx *components.Context) (string, []string, []string, 
 		excludedRepos = utils.ParseSliceFlag(excludeReposStr)
 	}
 
-	// Validate promotion type flag
 	promotionType := ctx.GetStringFlagValue(commands.PromotionTypeFlag)
 
-	// For validation, we need to add the dry_run option
-	allowedValues := append([]string{}, model.PromotionTypeValues...)
-	allowedValues = append(allowedValues, model.PromotionTypeDryRun)
-
-	validatedPromotionType, err := utils.ValidateEnumFlag(commands.PromotionTypeFlag, promotionType, model.PromotionTypeCopy, allowedValues)
+	validatedPromotionType, err := utils.ValidateEnumFlag(commands.PromotionTypeFlag, promotionType, model.PromotionTypeCopy, model.PromotionTypeValues)
 	if err != nil {
 		return "", nil, nil, err
 	}

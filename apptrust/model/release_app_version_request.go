@@ -1,7 +1,7 @@
 package model
 
 const (
-	ReleaseStage = "RELEASE"
+	ReleaseStage = "PROD"
 )
 
 type ReleaseAppVersionRequest struct {
