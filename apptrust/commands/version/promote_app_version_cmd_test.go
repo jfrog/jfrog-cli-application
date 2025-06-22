@@ -68,10 +68,11 @@ func TestPromoteAppVersionCommand_Run_Error(t *testing.T) {
 	requestPayload := &model.PromoteAppVersionRequest{
 		Stage: "prod",
 	}
+	sync := true
 	expectedError := errors.New("service error occurred")
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().PromoteAppVersion(gomock.Any(), applicationKey, version, requestPayload, false).
+	mockVersionService.EXPECT().PromoteAppVersion(gomock.Any(), applicationKey, version, requestPayload, sync).
 		Return(expectedError).Times(1)
 
 	cmd := &promoteAppVersionCommand{
@@ -80,7 +81,7 @@ func TestPromoteAppVersionCommand_Run_Error(t *testing.T) {
 		applicationKey: applicationKey,
 		version:        version,
 		requestPayload: requestPayload,
-		sync:           false,
+		sync:           sync,
 	}
 
 	err := cmd.Run()

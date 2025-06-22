@@ -1,13 +1,16 @@
 package model
 
-const (
-	ReleaseStage = "PROD"
-)
-
+// ReleaseAppVersionRequest represents a request to release an application version to production.
+// This struct reuses CommonPromoteAppVersion for consistency with PromoteAppVersionRequest.
+// A release is functionally promoted with a hardcoded stage ("prod") set by the backend,
+// so the stage is not included here.
+// This separation improves readability and intent in the codebase.
 type ReleaseAppVersionRequest struct {
-	PromoteAppVersionRequest
+	CommonPromoteAppVersion
 }
 
+// NewReleaseAppVersionRequest constructs a ReleaseAppVersionRequest.
+// The provided parameters are identical to those used for promotion, but the stage is always production.
 func NewReleaseAppVersionRequest(
 	promotionType string,
 	includedRepositoryKeys []string,
@@ -15,8 +18,7 @@ func NewReleaseAppVersionRequest(
 	artifactProperties map[string]string,
 ) *ReleaseAppVersionRequest {
 	return &ReleaseAppVersionRequest{
-		PromoteAppVersionRequest: PromoteAppVersionRequest{
-			Stage:                        ReleaseStage,
+		CommonPromoteAppVersion: CommonPromoteAppVersion{
 			PromotionType:                promotionType,
 			IncludedRepositoryKeys:       includedRepositoryKeys,
 			ExcludedRepositoryKeys:       excludedRepositoryKeys,

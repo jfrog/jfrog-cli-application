@@ -97,10 +97,12 @@ func TestPromoteAppVersion(t *testing.T) {
 			applicationKey: "test-app",
 			version:        "1.0.0",
 			payload: &model.PromoteAppVersionRequest{
-				Stage:                  "prod",
-				PromotionType:          model.PromotionTypeCopy,
-				IncludedRepositoryKeys: []string{"repo1", "repo2"},
-				ExcludedRepositoryKeys: []string{"repo3"},
+				Stage: "prod",
+				CommonPromoteAppVersion: model.CommonPromoteAppVersion{
+					PromotionType:          model.PromotionTypeCopy,
+					IncludedRepositoryKeys: []string{"repo1", "repo2"},
+					ExcludedRepositoryKeys: []string{"repo3"},
+				},
 			},
 			sync:             true,
 			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
@@ -114,10 +116,12 @@ func TestPromoteAppVersion(t *testing.T) {
 			applicationKey: "test-app",
 			version:        "1.0.0",
 			payload: &model.PromoteAppVersionRequest{
-				Stage:                  "prod",
-				PromotionType:          model.PromotionTypeCopy,
-				IncludedRepositoryKeys: []string{"repo1", "repo2"},
-				ExcludedRepositoryKeys: []string{"repo3"},
+				Stage: "prod",
+				CommonPromoteAppVersion: model.CommonPromoteAppVersion{
+					PromotionType:          model.PromotionTypeCopy,
+					IncludedRepositoryKeys: []string{"repo1", "repo2"},
+					ExcludedRepositoryKeys: []string{"repo3"},
+				},
 			},
 			sync:             false,
 			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
@@ -131,8 +135,10 @@ func TestPromoteAppVersion(t *testing.T) {
 			applicationKey: "test-app",
 			version:        "1.0.0",
 			payload: &model.PromoteAppVersionRequest{
-				Stage:         "prod",
-				PromotionType: model.PromotionTypeCopy,
+				Stage: "prod",
+				CommonPromoteAppVersion: model.CommonPromoteAppVersion{
+					PromotionType: model.PromotionTypeCopy,
+				},
 			},
 			sync:             true,
 			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
@@ -146,8 +152,10 @@ func TestPromoteAppVersion(t *testing.T) {
 			applicationKey: "test-app",
 			version:        "1.0.0",
 			payload: &model.PromoteAppVersionRequest{
-				Stage:         "prod",
-				PromotionType: model.PromotionTypeCopy,
+				Stage: "prod",
+				CommonPromoteAppVersion: model.CommonPromoteAppVersion{
+					PromotionType: model.PromotionTypeCopy,
+				},
 			},
 			sync:             false,
 			expectedEndpoint: "/v1/applications/test-app/versions/1.0.0/promote",
