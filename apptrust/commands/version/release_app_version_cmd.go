@@ -78,7 +78,6 @@ func (rv *releaseAppVersionCommand) buildRequestPayload(ctx *components.Context)
 		return nil, err
 	}
 
-	// Create the release request
 	return model.NewReleaseAppVersionRequest(
 		promotionType,
 		includedRepos,
