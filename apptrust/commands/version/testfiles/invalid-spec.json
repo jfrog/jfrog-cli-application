@@ -1,0 +1,5 @@
+{
+  "packages": [
+    {"type": "npm", "name": "pkg-invalid", "version": "0.1.0", "repository": "repo-invalid"}
+  ]
+// missing closing brace and invalid JSON

@@ -53,8 +53,7 @@ const (
 	BuildsFlag              = "builds"
 	ReleaseBundlesFlag      = "release-bundles"
 	SourceVersionFlag       = "source-version"
-	ExcludeFlag             = "exclude"
-	PromoteFlag             = "promote"
+	PackagesFlag            = "packages"
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -92,8 +91,7 @@ var flagsMap = map[string]components.Flag{
 	BuildsFlag:              components.NewStringFlag(BuildsFlag, "List of builds in format 'name1:number1[:timestamp1];name2:number2[:timestamp2]'", func(f *components.StringFlag) { f.Mandatory = false }),
 	ReleaseBundlesFlag:      components.NewStringFlag(ReleaseBundlesFlag, "List of release bundles in format 'name1:version1;name2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
 	SourceVersionFlag:       components.NewStringFlag(SourceVersionFlag, "Source versions in format 'app1:version1;app2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
-	ExcludeFlag:             components.NewStringFlag(ExcludeFlag, "Excluded packages in format 'package1:version1;package2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
-	PromoteFlag:             components.NewStringFlag(PromoteFlag, "Promotion stage for immediate promotion after creation", func(f *components.StringFlag) { f.Mandatory = false }),
+	PackagesFlag:            components.NewStringFlag(PackagesFlag, "List of packages in format 'name1;name2'", func(f *components.StringFlag) { f.Mandatory = false }),
 }
 
 var commandFlags = map[string][]string{
@@ -104,16 +102,14 @@ var commandFlags = map[string][]string{
 		serverId,
 		ApplicationKeyFlag,
 		TagFlag,
+		PackagesFlag,
 		PackageTypeFlag,
-		PackageNameFlag,
-		PackageVersionFlag,
 		PackageRepositoryFlag,
 		BuildsFlag,
 		ReleaseBundlesFlag,
 		SourceVersionFlag,
-		ExcludeFlag,
-		PromoteFlag,
 		SpecFlag,
+		SpecVarsFlag,
 	},
 	VersionPromote: {
 		url,
@@ -150,13 +146,18 @@ var commandFlags = map[string][]string{
 		user,
 		accessToken,
 		serverId,
+		ApplicationKeyFlag,
+		PackagesFlag,
+		PackageTypeFlag,
 	},
-
 	PackageUnbind: {
 		url,
 		user,
 		accessToken,
 		serverId,
+		ApplicationKeyFlag,
+		PackagesFlag,
+		PackageTypeFlag,
 	},
 
 	Ping: {

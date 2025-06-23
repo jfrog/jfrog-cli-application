@@ -7,19 +7,18 @@ type CreateAppVersionRequest struct {
 	Tag            string                `json:"tag,omitempty"`
 }
 
-type CreateVersionSources struct {
-	Packages       []CreateVersionPackage       `json:"packages,omitempty"`
-	Builds         []CreateVersionBuild         `json:"builds,omitempty"`
-	ReleaseBundles []CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
-	Versions       []CreateVersionReference     `json:"versions,omitempty"`
-	Exclude        []ExcludePackage             `json:"exclude,omitempty"`
-}
-
 type CreateVersionPackage struct {
 	Type       string `json:"type"`
 	Name       string `json:"name"`
 	Version    string `json:"version"`
 	Repository string `json:"repository"`
+}
+
+type CreateVersionSources struct {
+	Packages       []CreateVersionPackage       `json:"packages,omitempty"`
+	Builds         []CreateVersionBuild         `json:"builds,omitempty"`
+	ReleaseBundles []CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
+	Versions       []CreateVersionReference     `json:"versions,omitempty"`
 }
 
 type CreateVersionArtifact struct {
@@ -45,9 +44,4 @@ type CreateVersionReleaseBundle struct {
 type CreateVersionReference struct {
 	ApplicationKey string `json:"application_key,omitempty"`
 	Version        string `json:"version"`
-}
-
-type ExcludePackage struct {
-	Name    string `json:"name,omitempty"`
-	Version string `json:"version,omitempty"`
 }

@@ -1,0 +1,6 @@
+{
+  "application_key": "should-be-ignored",
+  "packages": [
+    {"type": "npm", "name": "pkg-conflict", "version": "0.3.0", "repository": "repo-conflict"}
+  ]
+}

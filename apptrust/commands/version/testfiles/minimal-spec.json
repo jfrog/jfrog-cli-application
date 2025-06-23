@@ -1,0 +1,5 @@
+{
+  "packages": [
+    {"type": "npm", "name": "pkg-min", "version": "0.1.0", "repository": "repo-min"}
+  ]
+}
