@@ -88,8 +88,8 @@ func TestCreateAppVersionCommand_SpecAndFlags_Error(t *testing.T) {
 	ctx := &components.Context{
 		Arguments: []string{"app-key", "1.0.0"},
 	}
-	ctx.AddStringFlag("spec", testSpecPath)
-	ctx.AddStringFlag("package-name", "name")
+	ctx.AddStringFlag(commands.SpecFlag, testSpecPath)
+	ctx.AddStringFlag(commands.PackageNameFlag, "name")
 	ctx.AddStringFlag("url", "https://example.com")
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
@@ -148,7 +148,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			name: "spec only",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
-				ctx.AddStringFlag("spec", "/file1.txt")
+				ctx.AddStringFlag(commands.SpecFlag, "/file1.txt")
 			},
 			expectsPayload: nil,
 			expectsError:   true,
@@ -158,7 +158,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			name: "spec-vars only",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
-				ctx.AddStringFlag("spec-vars", "key1:val1,key2:val2")
+				ctx.AddStringFlag(commands.SpecVarsFlag, "key1:val1,key2:val2")
 			},
 			expectsPayload: nil,
 			expectsError:   true,
@@ -348,7 +348,7 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			ctx := &components.Context{
 				Arguments: tt.args,
 			}
-			ctx.AddStringFlag("spec", tt.specPath)
+			ctx.AddStringFlag(commands.SpecFlag, tt.specPath)
 			ctx.AddStringFlag("url", "https://example.com")
 
 			var actualPayload *model.CreateAppVersionRequest
