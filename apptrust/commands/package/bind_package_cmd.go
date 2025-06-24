@@ -17,6 +17,7 @@ import (
 type bindPackageCommand struct {
 	packageService packages.PackageService
 	serverDetails  *coreConfig.ServerDetails
+	applicationKey string
 	requestPayload *model.BindPackageRequest
 }
 
@@ -25,7 +26,7 @@ func (bp *bindPackageCommand) Run() error {
 	if err != nil {
 		return err
 	}
-	return bp.packageService.BindPackage(ctx, bp.requestPayload)
+	return bp.packageService.BindPackage(ctx, bp.applicationKey, bp.requestPayload)
 }
 
 func (bp *bindPackageCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
@@ -46,12 +47,22 @@ func (bp *bindPackageCommand) prepareAndRunCommand(ctx *components.Context) erro
 	if err != nil {
 		return err
 	}
-	bp.requestPayload, err = BuildPackageRequestPayload(ctx)
-	if err != nil {
-		return err
-	}
+	bp.extractFromArgs(ctx)
 
 	return commonCLiCommands.Exec(bp)
+}
+
+func (bp *bindPackageCommand) extractFromArgs(ctx *components.Context) {
+	bp.applicationKey = ctx.Arguments[0]
+	packageType := ctx.Arguments[1]
+	packageName := ctx.Arguments[2]
+	version := ctx.Arguments[3]
+
+	bp.requestPayload = &model.BindPackageRequest{
+		Type:    packageType,
+		Name:    packageName,
+		Version: version,
+	}
 }
 
 func GetBindPackageCommand(appContext app.Context) components.Command {
@@ -75,8 +86,8 @@ func GetBindPackageCommand(appContext app.Context) components.Command {
 				Description: "Package name.",
 			},
 			{
-				Name:        "package-versions",
-				Description: "Comma-separated versions of the package to bind (e.g., '1.0.0,1.1.0,1.2.0').",
+				Name:        "package-version",
+				Description: "Package version.",
 			},
 		},
 		Flags:  commands.GetCommandFlags(commands.PackageBind),

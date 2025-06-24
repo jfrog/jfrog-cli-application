@@ -16,20 +16,21 @@ func TestBindPackageCommand_Run(t *testing.T) {
 	defer ctrl.Finish()
 
 	serverDetails := &config.ServerDetails{Url: "https://example.com"}
+	applicationKey := "app-key"
 	requestPayload := &model.BindPackageRequest{
-		ApplicationKey: "app-key",
-		Type:           "npm",
-		Name:           "test-package",
-		Versions:       []string{"1.0.0"},
+		Type:    "npm",
+		Name:    "test-package",
+		Version: "1.0.0",
 	}
 
 	mockPackageService := mockpackages.NewMockPackageService(ctrl)
-	mockPackageService.EXPECT().BindPackage(gomock.Any(), requestPayload).
+	mockPackageService.EXPECT().BindPackage(gomock.Any(), applicationKey, requestPayload).
 		Return(nil).Times(1)
 
 	cmd := &bindPackageCommand{
 		packageService: mockPackageService,
 		serverDetails:  serverDetails,
+		applicationKey: applicationKey,
 		requestPayload: requestPayload,
 	}
 
@@ -42,20 +43,21 @@ func TestBindPackageCommand_Run_Error(t *testing.T) {
 	defer ctrl.Finish()
 
 	serverDetails := &config.ServerDetails{Url: "https://example.com"}
+	applicationKey := "app-key"
 	requestPayload := &model.BindPackageRequest{
-		ApplicationKey: "app-key",
-		Type:           "npm",
-		Name:           "test-package",
-		Versions:       []string{"1.0.0"},
+		Type:    "npm",
+		Name:    "test-package",
+		Version: "1.0.0",
 	}
 
 	mockPackageService := mockpackages.NewMockPackageService(ctrl)
-	mockPackageService.EXPECT().BindPackage(gomock.Any(), requestPayload).
+	mockPackageService.EXPECT().BindPackage(gomock.Any(), applicationKey, requestPayload).
 		Return(errors.New("bind error")).Times(1)
 
 	cmd := &bindPackageCommand{
 		packageService: mockPackageService,
 		serverDetails:  serverDetails,
+		applicationKey: applicationKey,
 		requestPayload: requestPayload,
 	}
 

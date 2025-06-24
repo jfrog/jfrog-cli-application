@@ -5,14 +5,15 @@ package packages
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
 )
 
 type PackageService interface {
-	BindPackage(ctx service.Context, request *model.BindPackageRequest) error
-	UnbindPackage(ctx service.Context, request *model.BindPackageRequest) error
+	BindPackage(ctx service.Context, applicationKey string, request *model.BindPackageRequest) error
+	UnbindPackage(ctx service.Context, applicationKey, pkgType, pkgName, pkgVersion string) error
 }
 
 type packageService struct{}
@@ -21,8 +22,8 @@ func NewPackageService() PackageService {
 	return &packageService{}
 }
 
-func (ps *packageService) BindPackage(ctx service.Context, request *model.BindPackageRequest) error {
-	endpoint := "/v1/package"
+func (ps *packageService) BindPackage(ctx service.Context, applicationKey string, request *model.BindPackageRequest) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/packages", applicationKey)
 	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, nil)
 	if err != nil {
 		return err
@@ -36,9 +37,9 @@ func (ps *packageService) BindPackage(ctx service.Context, request *model.BindPa
 	return nil
 }
 
-func (ps *packageService) UnbindPackage(ctx service.Context, request *model.BindPackageRequest) error {
-	endpoint := "/v1/package"
-	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint, request)
+func (ps *packageService) UnbindPackage(ctx service.Context, applicationKey, pkgType, pkgName, pkgVersion string) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/packages/%s/%s/%s", applicationKey, pkgType, url.PathEscape(pkgName), pkgVersion)
+	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint)
 	if err != nil {
 		return err
 	}

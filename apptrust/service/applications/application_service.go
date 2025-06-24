@@ -57,7 +57,7 @@ func (as *applicationService) UpdateApplication(ctx service.Context, requestBody
 
 func (as *applicationService) DeleteApplication(ctx service.Context, applicationKey string) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s", applicationKey)
-	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint, nil)
+	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint)
 	if err != nil {
 		return err
 	}

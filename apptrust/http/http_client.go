@@ -26,7 +26,7 @@ type ApptrustHttpClient interface {
 	Post(path string, requestBody interface{}, params map[string]string) (resp *http.Response, body []byte, err error)
 	Get(path string) (resp *http.Response, body []byte, err error)
 	Patch(path string, requestBody interface{}) (resp *http.Response, body []byte, err error)
-	Delete(path string, requestBody interface{}) (resp *http.Response, body []byte, err error)
+	Delete(path string) (resp *http.Response, body []byte, err error)
 }
 
 type apptrustHttpClient struct {
@@ -139,22 +139,14 @@ func (c *apptrustHttpClient) toJsonBytes(payload interface{}) ([]byte, error) {
 	return jsonBytes, nil
 }
 
-func (c *apptrustHttpClient) Delete(path string, requestBody interface{}) (resp *http.Response, body []byte, err error) {
+func (c *apptrustHttpClient) Delete(path string) (resp *http.Response, body []byte, err error) {
 	url, err := utils.BuildUrl(c.serverDetails.Url, apptrustApiPath+path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var requestContent []byte
-	if requestBody != nil {
-		requestContent, err = c.toJsonBytes(requestBody)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
 	log.Debug("Sending DELETE request to:", url)
-	return c.client.SendDelete(url, requestContent, c.getJsonHttpClientDetails())
+	return c.client.SendDelete(url, nil, c.getJsonHttpClientDetails())
 }
 
 func (c *apptrustHttpClient) getJsonHttpClientDetails() *httputils.HttpClientDetails {

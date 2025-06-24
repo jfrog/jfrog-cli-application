@@ -2,7 +2,9 @@ package packages
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 	"testing"
 
 	mockhttp "github.com/jfrog/jfrog-cli-application/apptrust/http/mocks"
@@ -18,6 +20,7 @@ func TestBindPackage(t *testing.T) {
 	defer ctrl.Finish()
 
 	service := NewPackageService()
+	applicationKey := "test-app"
 
 	tests := []struct {
 		name          string
@@ -29,10 +32,9 @@ func TestBindPackage(t *testing.T) {
 		{
 			name: "success",
 			request: &model.BindPackageRequest{
-				ApplicationKey: "test-app",
-				Type:           "npm",
-				Name:           "test-package",
-				Versions:       []string{"1.0.0"},
+				Type:    "npm",
+				Name:    "test-package",
+				Version: "1.0.0",
 			},
 			mockResponse:  &http.Response{StatusCode: 201},
 			mockError:     nil,
@@ -41,10 +43,9 @@ func TestBindPackage(t *testing.T) {
 		{
 			name: "failed with non-200 status code",
 			request: &model.BindPackageRequest{
-				ApplicationKey: "test-app",
-				Type:           "npm",
-				Name:           "test-package",
-				Versions:       []string{"1.0.0"},
+				Type:    "npm",
+				Name:    "test-package",
+				Version: "1.0.0",
 			},
 			mockResponse:  &http.Response{StatusCode: 400},
 			mockError:     nil,
@@ -53,10 +54,9 @@ func TestBindPackage(t *testing.T) {
 		{
 			name: "http client error",
 			request: &model.BindPackageRequest{
-				ApplicationKey: "test-app",
-				Type:           "npm",
-				Name:           "test-package",
-				Versions:       []string{"1.0.0"},
+				Type:    "npm",
+				Name:    "test-package",
+				Version: "1.0.0",
 			},
 			mockResponse:  nil,
 			mockError:     errors.New("http client error"),
@@ -67,13 +67,13 @@ func TestBindPackage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/package", tt.request, nil).
+			mockHttpClient.EXPECT().Post(fmt.Sprintf("/v1/applications/%s/packages", applicationKey), tt.request, nil).
 				Return(tt.mockResponse, []byte(""), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			err := service.BindPackage(mockCtx, tt.request)
+			err := service.BindPackage(mockCtx, applicationKey, tt.request)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
@@ -87,64 +87,67 @@ func TestBindPackage(t *testing.T) {
 func TestUnbindPackage(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	applicationKey := "test-app"
 
 	service := NewPackageService()
 
 	tests := []struct {
 		name          string
-		request       *model.BindPackageRequest
+		pkgType       string
+		pkgName       string
+		pkgVersion    string
 		mockResponse  *http.Response
 		mockError     error
 		expectedError string
 	}{
 		{
-			name: "success",
-			request: &model.BindPackageRequest{
-				ApplicationKey: "test-app",
-				Type:           "npm",
-				Name:           "test-package",
-				Versions:       []string{"1.0.0"},
-			},
+			name:          "success",
+			pkgType:       "npm",
+			pkgName:       "test-package",
+			pkgVersion:    "1.0.0",
 			mockResponse:  &http.Response{StatusCode: 204},
 			mockError:     nil,
 			expectedError: "",
 		},
 		{
-			name: "failed with non-200 status code",
-			request: &model.BindPackageRequest{
-				ApplicationKey: "test-app",
-				Type:           "npm",
-				Name:           "test-package",
-				Versions:       []string{"1.0.0"},
-			},
+			name:          "failed with non-200 status code",
+			pkgType:       "npm",
+			pkgName:       "test-package",
+			pkgVersion:    "1.0.0",
 			mockResponse:  &http.Response{StatusCode: 400},
 			mockError:     nil,
 			expectedError: "failed to unbind package. Status code: 400",
 		},
 		{
-			name: "http client error",
-			request: &model.BindPackageRequest{
-				ApplicationKey: "test-app",
-				Type:           "npm",
-				Name:           "test-package",
-				Versions:       []string{"1.0.0"},
-			},
+			name:          "http client error",
+			pkgType:       "npm",
+			pkgName:       "test-package",
+			pkgVersion:    "1.0.0",
 			mockResponse:  nil,
 			mockError:     errors.New("http client error"),
 			expectedError: "http client error",
+		},
+		{
+			name:          "special characters in package name",
+			pkgType:       "npm",
+			pkgName:       "@test/package",
+			pkgVersion:    "1.0.0",
+			mockResponse:  &http.Response{StatusCode: 204},
+			mockError:     nil,
+			expectedError: "",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Delete("/v1/package", tt.request).
+			mockHttpClient.EXPECT().Delete(fmt.Sprintf("/v1/applications/%s/packages/%s/%s/%s", applicationKey, tt.pkgType, url.PathEscape(tt.pkgName), tt.pkgVersion)).
 				Return(tt.mockResponse, []byte(""), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			err := service.UnbindPackage(mockCtx, tt.request)
+			err := service.UnbindPackage(mockCtx, applicationKey, tt.pkgType, tt.pkgName, tt.pkgVersion)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {

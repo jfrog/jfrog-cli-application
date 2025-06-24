@@ -1,8 +1,7 @@
 package model
 
 type BindPackageRequest struct {
-	ApplicationKey string   `json:"application_key"`
-	Type           string   `json:"type"`
-	Name           string   `json:"name"`
-	Versions       []string `json:"versions,omitempty"`
+	Type    string `json:"package_type"`
+	Name    string `json:"package_name"`
+	Version string `json:"package_version"`
 }

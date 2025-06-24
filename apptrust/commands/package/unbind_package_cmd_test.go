@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	mockpackages "github.com/jfrog/jfrog-cli-application/apptrust/service/packages/mocks"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/stretchr/testify/assert"
@@ -16,21 +15,22 @@ func TestUnbindPackageCommand_Run(t *testing.T) {
 	defer ctrl.Finish()
 
 	serverDetails := &config.ServerDetails{Url: "https://example.com"}
-	requestPayload := &model.BindPackageRequest{
-		ApplicationKey: "app-key",
-		Type:           "npm",
-		Name:           "test-package",
-		Versions:       []string{"1.0.0"},
-	}
+	applicationKey := "app-key"
+	pkgType := "npm"
+	pkgName := "test-package"
+	pkgVersion := "1.0.0"
 
 	mockPackageService := mockpackages.NewMockPackageService(ctrl)
-	mockPackageService.EXPECT().UnbindPackage(gomock.Any(), requestPayload).
+	mockPackageService.EXPECT().UnbindPackage(gomock.Any(), applicationKey, pkgType, pkgName, pkgVersion).
 		Return(nil).Times(1)
 
 	cmd := &unbindPackageCommand{
 		packageService: mockPackageService,
 		serverDetails:  serverDetails,
-		requestPayload: requestPayload,
+		applicationKey: applicationKey,
+		packageType:    pkgType,
+		packageName:    pkgName,
+		packageVersion: pkgVersion,
 	}
 
 	err := cmd.Run()
@@ -42,21 +42,22 @@ func TestUnbindPackageCommand_Run_Error(t *testing.T) {
 	defer ctrl.Finish()
 
 	serverDetails := &config.ServerDetails{Url: "https://example.com"}
-	requestPayload := &model.BindPackageRequest{
-		ApplicationKey: "app-key",
-		Type:           "npm",
-		Name:           "test-package",
-		Versions:       []string{"1.0.0"},
-	}
+	applicationKey := "app-key"
+	pkgType := "npm"
+	pkgName := "test-package"
+	pkgVersion := "1.0.0"
 
 	mockPackageService := mockpackages.NewMockPackageService(ctrl)
-	mockPackageService.EXPECT().UnbindPackage(gomock.Any(), requestPayload).
+	mockPackageService.EXPECT().UnbindPackage(gomock.Any(), applicationKey, pkgType, pkgName, pkgVersion).
 		Return(errors.New("unbind error")).Times(1)
 
 	cmd := &unbindPackageCommand{
 		packageService: mockPackageService,
 		serverDetails:  serverDetails,
-		requestPayload: requestPayload,
+		applicationKey: applicationKey,
+		packageType:    pkgType,
+		packageName:    pkgName,
+		packageVersion: pkgVersion,
 	}
 
 	err := cmd.Run()

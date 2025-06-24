@@ -71,7 +71,7 @@ func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey,
 
 func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, version string) error {
 	url := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
-	response, responseBody, err := ctx.GetHttpClient().Delete(url, nil)
+	response, responseBody, err := ctx.GetHttpClient().Delete(url)
 	if err != nil {
 		return err
 	}
