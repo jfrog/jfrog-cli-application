@@ -114,3 +114,86 @@ func TestValidateEnumFlag(t *testing.T) {
 		})
 	}
 }
+
+func TestParsePackagesFlag(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expected  []map[string]string
+		expectErr bool
+	}{
+		{"empty string", "", nil, false},
+		{"single package", "foo:1.0.0", []map[string]string{{"name": "foo", "version": "1.0.0"}}, false},
+		{"multiple packages", "foo:1.0.0,bar:2.0.0", []map[string]string{{"name": "foo", "version": "1.0.0"}, {"name": "bar", "version": "2.0.0"}}, false},
+		{"spaces", " foo:1.0.0 , bar:2.0.0 ", []map[string]string{{"name": "foo", "version": "1.0.0"}, {"name": "bar", "version": "2.0.0"}}, false},
+		{"invalid format", "foo", nil, true},
+		{"missing version", "foo:", []map[string]string{{"name": "foo", "version": ""}}, false},
+		{"missing name", ":1.0.0", []map[string]string{{"name": "", "version": "1.0.0"}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := ParsePackagesFlag(tt.input)
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("expected error for input %q, got nil", tt.input)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error for input %q: %v", tt.input, err)
+			}
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("ParsePackagesFlag(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestParseDelimitedSlice(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected [][]string
+	}{
+		{"empty string", "", nil},
+		{"single entry", "foo:bar", [][]string{{"foo", "bar"}}},
+		{"multiple entries", "foo:bar;baz:qux", [][]string{{"foo", "bar"}, {"baz", "qux"}}},
+		{"entries with extra parts", "a:1:2;b:3", [][]string{{"a", "1", "2"}, {"b", "3"}}},
+		{"trailing separator", "foo:bar;", [][]string{{"foo", "bar"}, {""}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ParseDelimitedSlice(tt.input)
+			if !reflect.DeepEqual(result, tt.expected) {
+				t.Errorf("ParseDelimitedSlice(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestParseNameVersionPairs(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expected  [][2]string
+		expectErr bool
+	}{
+		{"empty string", "", nil, false},
+		{"single pair", "foo:1.0.0", [][2]string{{"foo", "1.0.0"}}, false},
+		{"multiple pairs", "foo:1.0.0;bar:2.0.0", [][2]string{{"foo", "1.0.0"}, {"bar", "2.0.0"}}, false},
+		{"spaces", " foo:1.0.0 ; bar:2.0.0 ", [][2]string{{" foo", "1.0.0 "}, {" bar", "2.0.0 "}}, false},
+		{"invalid format", "foo", nil, true},
+		{"too many parts", "foo:1.0.0:extra", nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := ParseNameVersionPairs(tt.input)
+			if tt.expectErr {
+				assert.Error(t, err, "expected error for input %q", tt.input)
+				return
+			}
+			assert.NoError(t, err, "unexpected error for input %q: %v", tt.input, err)
+			assert.Equal(t, tt.expected, result, "ParseNameVersionPairs(%q) = %v, want %v", tt.input, result, tt.expected)
+		})
+	}
+}

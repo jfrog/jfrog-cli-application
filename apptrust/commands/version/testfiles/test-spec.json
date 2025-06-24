@@ -1,0 +1,28 @@
+{
+  "packages": [
+    {
+      "name": "pkg1",
+      "version": "1.0.0",
+      "repository": "repo1",
+      "type": "npm"
+    }
+  ],
+  "builds": [
+    {
+      "name": "build1",
+      "number": "5"
+    }
+  ],
+  "release_bundles": [
+    {
+      "name": "rb1",
+      "version": "1.0.0"
+    }
+  ],
+  "versions": [
+    {
+      "application_key": "app1",
+      "version": "1.0.0"
+    }
+  ]
+}

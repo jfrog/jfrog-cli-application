@@ -13,6 +13,11 @@ import (
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
+const (
+	EntrySeparator = ";"
+	PartSeparator  = ":"
+)
+
 func AssertValueProvided(c *components.Context, fieldName string) error {
 	if c.GetStringFlagValue(fieldName) == "" {
 		return errorutils.CheckErrorf("the --%s option is mandatory", fieldName)
@@ -80,4 +85,54 @@ func ValidateEnumFlag(flagName, value string, defaultValue string, allowedValues
 
 	return "", errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s",
 		flagName, value, coreutils.ListToText(allowedValues))
+}
+
+// ParsePackagesFlag parses a comma-separated list of package name:version pairs into a slice of maps.
+// Each map contains keys "name" and "version". Returns an error if any entry is not in the expected format.
+// Example input: "pkg1:1.0.0,pkg2:2.0.0" => []map[string]string{{"name": "pkg1", "version": "1.0.0"}, {"name": "pkg2", "version": "2.0.0"}}
+func ParsePackagesFlag(flagValue string) ([]map[string]string, error) {
+	if flagValue == "" {
+		return nil, nil
+	}
+	pairs := strings.Split(flagValue, ",")
+	var result []map[string]string
+	for _, pair := range pairs {
+		parts := strings.SplitN(strings.TrimSpace(pair), PartSeparator, 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid package format: %s (expected <name>:<version>)", pair)
+		}
+		result = append(result, map[string]string{"name": parts[0], "version": parts[1]})
+	}
+	return result, nil
+}
+
+// ParseDelimitedSlice splits a delimited string into a slice of string slices.
+// Example: input "a:1;b:2" returns [][]string{{"a","1"},{"b","2"}}
+func ParseDelimitedSlice(input string) [][]string {
+	var result [][]string
+	if input == "" {
+		return result
+	}
+	entries := strings.Split(input, EntrySeparator)
+	for _, entry := range entries {
+		parts := strings.Split(entry, PartSeparator)
+		result = append(result, parts)
+	}
+	return result
+}
+
+// ParseNameVersionPairs parses a delimited string (e.g., "name1:version1;name2:version2") into a slice of [2]string pairs.
+// Returns an error if any entry does not have exactly two parts.
+func ParseNameVersionPairs(input string) ([][2]string, error) {
+	var result [][2]string
+	if input == "" {
+		return result, nil
+	}
+	for _, parts := range ParseDelimitedSlice(input) {
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid format: %v", parts)
+		}
+		result = append(result, [2]string{parts[0], parts[1]})
+	}
+	return result, nil
 }

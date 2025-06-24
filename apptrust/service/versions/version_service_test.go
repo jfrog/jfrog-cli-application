@@ -30,7 +30,7 @@ func TestCreateAppVersion(t *testing.T) {
 	}{
 		{
 			name:             "success",
-			request:          &model.CreateAppVersionRequest{},
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
 			mockResponse:     &http.Response{StatusCode: 201},
 			mockResponseBody: "{}",
 			mockError:        nil,
@@ -38,7 +38,7 @@ func TestCreateAppVersion(t *testing.T) {
 		},
 		{
 			name:             "failure",
-			request:          &model.CreateAppVersionRequest{},
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
 			mockResponse:     &http.Response{StatusCode: 400},
 			mockResponseBody: "error",
 			mockError:        nil,
@@ -46,7 +46,7 @@ func TestCreateAppVersion(t *testing.T) {
 		},
 		{
 			name:             "http client error",
-			request:          &model.CreateAppVersionRequest{},
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
 			mockResponse:     nil,
 			mockResponseBody: "",
 			mockError:        errors.New("http client error"),
@@ -57,7 +57,7 @@ func TestCreateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications/version", tt.request, nil).
+			mockHttpClient.EXPECT().Post("/v1/applications/test-app/versions/", tt.request, nil).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)

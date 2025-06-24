@@ -1,0 +1,6 @@
+{
+  "packages": [
+    {"type": "npm", "name": "pkg-unknown", "version": "0.2.0", "repository": "repo-unknown"}
+  ],
+  "unknown_field": "should be ignored"
+}
