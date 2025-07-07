@@ -3,8 +3,6 @@ package version
 //go:generate ${PROJECT_DIR}/scripts/mockgen.sh ${GOFILE}
 
 import (
-	"strings"
-
 	"github.com/jfrog/jfrog-cli-application/apptrust/app"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
@@ -17,6 +15,7 @@ import (
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type updateAppVersionCommand struct {
@@ -28,11 +27,22 @@ type updateAppVersionCommand struct {
 }
 
 func (uv *updateAppVersionCommand) Run() error {
+	log.Info("Updating application version:", uv.applicationKey, "version:", uv.version)
+
 	ctx, err := service.NewContext(*uv.serverDetails)
 	if err != nil {
+		log.Error("Failed to create service context:", err)
 		return err
 	}
-	return uv.versionService.UpdateAppVersion(ctx, uv.applicationKey, uv.version, uv.requestPayload)
+
+	err = uv.versionService.UpdateAppVersion(ctx, uv.requestPayload)
+	if err != nil {
+		log.Error("Failed to update application version:", err)
+		return err
+	}
+
+	log.Info("Successfully updated application version:", uv.applicationKey, "version:", uv.version)
+	return nil
 }
 
 func (uv *updateAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
@@ -48,15 +58,11 @@ func (uv *updateAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 
-	uv.applicationKey = ctx.Arguments[0]
-	uv.version = ctx.Arguments[1]
-
-	serverDetails, err := utils.ServerDetailsByFlags(ctx)
-	if err != nil {
+	if err := uv.parseFlagsAndSetFields(ctx); err != nil {
 		return err
 	}
-	uv.serverDetails = serverDetails
 
+	var err error
 	uv.requestPayload, err = uv.buildRequestPayload(ctx)
 	if errorutils.CheckError(err) != nil {
 		return err
@@ -65,17 +71,32 @@ func (uv *updateAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 	return commonCLiCommands.Exec(uv)
 }
 
-func (uv *updateAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.UpdateAppVersionRequest, error) {
-	request := &model.UpdateAppVersionRequest{}
+// parseFlagsAndSetFields parses CLI flags and sets struct fields accordingly.
+func (uv *updateAppVersionCommand) parseFlagsAndSetFields(ctx *components.Context) error {
+	uv.applicationKey = ctx.Arguments[0]
+	uv.version = ctx.Arguments[1]
 
-	// Handle tag - no validation, just pass through
+	serverDetails, err := utils.ServerDetailsByFlags(ctx)
+	if err != nil {
+		return err
+	}
+	uv.serverDetails = serverDetails
+	return nil
+}
+
+func (uv *updateAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.UpdateAppVersionRequest, error) {
+	request := &model.UpdateAppVersionRequest{
+		ApplicationKey: uv.applicationKey,
+		Version:        uv.version,
+	}
+
 	if ctx.IsFlagSet(commands.TagFlag) {
 		request.Tag = ctx.GetStringFlagValue(commands.TagFlag)
 	}
 
-	// Handle properties - support multiple values per key
+	// Handle properties - use spec format: key=value1[,value2,...]
 	if ctx.IsFlagSet(commands.PropertiesFlag) {
-		properties, err := uv.parseProperties(ctx.GetStringFlagValue(commands.PropertiesFlag))
+		properties, err := utils.ParsePropertiesFlag(ctx.GetStringFlagValue(commands.PropertiesFlag))
 		if err != nil {
 			return nil, err
 		}
@@ -89,43 +110,6 @@ func (uv *updateAppVersionCommand) buildRequestPayload(ctx *components.Context) 
 	}
 
 	return request, nil
-}
-
-func (uv *updateAppVersionCommand) parseProperties(propertiesStr string) (map[string][]string, error) {
-	// Format: "key1=value1[,value2,...];key2=value3[,value4,...]"
-	if propertiesStr == "" {
-		return nil, nil
-	}
-
-	result := make(map[string][]string)
-	pairs := strings.Split(propertiesStr, ";")
-
-	for _, pair := range pairs {
-		keyValue := strings.SplitN(strings.TrimSpace(pair), "=", 2)
-		if len(keyValue) != 2 {
-			return nil, errorutils.CheckErrorf("invalid property format: '%s' (expected key=value1[,value2,...])", pair)
-		}
-
-		key := strings.TrimSpace(keyValue[0])
-		valuesStr := strings.TrimSpace(keyValue[1])
-
-		if key == "" {
-			return nil, errorutils.CheckErrorf("property key cannot be empty")
-		}
-
-		var values []string
-		if valuesStr != "" {
-			values = strings.Split(valuesStr, ",")
-			for i, v := range values {
-				values[i] = strings.TrimSpace(v)
-			}
-		}
-		// Always set the key, even with empty values (to clear values)
-
-		result[key] = values
-	}
-
-	return result, nil
 }
 
 func GetUpdateAppVersionCommand(appContext app.Context) components.Command {

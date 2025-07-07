@@ -4,6 +4,7 @@ package versions
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
@@ -16,7 +17,7 @@ type VersionService interface {
 	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
 	ReleaseAppVersion(ctx service.Context, applicationKey string, version string, request *model.ReleaseAppVersionRequest, sync bool) error
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
-	UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error
+	UpdateAppVersion(ctx service.Context, request *model.UpdateAppVersionRequest) error
 }
 
 type versionService struct{}
@@ -32,7 +33,7 @@ func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.C
 		return err
 	}
 
-	if response.StatusCode != 201 {
+	if response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("failed to create app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
@@ -47,7 +48,7 @@ func (vs *versionService) PromoteAppVersion(ctx service.Context, applicationKey,
 		return err
 	}
 
-	if response.StatusCode >= 400 {
+	if response.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("failed to promote app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
@@ -62,7 +63,7 @@ func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey,
 		return err
 	}
 
-	if response.StatusCode >= 400 {
+	if response.StatusCode >= http.StatusBadRequest {
 		return fmt.Errorf("failed to release app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
@@ -77,7 +78,7 @@ func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, 
 		return err
 	}
 
-	if response.StatusCode != 204 {
+	if response.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("failed to delete app version. Status code: %d.\n%s",
 			response.StatusCode, responseBody)
 	}
@@ -85,14 +86,14 @@ func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, 
 	return nil
 }
 
-func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey, version string, request *model.UpdateAppVersionRequest) error {
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
+func (vs *versionService) UpdateAppVersion(ctx service.Context, request *model.UpdateAppVersionRequest) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", request.ApplicationKey, request.Version)
 	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request)
 	if err != nil {
 		return err
 	}
 
-	if response.StatusCode != 202 {
+	if response.StatusCode != http.StatusAccepted {
 		return fmt.Errorf("failed to update app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}

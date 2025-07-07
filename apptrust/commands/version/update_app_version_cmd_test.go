@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
 	mockversions "github.com/jfrog/jfrog-cli-application/apptrust/service/versions/mocks"
 	"go.uber.org/mock/gomock"
 
@@ -24,15 +25,21 @@ func TestUpdateAppVersionCommand_Run(t *testing.T) {
 		{
 			name: "success",
 			request: &model.UpdateAppVersionRequest{
-				Tag: "release/1.2.3",
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
+				Tag:            "release/1.2.3",
 				Properties: map[string][]string{
 					"status": {"rc", "validated"},
 				},
 			},
 		},
 		{
-			name:         "context error",
-			request:      &model.UpdateAppVersionRequest{Tag: "test-tag"},
+			name: "context error",
+			request: &model.UpdateAppVersionRequest{
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
+				Tag:            "test-tag",
+			},
 			shouldError:  true,
 			errorMessage: "context error",
 		},
@@ -45,10 +52,10 @@ func TestUpdateAppVersionCommand_Run(t *testing.T) {
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if tt.shouldError {
-				mockVersionService.EXPECT().UpdateAppVersion(gomock.Any(), "app-key", "1.0.0", tt.request).
+				mockVersionService.EXPECT().UpdateAppVersion(gomock.Any(), gomock.Any()).
 					Return(errors.New(tt.errorMessage)).Times(1)
 			} else {
-				mockVersionService.EXPECT().UpdateAppVersion(gomock.Any(), "app-key", "1.0.0", tt.request).
+				mockVersionService.EXPECT().UpdateAppVersion(gomock.Any(), gomock.Any()).
 					Return(nil).Times(1)
 			}
 
@@ -86,7 +93,9 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.TagFlag, "release/1.2.3")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
-				Tag: "release/1.2.3",
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
+				Tag:            "release/1.2.3",
 			},
 		},
 		{
@@ -96,6 +105,8 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.PropertiesFlag, "status=rc")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
 				Properties: map[string][]string{
 					"status": {"rc"},
 				},
@@ -108,6 +119,8 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.PropertiesFlag, "status=rc,validated")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
 				Properties: map[string][]string{
 					"status": {"rc", "validated"},
 				},
@@ -120,6 +133,8 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.PropertiesFlag, "status=rc,validated;deployed_to=staging-A,staging-B")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
 				Properties: map[string][]string{
 					"status":      {"rc", "validated"},
 					"deployed_to": {"staging-A", "staging-B"},
@@ -133,6 +148,8 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.DeletePropertyFlag, "legacy_param;toBeDeleted")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
+				ApplicationKey:   "app-key",
+				Version:          "1.0.0",
 				DeleteProperties: []string{"legacy_param", "toBeDeleted"},
 			},
 		},
@@ -143,6 +160,8 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.PropertiesFlag, "old_feature_flag=")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
 				Properties: map[string][]string{
 					"old_feature_flag": nil,
 				},
@@ -157,7 +176,9 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.DeletePropertyFlag, "old_param")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
-				Tag: "release/1.2.3",
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
+				Tag:            "release/1.2.3",
 				Properties: map[string][]string{
 					"status": {"rc", "validated"},
 				},
@@ -171,7 +192,9 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.TagFlag, "")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
-				Tag: "",
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
+				Tag:            "",
 			},
 		},
 		{
@@ -206,8 +229,8 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 			var actualPayload *model.UpdateAppVersionRequest
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if !tt.expectsError {
-				mockVersionService.EXPECT().UpdateAppVersion(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ interface{}, _ string, _ string, req *model.UpdateAppVersionRequest) error {
+				mockVersionService.EXPECT().UpdateAppVersion(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ interface{}, req *model.UpdateAppVersionRequest) error {
 						actualPayload = req
 						return nil
 					}).Times(1)
@@ -232,8 +255,6 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 }
 
 func TestParseProperties(t *testing.T) {
-	cmd := &updateAppVersionCommand{}
-
 	tests := []struct {
 		name      string
 		input     string
@@ -301,7 +322,7 @@ func TestParseProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := cmd.parseProperties(tt.input)
+			result, err := utils.ParsePropertiesFlag(tt.input)
 			if tt.expectErr {
 				assert.Error(t, err)
 			} else {

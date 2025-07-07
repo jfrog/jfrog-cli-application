@@ -90,13 +90,13 @@ var flagsMap = map[string]components.Flag{
 	ExcludeReposFlag:        components.NewStringFlag(ExcludeReposFlag, "Semicolon-separated list of repositories to exclude.", func(f *components.StringFlag) { f.Mandatory = false }),
 	IncludeReposFlag:        components.NewStringFlag(IncludeReposFlag, "Semicolon-separated list of repositories to include.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PropsFlag:               components.NewStringFlag(PropsFlag, "Semicolon-separated list of properties in the form of 'key1=value1;key2=value2;...' to be added to each artifact.", func(f *components.StringFlag) { f.Mandatory = false }),
-	TagFlag:                 components.NewStringFlag(TagFlag, "A tag to associate with the version.", func(f *components.StringFlag) { f.Mandatory = false }),
+	TagFlag:                 components.NewStringFlag(TagFlag, "A tag to associate with the version. Must contain only alphanumeric characters, hyphens (-), underscores (_), and dots (.). Examples: 'release-1.2.3', 'v1.0.0', 'production_build'.", func(f *components.StringFlag) { f.Mandatory = false }),
 	BuildsFlag:              components.NewStringFlag(BuildsFlag, "List of builds in format 'name1:number1[:timestamp1];name2:number2[:timestamp2]'", func(f *components.StringFlag) { f.Mandatory = false }),
 	ReleaseBundlesFlag:      components.NewStringFlag(ReleaseBundlesFlag, "List of release bundles in format 'name1:version1;name2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
 	SourceVersionFlag:       components.NewStringFlag(SourceVersionFlag, "Source versions in format 'app1:version1;app2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
 	PackagesFlag:            components.NewStringFlag(PackagesFlag, "List of packages in format 'name1;name2'", func(f *components.StringFlag) { f.Mandatory = false }),
-	PropertiesFlag:          components.NewStringFlag(PropertiesFlag, "Sets or updates a custom property for the application version in format 'key=value1[,value2,...]'", func(f *components.StringFlag) { f.Mandatory = false }),
-	DeletePropertyFlag:      components.NewStringFlag(DeletePropertyFlag, "Completely removes the specified property key and all its associated values from the application version", func(f *components.StringFlag) { f.Mandatory = false }),
+	PropertiesFlag:          components.NewStringFlag(PropertiesFlag, "Set or update a property: 'key=val1[,val2,...]'", func(f *components.StringFlag) { f.Mandatory = false }),
+	DeletePropertyFlag:      components.NewStringFlag(DeletePropertyFlag, "Remove a property key and all its values", func(f *components.StringFlag) { f.Mandatory = false }),
 }
 
 var commandFlags = map[string][]string{

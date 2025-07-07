@@ -197,3 +197,82 @@ func TestParseNameVersionPairs(t *testing.T) {
 		})
 	}
 }
+
+func TestParsePropertiesFlag(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     string
+		expected  map[string][]string
+		expectErr bool
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: nil,
+		},
+		{
+			name:  "single property with single value",
+			input: "status=rc",
+			expected: map[string][]string{
+				"status": {"rc"},
+			},
+		},
+		{
+			name:  "single property with multiple values",
+			input: "status=rc,validated",
+			expected: map[string][]string{
+				"status": {"rc", "validated"},
+			},
+		},
+		{
+			name:  "multiple properties",
+			input: "status=rc,validated;deployed_to=staging-A,staging-B",
+			expected: map[string][]string{
+				"status":      {"rc", "validated"},
+				"deployed_to": {"staging-A", "staging-B"},
+			},
+		},
+		{
+			name:  "empty values (clears values)",
+			input: "old_feature_flag=",
+			expected: map[string][]string{
+				"old_feature_flag": nil,
+			},
+		},
+		{
+			name:  "with spaces",
+			input: " status = rc , validated ; deployed_to = staging-A , staging-B ",
+			expected: map[string][]string{
+				"status":      {"rc", "validated"},
+				"deployed_to": {"staging-A", "staging-B"},
+			},
+		},
+		{
+			name:      "invalid format - missing =",
+			input:     "invalid-format",
+			expectErr: true,
+		},
+		{
+			name:      "empty key",
+			input:     "=value",
+			expectErr: true,
+		},
+		{
+			name:      "empty key with spaces",
+			input:     " =value",
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := ParsePropertiesFlag(tt.input)
+			if tt.expectErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
