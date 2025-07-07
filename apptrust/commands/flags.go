@@ -13,6 +13,7 @@ const (
 	VersionPromote = "version-promote"
 	VersionDelete  = "version-delete"
 	VersionRelease = "version-release"
+	VersionUpdate  = "version-update"
 	PackageBind    = "package-bind"
 	PackageUnbind  = "package-unbind"
 	AppCreate      = "app-create"
@@ -54,6 +55,8 @@ const (
 	ReleaseBundlesFlag      = "release-bundles"
 	SourceVersionFlag       = "source-version"
 	PackagesFlag            = "packages"
+	PropertiesFlag          = "properties"
+	DeletePropertyFlag      = "delete-property"
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -92,6 +95,8 @@ var flagsMap = map[string]components.Flag{
 	ReleaseBundlesFlag:      components.NewStringFlag(ReleaseBundlesFlag, "List of release bundles in format 'name1:version1;name2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
 	SourceVersionFlag:       components.NewStringFlag(SourceVersionFlag, "Source versions in format 'app1:version1;app2:version2'", func(f *components.StringFlag) { f.Mandatory = false }),
 	PackagesFlag:            components.NewStringFlag(PackagesFlag, "List of packages in format 'name1;name2'", func(f *components.StringFlag) { f.Mandatory = false }),
+	PropertiesFlag:          components.NewStringFlag(PropertiesFlag, "Sets or updates a custom property for the application version in format 'key=value1[,value2,...]'", func(f *components.StringFlag) { f.Mandatory = false }),
+	DeletePropertyFlag:      components.NewStringFlag(DeletePropertyFlag, "Completely removes the specified property key and all its associated values from the application version", func(f *components.StringFlag) { f.Mandatory = false }),
 }
 
 var commandFlags = map[string][]string{
@@ -139,6 +144,15 @@ var commandFlags = map[string][]string{
 		user,
 		accessToken,
 		serverId,
+	},
+	VersionUpdate: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		TagFlag,
+		PropertiesFlag,
+		DeletePropertyFlag,
 	},
 
 	PackageBind: {
