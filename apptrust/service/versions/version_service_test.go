@@ -312,9 +312,7 @@ func TestUpdateAppVersion(t *testing.T) {
 		{
 			name: "success - tag only",
 			request: &model.UpdateAppVersionRequest{
-				ApplicationKey: "test-app",
-				Version:        "1.0.0",
-				Tag:            "release/1.2.3",
+				Tag: "release/1.2.3",
 			},
 			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
 			mockResponseBody: "{}",
@@ -325,8 +323,6 @@ func TestUpdateAppVersion(t *testing.T) {
 		{
 			name: "success - properties only",
 			request: &model.UpdateAppVersionRequest{
-				ApplicationKey: "test-app",
-				Version:        "1.0.0",
 				Properties: map[string][]string{
 					"status": {"rc", "validated"},
 				},
@@ -340,8 +336,6 @@ func TestUpdateAppVersion(t *testing.T) {
 		{
 			name: "success - delete properties only",
 			request: &model.UpdateAppVersionRequest{
-				ApplicationKey:   "test-app",
-				Version:          "1.0.0",
 				DeleteProperties: []string{"legacy_param", "toBeDeleted"},
 			},
 			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
@@ -353,9 +347,7 @@ func TestUpdateAppVersion(t *testing.T) {
 		{
 			name: "success - combined update",
 			request: &model.UpdateAppVersionRequest{
-				ApplicationKey: "test-app",
-				Version:        "1.0.0",
-				Tag:            "release/1.2.3",
+				Tag: "release/1.2.3",
 				Properties: map[string][]string{
 					"status": {"rc", "validated"},
 				},
@@ -370,9 +362,7 @@ func TestUpdateAppVersion(t *testing.T) {
 		{
 			name: "failure - 400",
 			request: &model.UpdateAppVersionRequest{
-				ApplicationKey: "test-app",
-				Version:        "1.0.0",
-				Tag:            "invalid-tag",
+				Tag: "invalid-tag",
 			},
 			mockResponse:     &http.Response{StatusCode: http.StatusBadRequest},
 			mockResponseBody: "bad request",
@@ -383,9 +373,7 @@ func TestUpdateAppVersion(t *testing.T) {
 		{
 			name: "failure - 404",
 			request: &model.UpdateAppVersionRequest{
-				ApplicationKey: "test-app",
-				Version:        "1.0.0",
-				Tag:            "release/1.2.3",
+				Tag: "release/1.2.3",
 			},
 			mockResponse:     &http.Response{StatusCode: http.StatusNotFound},
 			mockResponseBody: "not found",
@@ -396,9 +384,7 @@ func TestUpdateAppVersion(t *testing.T) {
 		{
 			name: "http client error",
 			request: &model.UpdateAppVersionRequest{
-				ApplicationKey: "test-app",
-				Version:        "1.0.0",
-				Tag:            "release/1.2.3",
+				Tag: "release/1.2.3",
 			},
 			mockResponse:     nil,
 			mockResponseBody: "",
@@ -411,13 +397,13 @@ func TestUpdateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Patch("/v1/applications/"+tt.request.ApplicationKey+"/versions/"+tt.request.Version, tt.request).
+			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0", tt.request).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).AnyTimes()
 
-			err := service.UpdateAppVersion(mockCtx, tt.request)
+			err := service.UpdateAppVersion(mockCtx, "test-app", "1.0.0", tt.request)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorMsg != "" {

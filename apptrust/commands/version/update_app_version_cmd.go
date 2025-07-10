@@ -35,7 +35,7 @@ func (uv *updateAppVersionCommand) Run() error {
 		return err
 	}
 
-	err = uv.versionService.UpdateAppVersion(ctx, uv.requestPayload)
+	err = uv.versionService.UpdateAppVersion(ctx, uv.applicationKey, uv.version, uv.requestPayload)
 	if err != nil {
 		log.Error("Failed to update application version:", err)
 		return err
@@ -85,10 +85,7 @@ func (uv *updateAppVersionCommand) parseFlagsAndSetFields(ctx *components.Contex
 }
 
 func (uv *updateAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.UpdateAppVersionRequest, error) {
-	request := &model.UpdateAppVersionRequest{
-		ApplicationKey: uv.applicationKey,
-		Version:        uv.version,
-	}
+	request := &model.UpdateAppVersionRequest{}
 
 	if ctx.IsFlagSet(commands.TagFlag) {
 		request.Tag = ctx.GetStringFlagValue(commands.TagFlag)

@@ -17,7 +17,7 @@ type VersionService interface {
 	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
 	ReleaseAppVersion(ctx service.Context, applicationKey string, version string, request *model.ReleaseAppVersionRequest, sync bool) error
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
-	UpdateAppVersion(ctx service.Context, request *model.UpdateAppVersionRequest) error
+	UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error
 }
 
 type versionService struct{}
@@ -86,8 +86,8 @@ func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, 
 	return nil
 }
 
-func (vs *versionService) UpdateAppVersion(ctx service.Context, request *model.UpdateAppVersionRequest) error {
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", request.ApplicationKey, request.Version)
+func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
 	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request)
 	if err != nil {
 		return err
