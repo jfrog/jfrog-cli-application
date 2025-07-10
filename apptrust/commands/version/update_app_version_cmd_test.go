@@ -163,7 +163,7 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ApplicationKey: "app-key",
 				Version:        "1.0.0",
 				Properties: map[string][]string{
-					"old_feature_flag": nil,
+					"old_feature_flag": {},
 				},
 			},
 		},
@@ -292,7 +292,7 @@ func TestParseProperties(t *testing.T) {
 			name:  "empty values (clears values)",
 			input: "old_feature_flag=",
 			expected: map[string][]string{
-				"old_feature_flag": nil,
+				"old_feature_flag": {},
 			},
 		},
 		{
@@ -322,7 +322,7 @@ func TestParseProperties(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := utils.ParsePropertiesFlag(tt.input)
+			result, err := utils.ParseListPropertiesFlag(tt.input)
 			if tt.expectErr {
 				assert.Error(t, err)
 			} else {

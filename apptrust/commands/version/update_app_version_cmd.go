@@ -96,7 +96,7 @@ func (uv *updateAppVersionCommand) buildRequestPayload(ctx *components.Context) 
 
 	// Handle properties - use spec format: key=value1[,value2,...]
 	if ctx.IsFlagSet(commands.PropertiesFlag) {
-		properties, err := utils.ParsePropertiesFlag(ctx.GetStringFlagValue(commands.PropertiesFlag))
+		properties, err := utils.ParseListPropertiesFlag(ctx.GetStringFlagValue(commands.PropertiesFlag))
 		if err != nil {
 			return nil, err
 		}

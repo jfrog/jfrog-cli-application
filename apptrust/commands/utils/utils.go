@@ -137,14 +137,14 @@ func ParseNameVersionPairs(input string) ([][2]string, error) {
 	return result, nil
 }
 
-// ParsePropertiesFlag parses a properties string into a map of keys to value slices.
+// ParseListPropertiesFlag parses a properties string into a map of keys to value slices.
 // Format: "key1=value1[,value2,...];key2=value3[,value4,...]"
 // Examples:
 //   - "status=rc" -> {"status": ["rc"]}
 //   - "status=rc,validated" -> {"status": ["rc", "validated"]}
 //   - "status=rc;deployed_to=staging" -> {"status": ["rc"], "deployed_to": ["staging"]}
 //   - "old_flag=" -> {"old_flag": []} (clears values)
-func ParsePropertiesFlag(propertiesStr string) (map[string][]string, error) {
+func ParseListPropertiesFlag(propertiesStr string) (map[string][]string, error) {
 	if propertiesStr == "" {
 		return nil, nil
 	}
@@ -171,6 +171,9 @@ func ParsePropertiesFlag(propertiesStr string) (map[string][]string, error) {
 			for i, v := range values {
 				values[i] = strings.TrimSpace(v)
 			}
+		} else {
+			// Return empty slice instead of nil for empty values
+			values = []string{}
 		}
 		// Always set the key, even with empty values (to clear values)
 		result[key] = values
