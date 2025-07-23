@@ -30,6 +30,7 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	ctx.AddStringFlag("labels", "env=prod;region=us-east")
 	ctx.AddStringFlag("user-owners", "john.doe;jane.smith")
 	ctx.AddStringFlag("group-owners", "devops;security")
+	ctx.AddStringFlag("url", "https://example.com")
 
 	requestPayload := &model.AppDescriptor{
 		ApplicationKey:      "app-key",
@@ -50,7 +51,6 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	mockAppService.EXPECT().CreateApplication(gomock.Any(), requestPayload).Return(nil).Times(1)
 
 	cmd := &createAppCommand{
-		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 		requestBody:        requestPayload,
 	}
@@ -113,10 +113,10 @@ func TestCreateAppCommand_MissingProjectFlag(t *testing.T) {
 		Arguments: []string{"app-key"},
 	}
 	ctx.AddStringFlag("application-name", "test-app")
+	ctx.AddStringFlag("url", "https://example.com")
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
 
 	cmd := &createAppCommand{
-		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 	}
 
@@ -206,6 +206,7 @@ func TestCreateAppCommand_Run_SpecFile(t *testing.T) {
 			ctx := &components.Context{
 				Arguments: tt.args,
 			}
+			ctx.AddStringFlag("url", "https://example.com")
 			ctx.AddStringFlag("spec", tt.specPath)
 
 			var actualPayload *model.AppDescriptor
@@ -219,7 +220,6 @@ func TestCreateAppCommand_Run_SpecFile(t *testing.T) {
 			}
 
 			cmd := &createAppCommand{
-				serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 				applicationService: mockAppService,
 			}
 
@@ -259,6 +259,7 @@ func TestCreateAppCommand_Run_SpecVars(t *testing.T) {
 	}
 	ctx.AddStringFlag("spec", "./testfiles/with-vars-spec.json")
 	ctx.AddStringFlag("spec-vars", "PROJECT_KEY=test-project;APP_NAME=test-app;ENVIRONMENT=production;MATURITY_LEVEL=production;CRITICALITY=high;REGION=us-east-1")
+	ctx.AddStringFlag("url", "https://example.com")
 
 	var actualPayload *model.AppDescriptor
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
@@ -269,7 +270,6 @@ func TestCreateAppCommand_Run_SpecVars(t *testing.T) {
 		}).Times(1)
 
 	cmd := &createAppCommand{
-		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 	}
 
@@ -293,7 +293,6 @@ func TestCreateAppCommand_Error_SpecAndFlags(t *testing.T) {
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
 
 	cmd := &createAppCommand{
-		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 	}
 
