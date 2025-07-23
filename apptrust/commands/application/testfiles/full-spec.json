@@ -1,0 +1,20 @@
+{
+  "project_key": "test-project",
+  "application_name": "test-app-full",
+  "description": "A comprehensive test application",
+  "maturity_level": "production",
+  "criticality": "high",
+  "labels": {
+    "environment": "production",
+    "region": "us-east-1",
+    "team": "devops"
+  },
+  "user_owners": [
+    "john.doe",
+    "jane.smith"
+  ],
+  "group_owners": [
+    "devops-team",
+    "security-team"
+  ]
+} 

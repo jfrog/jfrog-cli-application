@@ -1,0 +1,6 @@
+{
+  "application_key": "ignored-app-key",
+  "project_key": "test-project",
+  "application_name": "test-app",
+  "description": "A test application with application_key that should be ignored"
+} 

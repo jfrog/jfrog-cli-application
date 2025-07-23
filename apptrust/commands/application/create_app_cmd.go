@@ -1,6 +1,8 @@
 package application
 
 import (
+	"encoding/json"
+
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
@@ -9,7 +11,9 @@ import (
 	commonCLiCommands "github.com/jfrog/jfrog-cli-core/v2/common/commands"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/io/fileutils"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/app"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
@@ -42,11 +46,30 @@ func (cac *createAppCommand) CommandName() string {
 
 func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*model.AppDescriptor, error) {
 	applicationKey := ctx.Arguments[0]
-	applicationName := ctx.GetStringFlagValue(commands.ApplicationNameFlag)
-	if applicationName == "" {
-		// Default to the application key if application name is not provided
-		applicationName = applicationKey
+
+	var appDescriptor *model.AppDescriptor
+	var err error
+
+	if ctx.IsFlagSet(commands.SpecFlag) {
+		appDescriptor, err = cac.loadFromSpec(ctx)
+	} else {
+		appDescriptor, err = cac.buildFromFlags(ctx)
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	appDescriptor.ApplicationKey = applicationKey
+	if appDescriptor.ApplicationName == "" {
+		appDescriptor.ApplicationName = applicationKey
+	}
+
+	return appDescriptor, nil
+}
+
+func (cac *createAppCommand) buildFromFlags(ctx *components.Context) (*model.AppDescriptor, error) {
+	applicationName := ctx.GetStringFlagValue(commands.ApplicationNameFlag)
 
 	project := ctx.GetStringFlagValue(commands.ProjectFlag)
 	if project == "" {
@@ -83,7 +106,6 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 
 	return &model.AppDescriptor{
 		ApplicationName:     applicationName,
-		ApplicationKey:      applicationKey,
 		Description:         description,
 		ProjectKey:          project,
 		MaturityLevel:       maturityLevel,
@@ -94,9 +116,34 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 	}, nil
 }
 
+func (cac *createAppCommand) loadFromSpec(ctx *components.Context) (*model.AppDescriptor, error) {
+	specFilePath := ctx.GetStringFlagValue(commands.SpecFlag)
+	spec := new(model.AppDescriptor)
+	specVars := coreutils.SpecVarsStringToMap(ctx.GetStringFlagValue(commands.SpecVarsFlag))
+	content, err := fileutils.ReadFile(specFilePath)
+	if errorutils.CheckError(err) != nil {
+		return nil, err
+	}
+
+	if len(specVars) > 0 {
+		content = coreutils.ReplaceVars(content, specVars)
+	}
+
+	err = json.Unmarshal(content, spec)
+	if errorutils.CheckError(err) != nil {
+		return nil, err
+	}
+
+	if spec.ProjectKey == "" {
+		return nil, errorutils.CheckErrorf("project_key is mandatory in spec file")
+	}
+
+	return spec, nil
+}
+
 func (cac *createAppCommand) prepareAndRunCommand(ctx *components.Context) error {
-	if len(ctx.Arguments) != 1 {
-		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
+	if err := validateCreateAppContext(ctx); err != nil {
+		return err
 	}
 
 	var err error
@@ -111,6 +158,37 @@ func (cac *createAppCommand) prepareAndRunCommand(ctx *components.Context) error
 	}
 
 	return commonCLiCommands.Exec(cac)
+}
+
+func validateCreateAppContext(ctx *components.Context) error {
+	if err := validateNoSpecAndFlagsTogether(ctx); err != nil {
+		return err
+	}
+	if len(ctx.Arguments) != 1 {
+		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
+	}
+	return nil
+}
+
+func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
+	if ctx.IsFlagSet(commands.SpecFlag) {
+		otherAppFlags := []string{
+			commands.ApplicationNameFlag,
+			commands.ProjectFlag,
+			commands.DescriptionFlag,
+			commands.BusinessCriticalityFlag,
+			commands.MaturityLevelFlag,
+			commands.LabelsFlag,
+			commands.UserOwnersFlag,
+			commands.GroupOwnersFlag,
+		}
+		for _, flag := range otherAppFlags {
+			if ctx.IsFlagSet(flag) {
+				return errorutils.CheckErrorf("the flag --%s is not allowed when --spec is provided.", flag)
+			}
+		}
+	}
+	return nil
 }
 
 func GetCreateAppCommand(appContext app.Context) components.Command {

@@ -1,0 +1,5 @@
+{
+  "project_key": "test-project",
+  "application_name": "test-app",
+  "description": "A test application with invalid JSON",
+  "unclosed": "value" 
