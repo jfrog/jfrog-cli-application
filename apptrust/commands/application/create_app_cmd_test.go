@@ -50,6 +50,7 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	mockAppService.EXPECT().CreateApplication(gomock.Any(), requestPayload).Return(nil).Times(1)
 
 	cmd := &createAppCommand{
+		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 		requestBody:        requestPayload,
 	}
@@ -115,6 +116,7 @@ func TestCreateAppCommand_MissingProjectFlag(t *testing.T) {
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
 
 	cmd := &createAppCommand{
+		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 	}
 
@@ -217,6 +219,7 @@ func TestCreateAppCommand_Run_SpecFile(t *testing.T) {
 			}
 
 			cmd := &createAppCommand{
+				serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 				applicationService: mockAppService,
 			}
 
@@ -266,6 +269,7 @@ func TestCreateAppCommand_Run_SpecVars(t *testing.T) {
 		}).Times(1)
 
 	cmd := &createAppCommand{
+		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 	}
 
@@ -289,6 +293,7 @@ func TestCreateAppCommand_Error_SpecAndFlags(t *testing.T) {
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
 
 	cmd := &createAppCommand{
+		serverDetails:      &config.ServerDetails{Url: "https://example.com"},
 		applicationService: mockAppService,
 	}
 
