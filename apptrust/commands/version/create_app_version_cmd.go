@@ -2,6 +2,7 @@ package version
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/service/versions"
 
@@ -92,35 +93,21 @@ func (cv *createAppVersionCommand) buildRequestPayload(ctx *components.Context) 
 
 func (cv *createAppVersionCommand) buildSourcesFromFlags(ctx *components.Context) (*model.CreateVersionSources, error) {
 	sources := &model.CreateVersionSources{}
-	if ctx.IsFlagSet(commands.PackagesFlag) {
-		parsedPkgs, err := utils.ParsePackagesFlag(ctx.GetStringFlagValue(commands.PackagesFlag))
-		if err != nil {
-			return nil, err
-		}
-		for _, pkg := range parsedPkgs {
-			sources.Packages = append(sources.Packages, model.CreateVersionPackage{
-				Type:       ctx.GetStringFlagValue(commands.PackageTypeFlag),
-				Name:       pkg["name"],
-				Version:    pkg["version"],
-				Repository: ctx.GetStringFlagValue(commands.PackageRepositoryFlag),
-			})
-		}
-	}
-	if buildsStr := ctx.GetStringFlagValue(commands.BuildsFlag); buildsStr != "" {
+	if buildsStr := ctx.GetStringFlagValue(commands.SourceTypeBuildsFlag); buildsStr != "" {
 		builds, err := cv.parseBuilds(buildsStr)
 		if err != nil {
 			return nil, err
 		}
 		sources.Builds = builds
 	}
-	if rbStr := ctx.GetStringFlagValue(commands.ReleaseBundlesFlag); rbStr != "" {
+	if rbStr := ctx.GetStringFlagValue(commands.SourceTypeReleaseBundlesFlag); rbStr != "" {
 		releaseBundles, err := cv.parseReleaseBundles(rbStr)
 		if err != nil {
 			return nil, err
 		}
 		sources.ReleaseBundles = releaseBundles
 	}
-	if srcVersionsStr := ctx.GetStringFlagValue(commands.SourceVersionFlag); srcVersionsStr != "" {
+	if srcVersionsStr := ctx.GetStringFlagValue(commands.SourceTypeApplicationVersionsFlag); srcVersionsStr != "" {
 		sourceVersions, err := cv.parseSourceVersions(srcVersionsStr)
 		if err != nil {
 			return nil, err
@@ -164,17 +151,29 @@ func (cv *createAppVersionCommand) loadFromSpec(ctx *components.Context) (*model
 }
 
 func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.CreateVersionBuild, error) {
+	const (
+		nameField       = "name"
+		idField         = "id"
+		includeDepField = "include_deps"
+	)
+
 	var builds []model.CreateVersionBuild
-	for _, parts := range utils.ParseDelimitedSlice(buildsStr) {
-		if len(parts) < 2 || len(parts) > 3 {
-			return nil, errorutils.CheckErrorf("invalid build format: %v", parts)
+	buildEntries := utils.ParseSliceFlag(buildsStr)
+	for _, entry := range buildEntries {
+		buildEntryMap, err := utils.ParseKeyValueString(entry, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid build format: %v", err)
 		}
 		build := model.CreateVersionBuild{
-			Name:   parts[0],
-			Number: parts[1],
+			Name:   buildEntryMap[nameField],
+			Number: buildEntryMap[idField],
 		}
-		if len(parts) == 3 {
-			build.Started = parts[2]
+		if _, ok := buildEntryMap[includeDepField]; ok {
+			includeDep, err := strconv.ParseBool(buildEntryMap[includeDepField])
+			if err != nil {
+				return nil, errorutils.CheckErrorf("invalid build format: %v", err)
+			}
+			build.IncludeDependencies = includeDep
 		}
 		builds = append(builds, build)
 	}
@@ -182,30 +181,42 @@ func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.Create
 }
 
 func (cv *createAppVersionCommand) parseReleaseBundles(rbStr string) ([]model.CreateVersionReleaseBundle, error) {
-	pairs, err := utils.ParseNameVersionPairs(rbStr)
-	if err != nil {
-		return nil, errorutils.CheckErrorf("invalid release bundle format: %v", err)
-	}
+	const (
+		nameField    = "name"
+		versionField = "version"
+	)
+
 	var bundles []model.CreateVersionReleaseBundle
-	for _, pair := range pairs {
+	releaseBundleEntries := utils.ParseSliceFlag(rbStr)
+	for _, entry := range releaseBundleEntries {
+		releaseBundleEntryMap, err := utils.ParseKeyValueString(entry, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid release bundle format: %v", err)
+		}
 		bundles = append(bundles, model.CreateVersionReleaseBundle{
-			Name:    pair[0],
-			Version: pair[1],
+			Name:    releaseBundleEntryMap[nameField],
+			Version: releaseBundleEntryMap[versionField],
 		})
 	}
 	return bundles, nil
 }
 
-func (cv *createAppVersionCommand) parseSourceVersions(sourceVersionsStr string) ([]model.CreateVersionReference, error) {
-	pairs, err := utils.ParseNameVersionPairs(sourceVersionsStr)
-	if err != nil {
-		return nil, errorutils.CheckErrorf("invalid source version format: %v", err)
-	}
+func (cv *createAppVersionCommand) parseSourceVersions(applicationVersionsStr string) ([]model.CreateVersionReference, error) {
+	const (
+		applicationKeyField = "application-key"
+		versionField        = "version"
+	)
+
 	var refs []model.CreateVersionReference
-	for _, pair := range pairs {
+	applicationVersionEntries := utils.ParseSliceFlag(applicationVersionsStr)
+	for _, entry := range applicationVersionEntries {
+		applicationVersionEntryMap, err := utils.ParseKeyValueString(entry, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid application version format: %v", err)
+		}
 		refs = append(refs, model.CreateVersionReference{
-			ApplicationKey: pair[0],
-			Version:        pair[1],
+			ApplicationKey: applicationVersionEntryMap[applicationKeyField],
+			Version:        applicationVersionEntryMap[versionField],
 		})
 	}
 	return refs, nil
@@ -220,22 +231,14 @@ func validateCreateAppVersionContext(ctx *components.Context) error {
 	}
 
 	hasSource := ctx.IsFlagSet(commands.SpecFlag) ||
-		ctx.IsFlagSet(commands.PackageNameFlag) ||
-		ctx.IsFlagSet(commands.BuildsFlag) ||
-		ctx.IsFlagSet(commands.ReleaseBundlesFlag) ||
-		ctx.IsFlagSet(commands.SourceVersionFlag)
+		ctx.IsFlagSet(commands.SourceTypeBuildsFlag) ||
+		ctx.IsFlagSet(commands.SourceTypeReleaseBundlesFlag) ||
+		ctx.IsFlagSet(commands.SourceTypeApplicationVersionsFlag)
 
 	if !hasSource {
 		return errorutils.CheckErrorf(
-			"At least one source flag is required to create an application version. Please provide one of the following: --%s, --%s, --%s, --%s, or --%s.",
-			commands.SpecFlag, commands.PackageNameFlag, commands.BuildsFlag, commands.ReleaseBundlesFlag, commands.SourceVersionFlag)
-	}
-
-	// Validate package details if used
-	if ctx.IsFlagSet(commands.PackageNameFlag) {
-		if !ctx.IsFlagSet(commands.PackageVersionFlag) || !ctx.IsFlagSet(commands.PackageRepositoryFlag) {
-			return handleMissingPackageDetailsError()
-		}
+			"At least one source flag is required to create an application version. Please provide one of the following: --%s, --%s, --%s, or --%s.",
+			commands.SpecFlag, commands.SourceTypeBuildsFlag, commands.SourceTypeReleaseBundlesFlag, commands.SourceTypeApplicationVersionsFlag)
 	}
 
 	return nil
@@ -265,19 +268,13 @@ func GetCreateAppVersionCommand(appContext app.Context) components.Command {
 	}
 }
 
-func handleMissingPackageDetailsError() error {
-	return errorutils.CheckErrorf("Missing packages information. Please provide the following flags --%s or the set of: --%s, --%s, --%s, --%s",
-		commands.SpecFlag, commands.PackageTypeFlag, commands.PackageNameFlag, commands.PackageVersionFlag, commands.PackageRepositoryFlag)
-}
-
 // Returns error if both --spec and any other source flag are set
 func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
 	if ctx.IsFlagSet(commands.SpecFlag) {
 		otherSourceFlags := []string{
-			commands.PackageNameFlag,
-			commands.BuildsFlag,
-			commands.ReleaseBundlesFlag,
-			commands.SourceVersionFlag,
+			commands.SourceTypeBuildsFlag,
+			commands.SourceTypeReleaseBundlesFlag,
+			commands.SourceTypeApplicationVersionsFlag,
 		}
 		for _, flag := range otherSourceFlags {
 			if ctx.IsFlagSet(flag) {

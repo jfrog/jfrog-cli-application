@@ -56,11 +56,15 @@ func ParseSliceFlag(flagValue string) []string {
 // ParseMapFlag parses a semicolon-separated string of key=value pairs into a map[string]string.
 // Returns an error if any pair does not contain exactly one '='.
 func ParseMapFlag(flagValue string) (map[string]string, error) {
-	if flagValue == "" {
+	return ParseKeyValueString(flagValue, ";")
+}
+
+func ParseKeyValueString(value, separator string) (map[string]string, error) {
+	if value == "" {
 		return nil, nil
 	}
 	result := make(map[string]string)
-	pairs := strings.Split(flagValue, ";")
+	pairs := strings.Split(value, separator)
 	for _, pair := range pairs {
 		keyValue := strings.SplitN(pair, "=", 2)
 		if len(keyValue) != 2 {
@@ -85,25 +89,6 @@ func ValidateEnumFlag(flagName, value string, defaultValue string, allowedValues
 
 	return "", errorutils.CheckErrorf("invalid value for --%s: '%s'. Allowed values: %s",
 		flagName, value, coreutils.ListToText(allowedValues))
-}
-
-// ParsePackagesFlag parses a comma-separated list of package name:version pairs into a slice of maps.
-// Each map contains keys "name" and "version". Returns an error if any entry is not in the expected format.
-// Example input: "pkg1:1.0.0,pkg2:2.0.0" => []map[string]string{{"name": "pkg1", "version": "1.0.0"}, {"name": "pkg2", "version": "2.0.0"}}
-func ParsePackagesFlag(flagValue string) ([]map[string]string, error) {
-	if flagValue == "" {
-		return nil, nil
-	}
-	pairs := strings.Split(flagValue, ",")
-	var result []map[string]string
-	for _, pair := range pairs {
-		parts := strings.SplitN(strings.TrimSpace(pair), PartSeparator, 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid package format: %s (expected <name>:<version>)", pair)
-		}
-		result = append(result, map[string]string{"name": parts[0], "version": parts[1]})
-	}
-	return result, nil
 }
 
 // ParseDelimitedSlice splits a delimited string into a slice of string slices.

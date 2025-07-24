@@ -28,7 +28,7 @@ func NewVersionService() VersionService {
 
 func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/versions/", request.ApplicationKey)
-	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, nil)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{"async": "false"})
 	if err != nil {
 		return err
 	}
