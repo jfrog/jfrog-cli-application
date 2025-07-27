@@ -1,0 +1,11 @@
+{
+  "project_key": "${PROJECT_KEY}",
+  "application_name": "${APP_NAME}",
+  "description": "A test application for ${ENVIRONMENT}",
+  "maturity_level": "${MATURITY_LEVEL}",
+  "criticality": "${CRITICALITY}",
+  "labels": {
+    "environment": "${ENVIRONMENT}",
+    "region": "${REGION}"
+  }
+} 
