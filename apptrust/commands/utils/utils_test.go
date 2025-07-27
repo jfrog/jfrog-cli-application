@@ -115,40 +115,6 @@ func TestValidateEnumFlag(t *testing.T) {
 	}
 }
 
-func TestParsePackagesFlag(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     string
-		expected  []map[string]string
-		expectErr bool
-	}{
-		{"empty string", "", nil, false},
-		{"single package", "foo:1.0.0", []map[string]string{{"name": "foo", "version": "1.0.0"}}, false},
-		{"multiple packages", "foo:1.0.0,bar:2.0.0", []map[string]string{{"name": "foo", "version": "1.0.0"}, {"name": "bar", "version": "2.0.0"}}, false},
-		{"spaces", " foo:1.0.0 , bar:2.0.0 ", []map[string]string{{"name": "foo", "version": "1.0.0"}, {"name": "bar", "version": "2.0.0"}}, false},
-		{"invalid format", "foo", nil, true},
-		{"missing version", "foo:", []map[string]string{{"name": "foo", "version": ""}}, false},
-		{"missing name", ":1.0.0", []map[string]string{{"name": "", "version": "1.0.0"}}, false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result, err := ParsePackagesFlag(tt.input)
-			if tt.expectErr {
-				if err == nil {
-					t.Errorf("expected error for input %q, got nil", tt.input)
-				}
-				return
-			}
-			if err != nil {
-				t.Errorf("unexpected error for input %q: %v", tt.input, err)
-			}
-			if !reflect.DeepEqual(result, tt.expected) {
-				t.Errorf("ParsePackagesFlag(%q) = %v, want %v", tt.input, result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestParseDelimitedSlice(t *testing.T) {
 	tests := []struct {
 		name     string

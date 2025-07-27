@@ -3,6 +3,7 @@ package version
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/service/versions"
 
@@ -164,6 +165,10 @@ func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.Create
 		if err != nil {
 			return nil, errorutils.CheckErrorf("invalid build format: %v", err)
 		}
+		err = validateRequiredFieldsInMap(buildEntryMap, nameField, idField)
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid build format: %v", err)
+		}
 		build := model.CreateVersionBuild{
 			Name:   buildEntryMap[nameField],
 			Number: buildEntryMap[idField],
@@ -193,6 +198,10 @@ func (cv *createAppVersionCommand) parseReleaseBundles(rbStr string) ([]model.Cr
 		if err != nil {
 			return nil, errorutils.CheckErrorf("invalid release bundle format: %v", err)
 		}
+		err = validateRequiredFieldsInMap(releaseBundleEntryMap, nameField, versionField)
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid release bundle format: %v", err)
+		}
 		bundles = append(bundles, model.CreateVersionReleaseBundle{
 			Name:    releaseBundleEntryMap[nameField],
 			Version: releaseBundleEntryMap[versionField],
@@ -211,6 +220,10 @@ func (cv *createAppVersionCommand) parseSourceVersions(applicationVersionsStr st
 	applicationVersionEntries := utils.ParseSliceFlag(applicationVersionsStr)
 	for _, entry := range applicationVersionEntries {
 		applicationVersionEntryMap, err := utils.ParseKeyValueString(entry, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid application version format: %v", err)
+		}
+		err = validateRequiredFieldsInMap(applicationVersionEntryMap, applicationKeyField, versionField)
 		if err != nil {
 			return nil, errorutils.CheckErrorf("invalid application version format: %v", err)
 		}
@@ -280,6 +293,18 @@ func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
 			if ctx.IsFlagSet(flag) {
 				return errorutils.CheckErrorf("--spec provided: all other source flags (e.g., --%s) are not allowed.", flag)
 			}
+		}
+	}
+	return nil
+}
+
+func validateRequiredFieldsInMap(m map[string]string, requiredFields ...string) error {
+	if m == nil {
+		return errorutils.CheckErrorf("missing required fields: %v", strings.Join(requiredFields, ", "))
+	}
+	for _, field := range requiredFields {
+		if _, exists := m[field]; !exists {
+			return errorutils.CheckErrorf("missing required field: %s", field)
 		}
 	}
 	return nil

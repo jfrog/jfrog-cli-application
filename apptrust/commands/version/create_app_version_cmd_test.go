@@ -89,7 +89,7 @@ func TestCreateAppVersionCommand_SpecAndFlags_Error(t *testing.T) {
 		Arguments: []string{"app-key", "1.0.0"},
 	}
 	ctx.AddStringFlag(commands.SpecFlag, testSpecPath)
-	ctx.AddStringFlag(commands.PackageNameFlag, "name")
+	ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0")
 	ctx.AddStringFlag("url", "https://example.com")
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
@@ -116,23 +116,18 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
 				ctx.AddStringFlag(commands.TagFlag, "release-tag")
-				ctx.AddStringFlag(commands.PackagesFlag, "pkg1:1.2.3,pkg2:2.3.4")
-				ctx.AddStringFlag(commands.BuildsFlag, "build1:1.0.0:2024-01-01;build2:2.0.0:2024-02-01")
-				ctx.AddStringFlag(commands.ReleaseBundlesFlag, "rb1:1.0.0;rb2:2.0.0")
-				ctx.AddStringFlag(commands.SourceVersionFlag, "source-app:3.2.1")
+				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0,include_deps=true;name=build2,id=2.0.0,include_deps=false")
+				ctx.AddStringFlag(commands.SourceTypeReleaseBundlesFlag, "name=rb1,version=1.0.0;name=rb2,version=2.0.0")
+				ctx.AddStringFlag(commands.SourceTypeApplicationVersionsFlag, "application-key=source-app,version=3.2.1")
 			},
 			expectsPayload: &model.CreateAppVersionRequest{
 				ApplicationKey: "app-key",
 				Version:        "1.0.0",
 				Tag:            "release-tag",
 				Sources: &model.CreateVersionSources{
-					Packages: []model.CreateVersionPackage{
-						{Name: "pkg1", Version: "1.2.3"},
-						{Name: "pkg2", Version: "2.3.4"},
-					},
 					Builds: []model.CreateVersionBuild{
-						{Name: "build1", Number: "1.0.0", Started: "2024-01-01"},
-						{Name: "build2", Number: "2.0.0", Started: "2024-02-01"},
+						{Name: "build1", Number: "1.0.0", IncludeDependencies: true},
+						{Name: "build2", Number: "2.0.0", IncludeDependencies: false},
 					},
 					ReleaseBundles: []model.CreateVersionReleaseBundle{
 						{Name: "rb1", Version: "1.0.0"},
@@ -162,7 +157,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide one of the following: --spec, --package-name, --builds, --release-bundles, or --source-version.",
+			errorContains:  "At least one source flag is required to create an application version. Please provide one of the following: --spec, --source-type-builds, --source-type-release-bundles, or --source-type-application-versions.",
 		},
 		{
 			name: "empty flags",
@@ -171,7 +166,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide one of the following: --spec, --package-name, --builds, --release-bundles, or --source-version.",
+			errorContains:  "At least one source flag is required to create an application version. Please provide one of the following: --spec, --source-type-builds, --source-type-release-bundles, or --source-type-application-versions.",
 		},
 	}
 
@@ -215,70 +210,191 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 func TestParseBuilds(t *testing.T) {
 	cmd := &createAppVersionCommand{}
 
-	// Test basic build parsing
-	builds, err := cmd.parseBuilds("build1:1.0.0:2024-01-01;build2:2.0.0:2024-02-01")
-	assert.NoError(t, err)
-	assert.Len(t, builds, 2)
-	assert.Equal(t, "build1", builds[0].Name)
-	assert.Equal(t, "1.0.0", builds[0].Number)
-	assert.Equal(t, "build2", builds[1].Name)
-	assert.Equal(t, "2.0.0", builds[1].Number)
+	tests := []struct {
+		name           string
+		input          string
+		expectError    bool
+		errorContains  string
+		expectedBuilds []model.CreateVersionBuild
+	}{
+		{
+			name:        "multiple builds",
+			input:       "name=build1,id=1.0.0,include_deps=true;name=build2,id=2.0.0,include_deps=false;name=build3,id=3.0.0",
+			expectError: false,
+			expectedBuilds: []model.CreateVersionBuild{
+				{Name: "build1", Number: "1.0.0", IncludeDependencies: true},
+				{Name: "build2", Number: "2.0.0", IncludeDependencies: false},
+				{Name: "build3", Number: "3.0.0", IncludeDependencies: false},
+			},
+		},
+		{
+			name:           "empty string",
+			input:          "",
+			expectError:    false,
+			expectedBuilds: nil,
+		},
+		{
+			name:          "missing name field",
+			input:         "id=1.0.0",
+			expectError:   true,
+			errorContains: "missing required field 'name'",
+		},
+		{
+			name:          "missing id field",
+			input:         "name=build1",
+			expectError:   true,
+			errorContains: "missing required field 'id'",
+		},
+		{
+			name:          "invalid format",
+			input:         "build1",
+			expectError:   true,
+			errorContains: "invalid build format",
+		},
+		{
+			name:          "invalid include_deps value",
+			input:         "name=build1,id=1.0.0,include_deps=invalid",
+			expectError:   true,
+			errorContains: "invalid build format",
+		},
+	}
 
-	// Test invalid format
-	_, err = cmd.parseBuilds("build1")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid build format")
-
-	// Test too many parts
-	_, err = cmd.parseBuilds("build1:1.0.0:timestamp:extra")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid build format")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			builds, err := cmd.parseBuilds(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedBuilds, builds)
+			}
+		})
+	}
 }
 
 func TestParseReleaseBundles(t *testing.T) {
 	cmd := &createAppVersionCommand{}
 
-	// Test basic release bundle parsing
-	rbs, err := cmd.parseReleaseBundles("rb1:1.0.0;rb2:2.0.0")
-	assert.NoError(t, err)
-	assert.Equal(t, 2, len(rbs))
-	assert.Equal(t, "rb1", rbs[0].Name)
-	assert.Equal(t, "1.0.0", rbs[0].Version)
-	assert.Equal(t, "rb2", rbs[1].Name)
-	assert.Equal(t, "2.0.0", rbs[1].Version)
+	tests := []struct {
+		name                   string
+		input                  string
+		expectError            bool
+		errorContains          string
+		expectedReleaseBundles []model.CreateVersionReleaseBundle
+	}{
+		{
+			name:        "multiple release bundles",
+			input:       "name=rb1,version=1.0.0;name=rb2,version=2.0.0",
+			expectError: false,
+			expectedReleaseBundles: []model.CreateVersionReleaseBundle{
+				{Name: "rb1", Version: "1.0.0"},
+				{Name: "rb2", Version: "2.0.0"},
+			},
+		},
+		{
+			name:                   "empty string",
+			input:                  "",
+			expectError:            false,
+			expectedReleaseBundles: nil,
+		},
+		{
+			name:          "missing name field",
+			input:         "version=1.0.0",
+			expectError:   true,
+			errorContains: "missing required field 'name'",
+		},
+		{
+			name:          "missing version field",
+			input:         "name=rb1",
+			expectError:   true,
+			errorContains: "missing required field 'version'",
+		},
+		{
+			name:          "invalid format",
+			input:         "rb1",
+			expectError:   true,
+			errorContains: "invalid release bundle format",
+		},
+	}
 
-	// Test invalid format
-	_, err = cmd.parseReleaseBundles("rb1")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid release bundle format")
-
-	// Test invalid format with too many parts
-	_, err = cmd.parseReleaseBundles("rb1:1.0.0:extra")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid release bundle format")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rbs, err := cmd.parseReleaseBundles(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedReleaseBundles, rbs)
+			}
+		})
+	}
 }
 
 func TestParseSourceVersions(t *testing.T) {
 	cmd := &createAppVersionCommand{}
 
-	// Test basic source versions parsing
-	svs, err := cmd.parseSourceVersions("app1:1.0.0;app2:2.0.0")
-	assert.NoError(t, err)
-	assert.Equal(t, 2, len(svs))
-	assert.Equal(t, "app1", svs[0].ApplicationKey)
-	assert.Equal(t, "1.0.0", svs[0].Version)
-	assert.Equal(t, "app2", svs[1].ApplicationKey)
-	assert.Equal(t, "2.0.0", svs[1].Version)
+	tests := []struct {
+		name                   string
+		input                  string
+		expectError            bool
+		errorContains          string
+		expectedSourceVersions []model.CreateVersionReference
+	}{
+		{
+			name:        "multiple source versions",
+			input:       "application-key=app1,version=1.0.0;application-key=app2,version=2.0.0",
+			expectError: false,
+			expectedSourceVersions: []model.CreateVersionReference{
+				{ApplicationKey: "app1", Version: "1.0.0"},
+				{ApplicationKey: "app2", Version: "2.0.0"},
+			},
+		},
+		{
+			name:                   "empty string",
+			input:                  "",
+			expectError:            false,
+			expectedSourceVersions: nil,
+		},
+		{
+			name:          "missing application-key field",
+			input:         "version=1.0.0",
+			expectError:   true,
+			errorContains: "missing required field 'application-key'",
+		},
+		{
+			name:          "missing version field",
+			input:         "application-key=app1",
+			expectError:   true,
+			errorContains: "missing required field 'version'",
+		},
+		{
+			name:          "invalid format",
+			input:         "app1",
+			expectError:   true,
+			errorContains: "invalid application version format",
+		},
+	}
 
-	// Test invalid format
-	_, err = cmd.parseSourceVersions("app1")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid source version format")
-
-	// Test invalid format with too many parts
-	_, err = cmd.parseSourceVersions("app1:1.0.0:extra")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "invalid source version format")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svs, err := cmd.parseSourceVersions(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedSourceVersions, svs)
+			}
+		})
+	}
 }
 
 func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
@@ -375,6 +491,170 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectsPayload, actualPayload)
+			}
+		})
+	}
+}
+
+func TestValidateCreateAppVersionContext(t *testing.T) {
+	tests := []struct {
+		name          string
+		ctxSetup      func(*components.Context)
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name: "no source flags",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+			},
+			expectError:   true,
+			errorContains: "At least one source flag is required",
+		},
+		{
+			name: "valid context with builds flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0")
+			},
+			expectError: false,
+		},
+		{
+			name: "valid context with spec flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			tt.ctxSetup(ctx)
+
+			err := validateCreateAppVersionContext(ctx)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateNoSpecAndFlagsTogether(t *testing.T) {
+	tests := []struct {
+		name          string
+		ctxSetup      func(*components.Context)
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name: "spec flag with builds flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0")
+			},
+			expectError:   true,
+			errorContains: "--spec provided",
+		},
+		{
+			name: "spec flag with release bundles flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.SourceTypeReleaseBundlesFlag, "name=rb1,version=1.0.0")
+			},
+			expectError:   true,
+			errorContains: "--spec provided",
+		},
+		{
+			name: "spec flag with application versions flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.SourceTypeApplicationVersionsFlag, "application-key=app1,version=1.0.0")
+			},
+			expectError:   true,
+			errorContains: "--spec provided",
+		},
+		{
+			name: "spec flag only",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+			},
+			expectError: false,
+		},
+		{
+			name: "other flags only",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0")
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			tt.ctxSetup(ctx)
+
+			err := validateNoSpecAndFlagsTogether(ctx)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateRequiredFieldsInMap(t *testing.T) {
+	tests := []struct {
+		name           string
+		inputMap       map[string]string
+		requiredFields []string
+		expectError    bool
+		errorContains  string
+	}{
+		{
+			name:           "nil map",
+			inputMap:       nil,
+			requiredFields: []string{"field1", "field2"},
+			expectError:    true,
+			errorContains:  "missing required fields: field1, field2",
+		},
+		{
+			name:           "missing field",
+			inputMap:       map[string]string{"field1": "value1"},
+			requiredFields: []string{"field1", "field2"},
+			expectError:    true,
+			errorContains:  "missing required field: field2",
+		},
+		{
+			name:           "all required fields present",
+			inputMap:       map[string]string{"field1": "value1", "field2": "value2", "extra": "value3"},
+			requiredFields: []string{"field1", "field2"},
+			expectError:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateRequiredFieldsInMap(tt.inputMap, tt.requiredFields...)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
