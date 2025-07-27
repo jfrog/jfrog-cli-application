@@ -237,13 +237,13 @@ func TestParseBuilds(t *testing.T) {
 			name:          "missing name field",
 			input:         "id=1.0.0",
 			expectError:   true,
-			errorContains: "missing required field 'name'",
+			errorContains: "missing required field: name",
 		},
 		{
 			name:          "missing id field",
 			input:         "name=build1",
 			expectError:   true,
-			errorContains: "missing required field 'id'",
+			errorContains: "missing required field: id",
 		},
 		{
 			name:          "invalid format",
@@ -304,13 +304,13 @@ func TestParseReleaseBundles(t *testing.T) {
 			name:          "missing name field",
 			input:         "version=1.0.0",
 			expectError:   true,
-			errorContains: "missing required field 'name'",
+			errorContains: "missing required field: name",
 		},
 		{
 			name:          "missing version field",
 			input:         "name=rb1",
 			expectError:   true,
-			errorContains: "missing required field 'version'",
+			errorContains: "missing required field: version",
 		},
 		{
 			name:          "invalid format",
@@ -365,13 +365,13 @@ func TestParseSourceVersions(t *testing.T) {
 			name:          "missing application-key field",
 			input:         "version=1.0.0",
 			expectError:   true,
-			errorContains: "missing required field 'application-key'",
+			errorContains: "missing required field: application-key",
 		},
 		{
 			name:          "missing version field",
 			input:         "application-key=app1",
 			expectError:   true,
-			errorContains: "missing required field 'version'",
+			errorContains: "missing required field: version",
 		},
 		{
 			name:          "invalid format",
