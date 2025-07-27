@@ -39,7 +39,6 @@ const (
 	LabelsFlag                        = "labels"
 	UserOwnersFlag                    = "user-owners"
 	GroupOwnersFlag                   = "group-owners"
-	SigningKeyFlag                    = "signing-key"
 	SyncFlag                          = "sync"
 	PromotionTypeFlag                 = "promotion-type"
 	DryRunFlag                        = "dry-run"
@@ -74,7 +73,6 @@ var flagsMap = map[string]components.Flag{
 	LabelsFlag:                        components.NewStringFlag(LabelsFlag, "List of semicolon-separated (;) labels in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes).", func(f *components.StringFlag) { f.Mandatory = false }),
 	UserOwnersFlag:                    components.NewStringFlag(UserOwnersFlag, "Comma-separated list of user owners.", func(f *components.StringFlag) { f.Mandatory = false }),
 	GroupOwnersFlag:                   components.NewStringFlag(GroupOwnersFlag, "Comma-separated list of group owners.", func(f *components.StringFlag) { f.Mandatory = false }),
-	SigningKeyFlag:                    components.NewStringFlag(SigningKeyFlag, "The GPG/RSA key-pair name given in Artifactory.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SyncFlag:                          components.NewBoolFlag(SyncFlag, "Whether to synchronize the operation.", components.WithBoolDefaultValueTrue()),
 	PromotionTypeFlag:                 components.NewStringFlag(PromotionTypeFlag, "The promotion type. The following values are supported: "+coreutils.ListToText(model.PromotionTypeValues), func(f *components.StringFlag) { f.Mandatory = false; f.DefaultValue = model.PromotionTypeCopy }),
 	DryRunFlag:                        components.NewBoolFlag(DryRunFlag, "Perform a simulation of the operation.", components.WithBoolDefaultValueFalse()),
@@ -176,7 +174,6 @@ var commandFlags = map[string][]string{
 		LabelsFlag,
 		UserOwnersFlag,
 		GroupOwnersFlag,
-		SigningKeyFlag,
 		SpecFlag,
 		SpecVarsFlag,
 	},
@@ -193,9 +190,6 @@ var commandFlags = map[string][]string{
 		LabelsFlag,
 		UserOwnersFlag,
 		GroupOwnersFlag,
-		SigningKeyFlag,
-		SpecFlag,
-		SpecVarsFlag,
 	},
 
 	AppDelete: {
