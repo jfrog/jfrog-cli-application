@@ -8,17 +8,18 @@ import (
 )
 
 const (
-	Ping           = "ping"
-	VersionCreate  = "version-create"
-	VersionPromote = "version-promote"
-	VersionDelete  = "version-delete"
-	VersionRelease = "version-release"
-	VersionUpdate  = "version-update"
-	PackageBind    = "package-bind"
-	PackageUnbind  = "package-unbind"
-	AppCreate      = "app-create"
-	AppUpdate      = "app-update"
-	AppDelete      = "app-delete"
+	Ping            = "ping"
+	VersionCreate   = "version-create"
+	VersionPromote  = "version-promote"
+	VersionRollback = "version-rollback"
+	VersionDelete   = "version-delete"
+	VersionRelease  = "version-release"
+	VersionUpdate   = "version-update"
+	PackageBind     = "package-bind"
+	PackageUnbind   = "package-unbind"
+	AppCreate       = "app-create"
+	AppUpdate       = "app-update"
+	AppDelete       = "app-delete"
 )
 
 const (
@@ -51,6 +52,7 @@ const (
 	SourceTypeApplicationVersionsFlag = "source-type-application-versions"
 	PropertiesFlag                    = "properties"
 	DeletePropertyFlag                = "delete-property"
+	FromStageFlag                     = "from-stage"
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -85,6 +87,7 @@ var flagsMap = map[string]components.Flag{
 	SourceTypeApplicationVersionsFlag: components.NewStringFlag(SourceTypeApplicationVersionsFlag, "List of semicolon-separated (;) application versions in the form of 'application-key=app1, version=version1; application-key=app2, version=version2' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PropertiesFlag:                    components.NewStringFlag(PropertiesFlag, "Sets or updates custom properties for the application version in format 'key1=value1[,value2,...];key2=value3[,value4,...]'", func(f *components.StringFlag) { f.Mandatory = false }),
 	DeletePropertyFlag:                components.NewStringFlag(DeletePropertyFlag, "Remove a property key and all its values", func(f *components.StringFlag) { f.Mandatory = false }),
+	FromStageFlag:                     components.NewStringFlag(FromStageFlag, "The name of the stage from which to roll back the application version.", func(f *components.StringFlag) { f.Mandatory = true }),
 }
 
 var commandFlags = map[string][]string{
@@ -128,6 +131,13 @@ var commandFlags = map[string][]string{
 		user,
 		accessToken,
 		serverId,
+	},
+	VersionRollback: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		FromStageFlag,
 	},
 	VersionUpdate: {
 		url,
