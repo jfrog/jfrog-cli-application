@@ -47,11 +47,9 @@ func (rv *rollbackAppVersionCommand) prepareAndRunCommand(ctx *components.Contex
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 
-	// Extract from arguments
 	rv.applicationKey = ctx.Arguments[0]
 	rv.version = ctx.Arguments[1]
 
-	// Extract from-stage flag value
 	fromStage := ctx.GetStringFlagValue(commands.FromStageFlag)
 	if fromStage == "" {
 		return errorutils.CheckErrorf("the --%s flag is required", commands.FromStageFlag)
