@@ -19,3 +19,4 @@ func NewRollbackAppVersionRequest(fromStage string) *RollbackAppVersionRequest {
 		Async:     false, // Default to synchronous as per spec
 	}
 }
+

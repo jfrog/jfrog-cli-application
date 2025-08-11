@@ -90,3 +90,4 @@ func GetRollbackAppVersionCommand(appContext app.Context) components.Command {
 		Action: cmd.prepareAndRunCommand,
 	}
 }
+
