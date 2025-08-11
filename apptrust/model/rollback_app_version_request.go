@@ -16,6 +16,6 @@ type RollbackAppVersionResponse struct {
 func NewRollbackAppVersionRequest(fromStage string) *RollbackAppVersionRequest {
 	return &RollbackAppVersionRequest{
 		FromStage: fromStage,
-		Async:     false, // Default to synchronous as per spec
+		Async:     false,
 	}
 }
