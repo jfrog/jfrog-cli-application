@@ -2,7 +2,6 @@ package model
 
 type RollbackAppVersionRequest struct {
 	FromStage string `json:"from_stage"`
-	Async     bool   `json:"async,omitempty"`
 }
 
 type RollbackAppVersionResponse struct {
@@ -16,6 +15,5 @@ type RollbackAppVersionResponse struct {
 func NewRollbackAppVersionRequest(fromStage string) *RollbackAppVersionRequest {
 	return &RollbackAppVersionRequest{
 		FromStage: fromStage,
-		Async:     false,
 	}
 }

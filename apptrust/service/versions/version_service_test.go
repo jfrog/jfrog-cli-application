@@ -431,7 +431,6 @@ func TestRollbackAppVersion(t *testing.T) {
 			version:        "1.5.0",
 			payload: &model.RollbackAppVersionRequest{
 				FromStage: "qa",
-				Async:     false,
 			},
 			expectedStatus: http.StatusOK,
 			expectedError:  false,
@@ -442,7 +441,6 @@ func TestRollbackAppVersion(t *testing.T) {
 			version:        "1.5.0",
 			payload: &model.RollbackAppVersionRequest{
 				FromStage: "prod",
-				Async:     false,
 			},
 			expectedStatus: http.StatusAccepted,
 			expectedError:  false,
@@ -453,7 +451,6 @@ func TestRollbackAppVersion(t *testing.T) {
 			version:        "1.0.0",
 			payload: &model.RollbackAppVersionRequest{
 				FromStage: "nonexistent",
-				Async:     false,
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  true,

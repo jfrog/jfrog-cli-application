@@ -21,7 +21,6 @@ func TestRollbackAppVersionCommand_Run(t *testing.T) {
 	version := "1.5.0"
 	requestPayload := &model.RollbackAppVersionRequest{
 		FromStage: "qa",
-		Async:     false,
 	}
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
@@ -49,7 +48,6 @@ func TestRollbackAppVersionCommand_Run_Error(t *testing.T) {
 	version := "1.5.0"
 	requestPayload := &model.RollbackAppVersionRequest{
 		FromStage: "qa",
-		Async:     false,
 	}
 	expectedError := errors.New("rollback service error occurred")
 
