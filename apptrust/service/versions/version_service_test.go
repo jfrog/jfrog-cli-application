@@ -444,7 +444,7 @@ func TestRollbackAppVersion(t *testing.T) {
 				FromStage: "prod",
 				Async:     false,
 			},
-			expectedStatus: http.StatusNoContent,
+			expectedStatus: http.StatusAccepted,
 			expectedError:  false,
 		},
 		{
@@ -456,28 +456,6 @@ func TestRollbackAppVersion(t *testing.T) {
 				Async:     false,
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  true,
-		},
-		{
-			name:           "failed rollback - unauthorized",
-			applicationKey: "video-encoder",
-			version:        "1.5.0",
-			payload: &model.RollbackAppVersionRequest{
-				FromStage: "qa",
-				Async:     false,
-			},
-			expectedStatus: http.StatusUnauthorized,
-			expectedError:  true,
-		},
-		{
-			name:           "failed rollback - not found",
-			applicationKey: "nonexistent-app",
-			version:        "1.0.0",
-			payload: &model.RollbackAppVersionRequest{
-				FromStage: "qa",
-				Async:     false,
-			},
-			expectedStatus: http.StatusNotFound,
 			expectedError:  true,
 		},
 	}

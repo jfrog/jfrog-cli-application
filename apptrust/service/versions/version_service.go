@@ -79,7 +79,7 @@ func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey
 		return err
 	}
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusAccepted {
 		return fmt.Errorf("failed to rollback app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}

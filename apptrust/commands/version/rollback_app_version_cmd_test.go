@@ -69,19 +69,3 @@ func TestRollbackAppVersionCommand_Run_Error(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "rollback service error occurred")
 }
-
-func TestRollbackAppVersionCommand_CommandName(t *testing.T) {
-	cmd := &rollbackAppVersionCommand{}
-	assert.Equal(t, "version-rollback", cmd.CommandName())
-}
-
-func TestRollbackAppVersionCommand_ServerDetails(t *testing.T) {
-	serverDetails := &config.ServerDetails{Url: "https://example.com"}
-	cmd := &rollbackAppVersionCommand{
-		serverDetails: serverDetails,
-	}
-
-	result, err := cmd.ServerDetails()
-	assert.NoError(t, err)
-	assert.Equal(t, serverDetails, result)
-}

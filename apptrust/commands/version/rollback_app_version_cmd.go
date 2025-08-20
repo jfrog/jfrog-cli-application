@@ -14,7 +14,6 @@ import (
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
-	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
 type rollbackAppVersionCommand struct {
@@ -23,6 +22,7 @@ type rollbackAppVersionCommand struct {
 	applicationKey string
 	version        string
 	requestPayload *model.RollbackAppVersionRequest
+	fromStage      string
 }
 
 func (rv *rollbackAppVersionCommand) Run() error {
@@ -43,24 +43,20 @@ func (rv *rollbackAppVersionCommand) CommandName() string {
 }
 
 func (rv *rollbackAppVersionCommand) prepareAndRunCommand(ctx *components.Context) error {
-	if len(ctx.Arguments) != 2 {
+	if len(ctx.Arguments) != 3 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
 
 	rv.applicationKey = ctx.Arguments[0]
 	rv.version = ctx.Arguments[1]
-
-	fromStage := ctx.GetStringFlagValue(commands.FromStageFlag)
-	if fromStage == "" {
-		return errorutils.CheckErrorf("the --%s flag is required", commands.FromStageFlag)
-	}
+	rv.fromStage = ctx.Arguments[2]
 
 	serverDetails, err := utils.ServerDetailsByFlags(ctx)
 	if err != nil {
 		return err
 	}
 	rv.serverDetails = serverDetails
-	rv.requestPayload = model.NewRollbackAppVersionRequest(fromStage)
+	rv.requestPayload = model.NewRollbackAppVersionRequest(rv.fromStage)
 
 	return commonCLiCommands.Exec(rv)
 }
