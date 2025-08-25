@@ -11,7 +11,7 @@ type CreateVersionPackage struct {
 	Type       string `json:"type"`
 	Name       string `json:"name"`
 	Version    string `json:"version"`
-	Repository string `json:"repository"`
+	Repository string `json:"repository_key"`
 }
 
 type CreateVersionSources struct {

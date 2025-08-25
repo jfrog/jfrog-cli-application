@@ -69,6 +69,7 @@ func GetDeleteAppCommand(appContext app.Context) components.Command {
 				Optional:    false,
 			},
 		},
+		Flags:  commands.GetCommandFlags(commands.AppDelete),
 		Action: cmd.prepareAndRunCommand,
 	}
 }

@@ -23,6 +23,8 @@ import (
 //				system.GetPingCommand(appContext),
 //				version.GetCreateAppVersionCommand(appContext),
 //				version.GetPromoteAppVersionCommand(appContext),
+//				version.GetRollbackAppVersionCommand(appContext),
+//				version.GetReleaseAppVersionCommand(appContext),
 //				version.GetDeleteAppVersionCommand(appContext),
 //				packagecmds.GetBindPackageCommand(appContext),
 //				packagecmds.GetUnbindPackageCommand(appContext),

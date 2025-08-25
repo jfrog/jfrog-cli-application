@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 )
@@ -39,6 +40,7 @@ func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.C
 			response.StatusCode, responseBody)
 	}
 
+	log.Output(string(responseBody))
 	return nil
 }
 
@@ -54,6 +56,7 @@ func (vs *versionService) PromoteAppVersion(ctx service.Context, applicationKey,
 			response.StatusCode, responseBody)
 	}
 
+	log.Output(string(responseBody))
 	return nil
 }
 
@@ -69,6 +72,7 @@ func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey,
 			response.StatusCode, responseBody)
 	}
 
+	log.Output(string(responseBody))
 	return nil
 }
 
@@ -84,6 +88,7 @@ func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey
 			response.StatusCode, responseBody)
 	}
 
+	log.Output("Application version deleted successfully")
 	return nil
 }
 

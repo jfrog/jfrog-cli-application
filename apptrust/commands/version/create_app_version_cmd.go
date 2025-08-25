@@ -250,7 +250,7 @@ func validateCreateAppVersionContext(ctx *components.Context) error {
 
 	if !hasSource {
 		return errorutils.CheckErrorf(
-			"At least one source flag is required to create an application version. Please provide one of the following: --%s, --%s, --%s, or --%s.",
+			"At least one source flag is required to create an application version. Please provide --%s or at least one of the following: --%s, --%s, --%s.",
 			commands.SpecFlag, commands.SourceTypeBuildsFlag, commands.SourceTypeReleaseBundlesFlag, commands.SourceTypeApplicationVersionsFlag)
 	}
 

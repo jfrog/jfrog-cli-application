@@ -157,7 +157,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide one of the following: --spec, --source-type-builds, --source-type-release-bundles, or --source-type-application-versions.",
+			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions.",
 		},
 		{
 			name: "empty flags",
@@ -166,7 +166,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide one of the following: --spec, --source-type-builds, --source-type-release-bundles, or --source-type-application-versions.",
+			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions.",
 		},
 	}
 

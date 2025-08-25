@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
@@ -35,7 +36,7 @@ func (as *applicationService) CreateApplication(ctx service.Context, requestBody
 			response.StatusCode, responseBody)
 	}
 
-	fmt.Println(string(responseBody))
+	log.Output(string(responseBody))
 	return nil
 }
 
@@ -51,7 +52,7 @@ func (as *applicationService) UpdateApplication(ctx service.Context, requestBody
 			response.StatusCode, responseBody)
 	}
 
-	fmt.Println(string(responseBody))
+	log.Output(string(responseBody))
 	return nil
 }
 
@@ -67,6 +68,6 @@ func (as *applicationService) DeleteApplication(ctx service.Context, application
 			response.StatusCode, responseBody)
 	}
 
-	fmt.Println("Application deleted successfully")
+	log.Output("Application deleted successfully")
 	return nil
 }

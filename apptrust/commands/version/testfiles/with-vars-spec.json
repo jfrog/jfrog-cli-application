@@ -1,5 +1,10 @@
 {
   "packages": [
-    {"type": "npm", "name": "${PKG_NAME}", "version": "${PKG_VERSION}", "repository": "${PKG_REPO}"}
+    {
+      "type": "npm",
+      "name": "${PKG_NAME}",
+      "version": "${PKG_VERSION}",
+      "repository_key": "${PKG_REPO}"
+    }
   ]
 }

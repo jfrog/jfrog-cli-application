@@ -29,7 +29,6 @@ const (
 	accessToken = "access-token"
 	ProjectFlag = "project"
 
-	ApplicationKeyFlag                = "application-key"
 	SpecFlag                          = "spec"
 	SpecVarsFlag                      = "spec-vars"
 	StageVarsFlag                     = "stage"
@@ -63,17 +62,16 @@ var flagsMap = map[string]components.Flag{
 	accessToken: components.NewStringFlag(accessToken, "JFrog access token.", func(f *components.StringFlag) { f.Mandatory = false }),
 	ProjectFlag: components.NewStringFlag(ProjectFlag, "Project key associated with the application. This flag is mandatory when the --spec flag is not provided.", func(f *components.StringFlag) { f.Mandatory = false }),
 
-	ApplicationKeyFlag:                components.NewStringFlag(ApplicationKeyFlag, "Application key.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SpecFlag:                          components.NewStringFlag(SpecFlag, "A path to the specification file.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SpecVarsFlag:                      components.NewStringFlag(SpecVarsFlag, "List of semicolon-separated (;) variables in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes) to be replaced in the File Spec. In the File Spec, the variables should be used as follows: ${key1}.", func(f *components.StringFlag) { f.Mandatory = false }),
 	StageVarsFlag:                     components.NewStringFlag(StageVarsFlag, "Promotion stage.", func(f *components.StringFlag) { f.Mandatory = true }),
 	ApplicationNameFlag:               components.NewStringFlag(ApplicationNameFlag, "The display name of the application.", func(f *components.StringFlag) { f.Mandatory = false }),
 	DescriptionFlag:                   components.NewStringFlag(DescriptionFlag, "The description of the application.", func(f *components.StringFlag) { f.Mandatory = false }),
 	BusinessCriticalityFlag:           components.NewStringFlag(BusinessCriticalityFlag, "The business criticality level. The following values are supported: "+coreutils.ListToText(model.BusinessCriticalityValues), func(f *components.StringFlag) { f.Mandatory = false }),
-	MaturityLevelFlag:                 components.NewStringFlag(MaturityLevelFlag, "The maturity level.", func(f *components.StringFlag) { f.Mandatory = false }),
+	MaturityLevelFlag:                 components.NewStringFlag(MaturityLevelFlag, "The maturity level. The following values are supported: "+coreutils.ListToText(model.MaturityLevelValues), func(f *components.StringFlag) { f.Mandatory = false }),
 	LabelsFlag:                        components.NewStringFlag(LabelsFlag, "List of semicolon-separated (;) labels in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes).", func(f *components.StringFlag) { f.Mandatory = false }),
-	UserOwnersFlag:                    components.NewStringFlag(UserOwnersFlag, "Comma-separated list of user owners.", func(f *components.StringFlag) { f.Mandatory = false }),
-	GroupOwnersFlag:                   components.NewStringFlag(GroupOwnersFlag, "Comma-separated list of group owners.", func(f *components.StringFlag) { f.Mandatory = false }),
+	UserOwnersFlag:                    components.NewStringFlag(UserOwnersFlag, "semicolon-separated (;) list of user owners.", func(f *components.StringFlag) { f.Mandatory = false }),
+	GroupOwnersFlag:                   components.NewStringFlag(GroupOwnersFlag, "semicolon-separated (;) list of group owners.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SyncFlag:                          components.NewBoolFlag(SyncFlag, "Whether to synchronize the operation.", components.WithBoolDefaultValueTrue()),
 	PromotionTypeFlag:                 components.NewStringFlag(PromotionTypeFlag, "The promotion type. The following values are supported: "+coreutils.ListToText(model.PromotionTypeValues), func(f *components.StringFlag) { f.Mandatory = false; f.DefaultValue = model.PromotionTypeCopy }),
 	DryRunFlag:                        components.NewBoolFlag(DryRunFlag, "Perform a simulation of the operation.", components.WithBoolDefaultValueFalse()),
@@ -151,14 +149,12 @@ var commandFlags = map[string][]string{
 		user,
 		accessToken,
 		serverId,
-		ApplicationKeyFlag,
 	},
 	PackageUnbind: {
 		url,
 		user,
 		accessToken,
 		serverId,
-		ApplicationKeyFlag,
 	},
 
 	Ping: {

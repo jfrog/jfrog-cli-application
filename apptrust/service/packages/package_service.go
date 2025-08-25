@@ -9,6 +9,7 @@ import (
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type PackageService interface {
@@ -34,6 +35,7 @@ func (ps *packageService) BindPackage(ctx service.Context, applicationKey string
 			response.StatusCode, responseBody)
 	}
 
+	log.Output(string(responseBody))
 	return nil
 }
 
@@ -49,5 +51,6 @@ func (ps *packageService) UnbindPackage(ctx service.Context, applicationKey, pkg
 			response.StatusCode, responseBody)
 	}
 
+	log.Output("Package unbound successfully")
 	return nil
 }

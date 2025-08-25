@@ -3,7 +3,7 @@
     {
       "name": "pkg1",
       "version": "1.0.0",
-      "repository": "repo1",
+      "repository_key": "repo1",
       "type": "npm"
     }
   ],

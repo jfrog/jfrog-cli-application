@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type SystemService interface {
@@ -28,6 +29,6 @@ func (ss *systemService) Ping(ctx service.Context) error {
 		return fmt.Errorf("failed pinging application service. Status code: %d", response.StatusCode)
 	}
 
-	fmt.Println(string(body))
+	log.Output(string(body))
 	return nil
 }

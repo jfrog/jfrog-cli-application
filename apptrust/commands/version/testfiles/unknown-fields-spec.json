@@ -1,6 +1,11 @@
 {
   "packages": [
-    {"type": "npm", "name": "pkg-unknown", "version": "0.2.0", "repository": "repo-unknown"}
+    {
+      "type": "npm",
+      "name": "pkg-unknown",
+      "version": "0.2.0",
+      "repository_key": "repo-unknown"
+    }
   ],
   "unknown_field": "should be ignored"
 }

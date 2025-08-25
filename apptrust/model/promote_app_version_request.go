@@ -23,5 +23,5 @@ type CommonPromoteAppVersion struct {
 
 type PromoteAppVersionRequest struct {
 	CommonPromoteAppVersion
-	Stage string `json:"stage"`
+	Stage string `json:"target_stage"`
 }
