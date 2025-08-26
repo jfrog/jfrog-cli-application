@@ -108,7 +108,7 @@ func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, 
 }
 
 func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error {
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s?async=false", applicationKey, version)
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
 	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request)
 	if err != nil {
 		return err
