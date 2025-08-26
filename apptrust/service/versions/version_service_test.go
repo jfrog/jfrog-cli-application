@@ -466,7 +466,7 @@ func TestRollbackAppVersion(t *testing.T) {
 			mockClient := mockhttp.NewMockApptrustHttpClient(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockClient)
 
-			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/rollback?async=false"
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/rollback"
 			mockClient.EXPECT().Post(expectedEndpoint, tt.payload, map[string]string{}).
 				Return(&http.Response{StatusCode: tt.expectedStatus}, []byte(""), nil)
 

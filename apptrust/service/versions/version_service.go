@@ -77,7 +77,7 @@ func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey,
 }
 
 func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey, version string, request *model.RollbackAppVersionRequest) error {
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/rollback?async=false", applicationKey, version)
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/rollback", applicationKey, version)
 	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{})
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey
 			response.StatusCode, responseBody)
 	}
 
-	log.Output("Application version rollback completed successfully")
+	log.Output("Application version deleted successfully")
 	return nil
 }
 
