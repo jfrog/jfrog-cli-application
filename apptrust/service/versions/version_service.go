@@ -84,9 +84,9 @@ func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey
 	}
 
 	// Validate status code based on sync mode
-	expectedStatusCode := http.StatusAccepted // async mode expects 202
+	expectedStatusCode := http.StatusAccepted
 	if sync {
-		expectedStatusCode = http.StatusOK // sync mode expects 200
+		expectedStatusCode = http.StatusOK
 	}
 
 	if response.StatusCode != expectedStatusCode {

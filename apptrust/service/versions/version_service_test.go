@@ -467,7 +467,7 @@ func TestRollbackAppVersion(t *testing.T) {
 				FromStage: "qa",
 			},
 			sync:           true,
-			expectedStatus: http.StatusAccepted, // Wrong status for sync=true
+			expectedStatus: http.StatusAccepted,
 			expectedError:  true,
 		},
 		{
@@ -478,7 +478,7 @@ func TestRollbackAppVersion(t *testing.T) {
 				FromStage: "prod",
 			},
 			sync:           false,
-			expectedStatus: http.StatusOK, // Wrong status for sync=false
+			expectedStatus: http.StatusOK,
 			expectedError:  true,
 		},
 	}
