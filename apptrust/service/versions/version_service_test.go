@@ -397,7 +397,7 @@ func TestUpdateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0", tt.request, map[string]string{"async": "false"}).
+			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0?async=false", tt.request).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
@@ -466,8 +466,8 @@ func TestRollbackAppVersion(t *testing.T) {
 			mockClient := mockhttp.NewMockApptrustHttpClient(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockClient)
 
-			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/rollback"
-			mockClient.EXPECT().Post(expectedEndpoint, tt.payload, map[string]string{"async": "false"}).
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/rollback?async=false"
+			mockClient.EXPECT().Post(expectedEndpoint, tt.payload, map[string]string{}).
 				Return(&http.Response{StatusCode: tt.expectedStatus}, []byte(""), nil)
 
 			service := NewVersionService()

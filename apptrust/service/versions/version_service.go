@@ -77,8 +77,8 @@ func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey,
 }
 
 func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey, version string, request *model.RollbackAppVersionRequest) error {
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/rollback", applicationKey, version)
-	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{"async": "false"})
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/rollback?async=false", applicationKey, version)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{})
 	if err != nil {
 		return err
 	}
@@ -108,8 +108,8 @@ func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, 
 }
 
 func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error {
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
-	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request, map[string]string{"async": "false"})
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s?async=false", applicationKey, version)
+	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request)
 	if err != nil {
 		return err
 	}
