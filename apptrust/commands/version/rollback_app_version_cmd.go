@@ -23,6 +23,7 @@ type rollbackAppVersionCommand struct {
 	version        string
 	requestPayload *model.RollbackAppVersionRequest
 	fromStage      string
+	sync           bool
 }
 
 func (rv *rollbackAppVersionCommand) Run() error {
@@ -31,7 +32,7 @@ func (rv *rollbackAppVersionCommand) Run() error {
 		return err
 	}
 
-	return rv.versionService.RollbackAppVersion(ctx, rv.applicationKey, rv.version, rv.requestPayload)
+	return rv.versionService.RollbackAppVersion(ctx, rv.applicationKey, rv.version, rv.requestPayload, rv.sync)
 }
 
 func (rv *rollbackAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
@@ -50,6 +51,9 @@ func (rv *rollbackAppVersionCommand) prepareAndRunCommand(ctx *components.Contex
 	rv.applicationKey = ctx.Arguments[0]
 	rv.version = ctx.Arguments[1]
 	rv.fromStage = ctx.Arguments[2]
+
+	// Extract sync flag value
+	rv.sync = ctx.GetBoolFlagValue(commands.SyncFlag)
 
 	serverDetails, err := utils.ServerDetailsByFlags(ctx)
 	if err != nil {

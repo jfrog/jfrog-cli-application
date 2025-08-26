@@ -24,7 +24,7 @@ func TestRollbackAppVersionCommand_Run(t *testing.T) {
 	}
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), applicationKey, version, requestPayload).
+	mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), applicationKey, version, requestPayload, false).
 		Return(nil).Times(1)
 
 	cmd := &rollbackAppVersionCommand{
@@ -52,7 +52,7 @@ func TestRollbackAppVersionCommand_Run_Error(t *testing.T) {
 	expectedError := errors.New("rollback service error occurred")
 
 	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), applicationKey, version, requestPayload).
+	mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), applicationKey, version, requestPayload, false).
 		Return(expectedError).Times(1)
 
 	cmd := &rollbackAppVersionCommand{

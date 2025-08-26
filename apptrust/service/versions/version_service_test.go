@@ -422,26 +422,29 @@ func TestRollbackAppVersion(t *testing.T) {
 		applicationKey string
 		version        string
 		payload        *model.RollbackAppVersionRequest
+		sync           bool
 		expectedStatus int
 		expectedError  bool
 	}{
 		{
-			name:           "successful rollback with 200",
+			name:           "successful rollback with sync=true",
 			applicationKey: "video-encoder",
 			version:        "1.5.0",
 			payload: &model.RollbackAppVersionRequest{
 				FromStage: "qa",
 			},
+			sync:           true,
 			expectedStatus: http.StatusOK,
 			expectedError:  false,
 		},
 		{
-			name:           "successful rollback with 204",
+			name:           "successful rollback with sync=false",
 			applicationKey: "video-encoder",
 			version:        "1.5.0",
 			payload: &model.RollbackAppVersionRequest{
 				FromStage: "prod",
 			},
+			sync:           false,
 			expectedStatus: http.StatusAccepted,
 			expectedError:  false,
 		},
@@ -452,6 +455,7 @@ func TestRollbackAppVersion(t *testing.T) {
 			payload: &model.RollbackAppVersionRequest{
 				FromStage: "nonexistent",
 			},
+			sync:           true,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  true,
 		},
@@ -467,11 +471,11 @@ func TestRollbackAppVersion(t *testing.T) {
 			mockCtx.EXPECT().GetHttpClient().Return(mockClient)
 
 			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/rollback"
-			mockClient.EXPECT().Post(expectedEndpoint, tt.payload, map[string]string{}).
+			mockClient.EXPECT().Post(expectedEndpoint, tt.payload, map[string]string{"async": strconv.FormatBool(!tt.sync)}).
 				Return(&http.Response{StatusCode: tt.expectedStatus}, []byte(""), nil)
 
 			service := NewVersionService()
-			err := service.RollbackAppVersion(mockCtx, tt.applicationKey, tt.version, tt.payload)
+			err := service.RollbackAppVersion(mockCtx, tt.applicationKey, tt.version, tt.payload, tt.sync)
 
 			if tt.expectedError {
 				assert.Error(t, err)
