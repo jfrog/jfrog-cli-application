@@ -52,8 +52,7 @@ func (rv *rollbackAppVersionCommand) prepareAndRunCommand(ctx *components.Contex
 	rv.version = ctx.Arguments[1]
 	rv.fromStage = ctx.Arguments[2]
 
-	// Extract sync flag value
-	rv.sync = ctx.GetBoolFlagValue(commands.SyncFlag)
+	rv.sync = ctx.GetBoolTFlagValue(commands.SyncFlag)
 
 	serverDetails, err := utils.ServerDetailsByFlags(ctx)
 	if err != nil {
