@@ -21,18 +21,21 @@ func TestUpdateAppCommand_Run(t *testing.T) {
 
 	serverDetails := &config.ServerDetails{Url: "https://example.com"}
 	appKey := "app-key"
+	description := "Updated description"
+	maturityLevel := "production"
+	businessCriticality := "high"
 	requestPayload := &model.AppDescriptor{
 		ApplicationKey:      appKey,
 		ApplicationName:     "app-name",
-		Description:         "Updated description",
-		MaturityLevel:       "production",
-		BusinessCriticality: "high",
-		Labels: map[string]string{
+		Description:         &description,
+		MaturityLevel:       &maturityLevel,
+		BusinessCriticality: &businessCriticality,
+		Labels: &map[string]string{
 			"environment": "production",
 			"region":      "us-east",
 		},
-		UserOwners:  []string{"JohnD", "Dave Rice"},
-		GroupOwners: []string{"DevOps"},
+		UserOwners:  &[]string{"JohnD", "Dave Rice"},
+		GroupOwners: &[]string{"DevOps"},
 	}
 
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
@@ -54,18 +57,21 @@ func TestUpdateAppCommand_Run_Error(t *testing.T) {
 
 	serverDetails := &config.ServerDetails{Url: "https://example.com"}
 	appKey := "app-key"
+	description := "Updated description"
+	maturityLevel := "production"
+	businessCriticality := "high"
 	requestPayload := &model.AppDescriptor{
 		ApplicationKey:      appKey,
 		ApplicationName:     "app-name",
-		Description:         "Updated description",
-		MaturityLevel:       "production",
-		BusinessCriticality: "high",
-		Labels: map[string]string{
+		Description:         &description,
+		MaturityLevel:       &maturityLevel,
+		BusinessCriticality: &businessCriticality,
+		Labels: &map[string]string{
 			"environment": "production",
 			"region":      "us-east",
 		},
-		UserOwners:  []string{"JohnD", "Dave Rice"},
-		GroupOwners: []string{"DevOps"},
+		UserOwners:  &[]string{"JohnD", "Dave Rice"},
+		GroupOwners: &[]string{"DevOps"},
 	}
 
 	mockAppService := mockapps.NewMockApplicationService(ctrl)

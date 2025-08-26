@@ -43,7 +43,7 @@ func ServerDetailsByFlags(ctx *components.Context) (*coreConfig.ServerDetails, e
 // ParseSliceFlag parses a comma-separated string into a slice of strings.
 func ParseSliceFlag(flagValue string) []string {
 	if flagValue == "" {
-		return nil
+		return []string{}
 	}
 	values := strings.Split(flagValue, ";")
 
@@ -60,10 +60,10 @@ func ParseMapFlag(flagValue string) (map[string]string, error) {
 }
 
 func ParseKeyValueString(value, separator string) (map[string]string, error) {
-	if value == "" {
-		return nil, nil
-	}
 	result := make(map[string]string)
+	if value == "" {
+		return result, nil
+	}
 	pairs := strings.Split(value, separator)
 	for _, pair := range pairs {
 		keyValue := strings.SplitN(pair, "=", 2)

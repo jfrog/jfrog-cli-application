@@ -69,51 +69,21 @@ func (cac *createAppCommand) buildRequestPayload(ctx *components.Context) (*mode
 }
 
 func (cac *createAppCommand) buildFromFlags(ctx *components.Context) (*model.AppDescriptor, error) {
-	applicationName := ctx.GetStringFlagValue(commands.ApplicationNameFlag)
-
 	project := ctx.GetStringFlagValue(commands.ProjectFlag)
 	if project == "" {
 		return nil, errorutils.CheckErrorf("--%s is mandatory", commands.ProjectFlag)
 	}
 
-	businessCriticalityStr := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
-	businessCriticality, err := utils.ValidateEnumFlag(
-		commands.BusinessCriticalityFlag,
-		businessCriticalityStr,
-		model.BusinessCriticalityUnspecified,
-		model.BusinessCriticalityValues)
+	descriptor := &model.AppDescriptor{
+		ProjectKey: project,
+	}
+
+	err := populateApplicationFromFlags(ctx, descriptor)
 	if err != nil {
 		return nil, err
 	}
 
-	maturityLevelStr := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
-	maturityLevel, err := utils.ValidateEnumFlag(
-		commands.MaturityLevelFlag,
-		maturityLevelStr,
-		model.MaturityLevelUnspecified,
-		model.MaturityLevelValues)
-	if err != nil {
-		return nil, err
-	}
-
-	description := ctx.GetStringFlagValue(commands.DescriptionFlag)
-	userOwners := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.UserOwnersFlag))
-	groupOwners := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.GroupOwnersFlag))
-	labelsMap, err := utils.ParseMapFlag(ctx.GetStringFlagValue(commands.LabelsFlag))
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.AppDescriptor{
-		ApplicationName:     applicationName,
-		Description:         description,
-		ProjectKey:          project,
-		MaturityLevel:       maturityLevel,
-		BusinessCriticality: businessCriticality,
-		Labels:              labelsMap,
-		UserOwners:          userOwners,
-		GroupOwners:         groupOwners,
-	}, nil
+	return descriptor, nil
 }
 
 func (cac *createAppCommand) loadFromSpec(ctx *components.Context) (*model.AppDescriptor, error) {

@@ -13,7 +13,7 @@ func TestParseSliceFlag(t *testing.T) {
 		input    string
 		expected []string
 	}{
-		{"empty string", "", nil},
+		{"empty string", "", []string{}},
 		{"single value", "foo", []string{"foo"}},
 		{"multiple values", "foo;bar;baz", []string{"foo", "bar", "baz"}},
 		{"values with spaces", " foo ; bar ;baz ", []string{"foo", "bar", "baz"}},
@@ -33,7 +33,7 @@ func TestParseMapFlag(t *testing.T) {
 		expected  map[string]string
 		expectErr bool
 	}{
-		{"empty string", "", nil, false},
+		{"empty string", "", map[string]string{}, false},
 		{"single pair", "foo=bar", map[string]string{"foo": "bar"}, false},
 		{"multiple pairs", "foo=bar;baz=qux", map[string]string{"foo": "bar", "baz": "qux"}, false},
 		{"pairs with spaces", " foo = bar ; baz = qux ", map[string]string{"foo": "bar", "baz": "qux"}, false},
