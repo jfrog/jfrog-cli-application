@@ -397,7 +397,7 @@ func TestUpdateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0?async=false", tt.request).
+			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0", tt.request).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
