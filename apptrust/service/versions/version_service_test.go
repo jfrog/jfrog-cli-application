@@ -459,6 +459,28 @@ func TestRollbackAppVersion(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  true,
 		},
+		{
+			name:           "failed rollback - sync=true but got 202",
+			applicationKey: "video-encoder",
+			version:        "1.5.0",
+			payload: &model.RollbackAppVersionRequest{
+				FromStage: "qa",
+			},
+			sync:           true,
+			expectedStatus: http.StatusAccepted, // Wrong status for sync=true
+			expectedError:  true,
+		},
+		{
+			name:           "failed rollback - sync=false but got 200",
+			applicationKey: "video-encoder",
+			version:        "1.5.0",
+			payload: &model.RollbackAppVersionRequest{
+				FromStage: "prod",
+			},
+			sync:           false,
+			expectedStatus: http.StatusOK, // Wrong status for sync=false
+			expectedError:  true,
+		},
 	}
 
 	for _, tt := range tests {

@@ -39,6 +39,35 @@ func TestRollbackAppVersionCommand_Run(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRollbackAppVersionCommand_Run_WithSync(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	applicationKey := "test-app"
+	version := "1.0.0"
+	serverDetails := &config.ServerDetails{Url: "https://example.com"}
+	requestPayload := &model.RollbackAppVersionRequest{
+		FromStage: "qa",
+	}
+
+	mockVersionService := mockversions.NewMockVersionService(ctrl)
+	mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), applicationKey, version, requestPayload, true).
+		Return(nil).Times(1)
+
+	cmd := &rollbackAppVersionCommand{
+		versionService: mockVersionService,
+		serverDetails:  serverDetails,
+		applicationKey: applicationKey,
+		version:        version,
+		requestPayload: requestPayload,
+		fromStage:      "qa",
+		sync:           true,
+	}
+
+	err := cmd.Run()
+	assert.NoError(t, err)
+}
+
 func TestRollbackAppVersionCommand_Run_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
