@@ -314,7 +314,7 @@ func TestUpdateAppVersion(t *testing.T) {
 			request: &model.UpdateAppVersionRequest{
 				Tag: "release/1.2.3",
 			},
-			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
 			mockResponseBody: "{}",
 			mockError:        nil,
 			expectError:      false,
@@ -327,7 +327,7 @@ func TestUpdateAppVersion(t *testing.T) {
 					"status": {"rc", "validated"},
 				},
 			},
-			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
 			mockResponseBody: "{}",
 			mockError:        nil,
 			expectError:      false,
@@ -338,7 +338,7 @@ func TestUpdateAppVersion(t *testing.T) {
 			request: &model.UpdateAppVersionRequest{
 				DeleteProperties: []string{"legacy_param", "toBeDeleted"},
 			},
-			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
 			mockResponseBody: "{}",
 			mockError:        nil,
 			expectError:      false,
@@ -353,7 +353,7 @@ func TestUpdateAppVersion(t *testing.T) {
 				},
 				DeleteProperties: []string{"old_param"},
 			},
-			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
 			mockResponseBody: "{}",
 			mockError:        nil,
 			expectError:      false,
@@ -397,7 +397,7 @@ func TestUpdateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0", tt.request).
+			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0", tt.request, map[string]string{"async": "false"}).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
@@ -467,7 +467,7 @@ func TestRollbackAppVersion(t *testing.T) {
 			mockCtx.EXPECT().GetHttpClient().Return(mockClient)
 
 			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/rollback"
-			mockClient.EXPECT().Post(expectedEndpoint, tt.payload, map[string]string{}).
+			mockClient.EXPECT().Post(expectedEndpoint, tt.payload, map[string]string{"async": "false"}).
 				Return(&http.Response{StatusCode: tt.expectedStatus}, []byte(""), nil)
 
 			service := NewVersionService()
