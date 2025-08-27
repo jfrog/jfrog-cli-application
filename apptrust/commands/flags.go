@@ -50,7 +50,7 @@ const (
 	SourceTypeReleaseBundlesFlag      = "source-type-release-bundles"
 	SourceTypeApplicationVersionsFlag = "source-type-application-versions"
 	PropertiesFlag                    = "properties"
-	DeletePropertyFlag                = "delete-property"
+	DeletePropertiesFlag              = "delete-properties"
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -83,7 +83,7 @@ var flagsMap = map[string]components.Flag{
 	SourceTypeReleaseBundlesFlag:      components.NewStringFlag(SourceTypeReleaseBundlesFlag, "List of semicolon-separated (;) release bundles in the form of 'name=releaseBundleName1, version=version1; name=releaseBundleName2, version=version2' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SourceTypeApplicationVersionsFlag: components.NewStringFlag(SourceTypeApplicationVersionsFlag, "List of semicolon-separated (;) application versions in the form of 'application-key=app1, version=version1; application-key=app2, version=version2' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PropertiesFlag:                    components.NewStringFlag(PropertiesFlag, "Sets or updates custom properties for the application version in format 'key1=value1[,value2,...];key2=value3[,value4,...]'", func(f *components.StringFlag) { f.Mandatory = false }),
-	DeletePropertyFlag:                components.NewStringFlag(DeletePropertyFlag, "Remove a property key and all its values", func(f *components.StringFlag) { f.Mandatory = false }),
+	DeletePropertiesFlag:              components.NewStringFlag(DeletePropertiesFlag, "Remove a property key and all its values", func(f *components.StringFlag) { f.Mandatory = false }),
 }
 
 var commandFlags = map[string][]string{
@@ -141,7 +141,7 @@ var commandFlags = map[string][]string{
 		serverId,
 		TagFlag,
 		PropertiesFlag,
-		DeletePropertyFlag,
+		DeletePropertiesFlag,
 	},
 
 	PackageBind: {

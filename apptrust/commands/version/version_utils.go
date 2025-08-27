@@ -39,13 +39,21 @@ func BuildPromotionParams(ctx *components.Context) (string, []string, []string, 
 }
 
 // ParseArtifactProps extracts artifact properties from command context
-func ParseArtifactProps(ctx *components.Context) (map[string]string, error) {
+func ParseArtifactProps(ctx *components.Context) ([]model.ArtifactProperty, error) {
 	if propsStr := ctx.GetStringFlagValue(commands.PropsFlag); propsStr != "" {
-		props, err := utils.ParseMapFlag(propsStr)
+		props, err := utils.ParseListPropertiesFlag(propsStr)
 		if err != nil {
 			return nil, errorutils.CheckErrorf("failed to parse properties: %s", err.Error())
 		}
-		return props, nil
+
+		var artifactProps []model.ArtifactProperty
+		for key, values := range props {
+			artifactProps = append(artifactProps, model.ArtifactProperty{
+				Key:    key,
+				Values: values,
+			})
+		}
+		return artifactProps, nil
 	}
 	return nil, nil
 }

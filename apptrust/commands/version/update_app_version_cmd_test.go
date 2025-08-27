@@ -132,7 +132,7 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 			name: "delete properties only",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
-				ctx.AddStringFlag(commands.DeletePropertyFlag, "legacy_param;toBeDeleted")
+				ctx.AddStringFlag(commands.DeletePropertiesFlag, "legacy_param;toBeDeleted")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
 				DeleteProperties: []string{"legacy_param", "toBeDeleted"},
@@ -156,7 +156,7 @@ func TestUpdateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
 				ctx.AddStringFlag(commands.TagFlag, "release/1.2.3")
 				ctx.AddStringFlag(commands.PropertiesFlag, "status=rc,validated")
-				ctx.AddStringFlag(commands.DeletePropertyFlag, "old_param")
+				ctx.AddStringFlag(commands.DeletePropertiesFlag, "old_param")
 			},
 			expectsPayload: &model.UpdateAppVersionRequest{
 				Tag: "release/1.2.3",

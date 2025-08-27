@@ -101,8 +101,8 @@ func (uv *updateAppVersionCommand) buildRequestPayload(ctx *components.Context) 
 	}
 
 	// Handle delete properties
-	if ctx.IsFlagSet(commands.DeletePropertyFlag) {
-		deleteProps := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.DeletePropertyFlag))
+	if ctx.IsFlagSet(commands.DeletePropertiesFlag) {
+		deleteProps := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.DeletePropertiesFlag))
 		request.DeleteProperties = deleteProps
 	}
 

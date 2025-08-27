@@ -13,7 +13,7 @@ func NewReleaseAppVersionRequest(
 	promotionType string,
 	includedRepositoryKeys []string,
 	excludedRepositoryKeys []string,
-	artifactProperties map[string]string,
+	artifactProperties []ArtifactProperty,
 ) *ReleaseAppVersionRequest {
 	return &ReleaseAppVersionRequest{
 		CommonPromoteAppVersion: CommonPromoteAppVersion{

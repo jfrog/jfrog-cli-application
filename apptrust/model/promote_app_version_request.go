@@ -15,10 +15,15 @@ var PromotionTypeValues = []string{
 }
 
 type CommonPromoteAppVersion struct {
-	PromotionType                string            `json:"promotion_type,omitempty"`
-	IncludedRepositoryKeys       []string          `json:"included_repository_keys,omitempty"`
-	ExcludedRepositoryKeys       []string          `json:"excluded_repository_keys,omitempty"`
-	ArtifactAdditionalProperties map[string]string `json:"artifact_additional_properties,omitempty"`
+	PromotionType                string             `json:"promotion_type,omitempty"`
+	IncludedRepositoryKeys       []string           `json:"included_repository_keys,omitempty"`
+	ExcludedRepositoryKeys       []string           `json:"excluded_repository_keys,omitempty"`
+	ArtifactAdditionalProperties []ArtifactProperty `json:"artifact_additional_properties,omitempty"`
+}
+
+type ArtifactProperty struct {
+	Key    string   `json:"key"`
+	Values []string `json:"values"`
 }
 
 type PromoteAppVersionRequest struct {
