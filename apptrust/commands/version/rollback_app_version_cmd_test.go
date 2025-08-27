@@ -13,57 +13,78 @@ import (
 )
 
 func TestRollbackAppVersionCommand_Run(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	serverDetails := &config.ServerDetails{Url: "https://example.com"}
-	applicationKey := "video-encoder"
-	version := "1.5.0"
-	requestPayload := &model.RollbackAppVersionRequest{
-		FromStage: "qa",
+	tests := []struct {
+		name           string
+		applicationKey string
+		version        string
+		fromStage      string
+		sync           bool
+		mockError      error
+		expectedError  bool
+	}{
+		{
+			name:           "successful rollback with sync=false",
+			applicationKey: "video-encoder",
+			version:        "1.5.0",
+			fromStage:      "qa",
+			sync:           false,
+			mockError:      nil,
+			expectedError:  false,
+		},
+		{
+			name:           "successful rollback with sync=true",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			fromStage:      "qa",
+			sync:           true,
+			mockError:      nil,
+			expectedError:  false,
+		},
+		{
+			name:           "failed rollback",
+			applicationKey: "video-encoder",
+			version:        "1.5.0",
+			fromStage:      "qa",
+			sync:           false,
+			mockError:      errors.New("rollback service error occurred"),
+			expectedError:  true,
+		},
 	}
 
-	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), applicationKey, version, requestPayload).
-		Return(nil).Times(1)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-	cmd := &rollbackAppVersionCommand{
-		versionService: mockVersionService,
-		serverDetails:  serverDetails,
-		applicationKey: applicationKey,
-		version:        version,
-		requestPayload: requestPayload,
+			serverDetails := &config.ServerDetails{Url: "https://example.com"}
+			requestPayload := &model.RollbackAppVersionRequest{
+				FromStage: tt.fromStage,
+			}
+
+			mockVersionService := mockversions.NewMockVersionService(ctrl)
+			mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), tt.applicationKey, tt.version, requestPayload, tt.sync).
+				Return(tt.mockError).Times(1)
+
+			cmd := &rollbackAppVersionCommand{
+				versionService: mockVersionService,
+				serverDetails:  serverDetails,
+				applicationKey: tt.applicationKey,
+				version:        tt.version,
+				requestPayload: requestPayload,
+				fromStage:      tt.fromStage,
+				sync:           tt.sync,
+			}
+
+			err := cmd.Run()
+
+			if tt.expectedError {
+				assert.Error(t, err)
+				if tt.mockError != nil {
+					assert.Contains(t, err.Error(), tt.mockError.Error())
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
-
-	err := cmd.Run()
-	assert.NoError(t, err)
-}
-
-func TestRollbackAppVersionCommand_Run_Error(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	serverDetails := &config.ServerDetails{Url: "https://example.com"}
-	applicationKey := "video-encoder"
-	version := "1.5.0"
-	requestPayload := &model.RollbackAppVersionRequest{
-		FromStage: "qa",
-	}
-	expectedError := errors.New("rollback service error occurred")
-
-	mockVersionService := mockversions.NewMockVersionService(ctrl)
-	mockVersionService.EXPECT().RollbackAppVersion(gomock.Any(), applicationKey, version, requestPayload).
-		Return(expectedError).Times(1)
-
-	cmd := &rollbackAppVersionCommand{
-		versionService: mockVersionService,
-		serverDetails:  serverDetails,
-		applicationKey: applicationKey,
-		version:        version,
-		requestPayload: requestPayload,
-	}
-
-	err := cmd.Run()
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "rollback service error occurred")
 }

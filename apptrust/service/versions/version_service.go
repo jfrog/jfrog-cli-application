@@ -17,7 +17,7 @@ type VersionService interface {
 	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error
 	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
 	ReleaseAppVersion(ctx service.Context, applicationKey string, version string, request *model.ReleaseAppVersionRequest, sync bool) error
-	RollbackAppVersion(ctx service.Context, applicationKey string, version string, request *model.RollbackAppVersionRequest) error
+	RollbackAppVersion(ctx service.Context, applicationKey string, version string, request *model.RollbackAppVersionRequest, sync bool) error
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
 	UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error
 }
@@ -76,19 +76,25 @@ func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey,
 	return nil
 }
 
-func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey, version string, request *model.RollbackAppVersionRequest) error {
+func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey, version string, request *model.RollbackAppVersionRequest, sync bool) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/rollback", applicationKey, version)
-	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{})
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{"async": strconv.FormatBool(!sync)})
 	if err != nil {
 		return err
 	}
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusAccepted {
+	// Validate status code based on sync mode
+	expectedStatusCode := http.StatusAccepted
+	if sync {
+		expectedStatusCode = http.StatusOK
+	}
+
+	if response.StatusCode != expectedStatusCode {
 		return fmt.Errorf("failed to rollback app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
 
-	log.Output("Application version deleted successfully")
+	log.Output(string(responseBody))
 	return nil
 }
 
@@ -114,7 +120,7 @@ func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey s
 		return err
 	}
 
-	if response.StatusCode != http.StatusAccepted {
+	if response.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to update app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
