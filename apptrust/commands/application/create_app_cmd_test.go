@@ -19,14 +19,18 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	description := "Test application"
+	businessCriticality := "high"
+	maturityLevel := "production"
+
 	ctx := &components.Context{
 		Arguments: []string{"app-key"},
 	}
 	ctx.AddStringFlag("application-name", "test-app")
 	ctx.AddStringFlag("project", "test-project")
-	ctx.AddStringFlag("desc", "Test application")
+	ctx.AddStringFlag("desc", description)
 	ctx.AddStringFlag("business-criticality", "high")
-	ctx.AddStringFlag("maturity-level", "production")
+	ctx.AddStringFlag("maturity-level", maturityLevel)
 	ctx.AddStringFlag("labels", "env=prod;region=us-east")
 	ctx.AddStringFlag("user-owners", "john.doe;jane.smith")
 	ctx.AddStringFlag("group-owners", "devops;security")
@@ -36,15 +40,15 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 		ApplicationKey:      "app-key",
 		ApplicationName:     "test-app",
 		ProjectKey:          "test-project",
-		Description:         "Test application",
-		BusinessCriticality: "high",
-		MaturityLevel:       "production",
-		Labels: map[string]string{
+		Description:         &description,
+		BusinessCriticality: &businessCriticality,
+		MaturityLevel:       &maturityLevel,
+		Labels: &map[string]string{
 			"env":    "prod",
 			"region": "us-east",
 		},
-		UserOwners:  []string{"john.doe", "jane.smith"},
-		GroupOwners: []string{"devops", "security"},
+		UserOwners:  &[]string{"john.doe", "jane.smith"},
+		GroupOwners: &[]string{"devops", "security"},
 	}
 
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
@@ -125,6 +129,52 @@ func TestCreateAppCommand_MissingProjectFlag(t *testing.T) {
 	assert.Contains(t, err.Error(), "--project is mandatory")
 }
 
+func TestCreateAppCommand_Run_FullSpecFile(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := &components.Context{
+		Arguments: []string{"app-full"},
+	}
+	ctx.AddStringFlag("url", "https://example.com")
+	ctx.AddStringFlag("spec", "./testfiles/full-spec.json")
+
+	expectedDescription := "A comprehensive test application"
+	expectedMaturityLevel := "production"
+	expectedBusinessCriticality := "high"
+	expectedPayload := &model.AppDescriptor{
+		ApplicationKey:      "app-full",
+		ApplicationName:     "test-app-full",
+		ProjectKey:          "test-project",
+		Description:         &expectedDescription,
+		MaturityLevel:       &expectedMaturityLevel,
+		BusinessCriticality: &expectedBusinessCriticality,
+		Labels: &map[string]string{
+			"environment": "production",
+			"region":      "us-east-1",
+			"team":        "devops",
+		},
+		UserOwners:  &[]string{"john.doe", "jane.smith"},
+		GroupOwners: &[]string{"devops-team", "security-team"},
+	}
+
+	var actualPayload *model.AppDescriptor
+	mockAppService := mockapps.NewMockApplicationService(ctrl)
+	mockAppService.EXPECT().CreateApplication(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ interface{}, req *model.AppDescriptor) error {
+			actualPayload = req
+			return nil
+		}).Times(1)
+
+	cmd := &createAppCommand{
+		applicationService: mockAppService,
+	}
+
+	err := cmd.prepareAndRunCommand(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedPayload, actualPayload)
+}
+
 func TestCreateAppCommand_Run_SpecFile(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -142,26 +192,6 @@ func TestCreateAppCommand_Run_SpecFile(t *testing.T) {
 				ApplicationKey:  "app-min",
 				ApplicationName: "app-min",
 				ProjectKey:      "test-project",
-			},
-		},
-		{
-			name:     "full spec file",
-			specPath: "./testfiles/full-spec.json",
-			args:     []string{"app-full"},
-			expectsPayload: &model.AppDescriptor{
-				ApplicationKey:      "app-full",
-				ApplicationName:     "test-app-full",
-				ProjectKey:          "test-project",
-				Description:         "A comprehensive test application",
-				MaturityLevel:       "production",
-				BusinessCriticality: "high",
-				Labels: map[string]string{
-					"environment": "production",
-					"region":      "us-east-1",
-					"team":        "devops",
-				},
-				UserOwners:  []string{"john.doe", "jane.smith"},
-				GroupOwners: []string{"devops-team", "security-team"},
 			},
 		},
 		{
@@ -193,7 +223,6 @@ func TestCreateAppCommand_Run_SpecFile(t *testing.T) {
 				ApplicationKey:  "command-line-app-key",
 				ApplicationName: "test-app",
 				ProjectKey:      "test-project",
-				Description:     "A test application with application_key that should be ignored",
 			},
 		},
 	}
@@ -241,14 +270,18 @@ func TestCreateAppCommand_Run_SpecVars(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	expectedDescription := "A test application for production"
+	expectedMaturityLevel := "production"
+	expectedBusinessCriticality := "high"
+
 	expectedPayload := &model.AppDescriptor{
 		ApplicationKey:      "app-with-vars",
 		ApplicationName:     "test-app",
 		ProjectKey:          "test-project",
-		Description:         "A test application for production",
-		MaturityLevel:       "production",
-		BusinessCriticality: "high",
-		Labels: map[string]string{
+		Description:         &expectedDescription,
+		MaturityLevel:       &expectedMaturityLevel,
+		BusinessCriticality: &expectedBusinessCriticality,
+		Labels: &map[string]string{
 			"environment": "production",
 			"region":      "us-east-1",
 		},

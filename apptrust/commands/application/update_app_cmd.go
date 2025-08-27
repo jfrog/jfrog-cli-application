@@ -40,46 +40,17 @@ func (uac *updateAppCommand) CommandName() string {
 
 func (uac *updateAppCommand) buildRequestPayload(ctx *components.Context) (*model.AppDescriptor, error) {
 	applicationKey := ctx.Arguments[0]
-	applicationName := ctx.GetStringFlagValue(commands.ApplicationNameFlag)
 
-	businessCriticalityStr := ctx.GetStringFlagValue(commands.BusinessCriticalityFlag)
-	businessCriticality, err := utils.ValidateEnumFlag(
-		commands.BusinessCriticalityFlag,
-		businessCriticalityStr,
-		"",
-		model.BusinessCriticalityValues)
+	descriptor := &model.AppDescriptor{
+		ApplicationKey: applicationKey,
+	}
+
+	err := populateApplicationFromFlags(ctx, descriptor)
 	if err != nil {
 		return nil, err
 	}
 
-	maturityLevelStr := ctx.GetStringFlagValue(commands.MaturityLevelFlag)
-	maturityLevel, err := utils.ValidateEnumFlag(
-		commands.MaturityLevelFlag,
-		maturityLevelStr,
-		model.MaturityLevelUnspecified,
-		model.MaturityLevelValues)
-	if err != nil {
-		return nil, err
-	}
-
-	description := ctx.GetStringFlagValue(commands.DescriptionFlag)
-	userOwners := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.UserOwnersFlag))
-	groupOwners := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.GroupOwnersFlag))
-	labelsMap, err := utils.ParseMapFlag(ctx.GetStringFlagValue(commands.LabelsFlag))
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.AppDescriptor{
-		ApplicationKey:      applicationKey,
-		ApplicationName:     applicationName,
-		Description:         description,
-		MaturityLevel:       maturityLevel,
-		BusinessCriticality: businessCriticality,
-		Labels:              labelsMap,
-		UserOwners:          userOwners,
-		GroupOwners:         groupOwners,
-	}, nil
+	return descriptor, nil
 }
 
 func (uac *updateAppCommand) prepareAndRunCommand(ctx *components.Context) error {

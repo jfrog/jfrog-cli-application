@@ -133,6 +133,7 @@ var commandFlags = map[string][]string{
 		user,
 		accessToken,
 		serverId,
+		SyncFlag,
 	},
 	VersionUpdate: {
 		url,
