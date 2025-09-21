@@ -27,8 +27,6 @@ type updateAppVersionCommand struct {
 }
 
 func (uv *updateAppVersionCommand) Run() error {
-	log.Info("Updating application version:", uv.applicationKey, "version:", uv.version)
-
 	ctx, err := service.NewContext(*uv.serverDetails)
 	if err != nil {
 		log.Error("Failed to create service context:", err)
@@ -41,7 +39,6 @@ func (uv *updateAppVersionCommand) Run() error {
 		return err
 	}
 
-	log.Info("Successfully updated application version:", uv.applicationKey, "version:", uv.version)
 	return nil
 }
 

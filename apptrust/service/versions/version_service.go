@@ -40,6 +40,7 @@ func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.C
 			response.StatusCode, responseBody)
 	}
 
+	log.Info("Application version created successfully.")
 	log.Output(string(responseBody))
 	return nil
 }
@@ -110,6 +111,7 @@ func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, 
 			response.StatusCode, responseBody)
 	}
 
+	log.Info("Application version deleted successfully.")
 	return nil
 }
 
@@ -125,5 +127,6 @@ func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey s
 			response.StatusCode, responseBody)
 	}
 
+	log.Info("Application version updated successfully.")
 	return nil
 }
