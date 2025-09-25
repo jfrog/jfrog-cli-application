@@ -31,10 +31,10 @@ func ServerDetailsByFlags(ctx *components.Context) (*coreConfig.ServerDetails, e
 		return nil, err
 	}
 	if serverDetails.Url == "" {
-		return nil, fmt.Errorf("platform URL is mandatory for evidence commands")
+		return nil, fmt.Errorf("platform URL is mandatory for AppTrust commands")
 	}
 	if serverDetails.GetUser() != "" && serverDetails.GetPassword() != "" {
-		return nil, fmt.Errorf("evidence service does not support basic authentication")
+		return nil, fmt.Errorf("AppTrust service does not support basic authentication")
 	}
 
 	return serverDetails, nil
