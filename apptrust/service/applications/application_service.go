@@ -36,6 +36,7 @@ func (as *applicationService) CreateApplication(ctx service.Context, requestBody
 			response.StatusCode, responseBody)
 	}
 
+	log.Info(fmt.Sprintf("Application \"%s\" created successfully.", requestBody.ApplicationKey))
 	log.Output(string(responseBody))
 	return nil
 }
@@ -52,6 +53,7 @@ func (as *applicationService) UpdateApplication(ctx service.Context, requestBody
 			response.StatusCode, responseBody)
 	}
 
+	log.Info(fmt.Sprintf("Application \"%s\" updated successfully.", requestBody.ApplicationKey))
 	log.Output(string(responseBody))
 	return nil
 }
@@ -68,6 +70,6 @@ func (as *applicationService) DeleteApplication(ctx service.Context, application
 			response.StatusCode, responseBody)
 	}
 
-	log.Output("Application deleted successfully")
+	log.Info(fmt.Sprintf("Application \"%s\" deleted successfully.", applicationKey))
 	return nil
 }
