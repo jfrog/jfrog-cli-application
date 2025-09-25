@@ -35,6 +35,7 @@ func (ps *packageService) BindPackage(ctx service.Context, applicationKey string
 			response.StatusCode, responseBody)
 	}
 
+	log.Info("Package bound successfully.")
 	log.Output(string(responseBody))
 	return nil
 }
@@ -51,6 +52,6 @@ func (ps *packageService) UnbindPackage(ctx service.Context, applicationKey, pkg
 			response.StatusCode, responseBody)
 	}
 
-	log.Output("Package unbound successfully")
+	log.Info("Package unbound successfully.")
 	return nil
 }
