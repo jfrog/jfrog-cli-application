@@ -141,7 +141,7 @@ func TestUnbindPackage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Delete(fmt.Sprintf("/v1/applications/%s/packages/%s/%s/%s", applicationKey, tt.pkgType, url.PathEscape(tt.pkgName), tt.pkgVersion)).
+			mockHttpClient.EXPECT().Delete(fmt.Sprintf("/v1/applications/%s/packages/%s/%s/%s", applicationKey, tt.pkgType, url.PathEscape(tt.pkgName), tt.pkgVersion), nil).
 				Return(tt.mockResponse, []byte(""), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
