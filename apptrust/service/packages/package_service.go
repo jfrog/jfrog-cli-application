@@ -42,7 +42,7 @@ func (ps *packageService) BindPackage(ctx service.Context, applicationKey string
 
 func (ps *packageService) UnbindPackage(ctx service.Context, applicationKey, pkgType, pkgName, pkgVersion string) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/packages/%s/%s/%s", applicationKey, pkgType, url.PathEscape(pkgName), pkgVersion)
-	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint)
+	response, responseBody, err := ctx.GetHttpClient().Delete(endpoint, nil)
 	if err != nil {
 		return err
 	}

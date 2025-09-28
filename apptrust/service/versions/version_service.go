@@ -101,7 +101,7 @@ func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey
 
 func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, version string) error {
 	url := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
-	response, responseBody, err := ctx.GetHttpClient().Delete(url)
+	response, responseBody, err := ctx.GetHttpClient().Delete(url, map[string]string{"async": "false"})
 	if err != nil {
 		return err
 	}
