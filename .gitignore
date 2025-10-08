@@ -5,6 +5,3 @@
 *.iml
 bin
 .tools
-
-# Go
-*_mock.go
