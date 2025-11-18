@@ -187,8 +187,10 @@ func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.Create
 
 func (cv *createAppVersionCommand) parseReleaseBundles(rbStr string) ([]model.CreateVersionReleaseBundle, error) {
 	const (
-		nameField    = "name"
-		versionField = "version"
+		projectKeyField = "project-key"
+		repoKeyField    = "repo-key"
+		nameField       = "name"
+		versionField    = "version"
 	)
 
 	var bundles []model.CreateVersionReleaseBundle
@@ -203,8 +205,10 @@ func (cv *createAppVersionCommand) parseReleaseBundles(rbStr string) ([]model.Cr
 			return nil, errorutils.CheckErrorf("invalid release bundle format: %v", err)
 		}
 		bundles = append(bundles, model.CreateVersionReleaseBundle{
-			Name:    releaseBundleEntryMap[nameField],
-			Version: releaseBundleEntryMap[versionField],
+			ProjectKey:    releaseBundleEntryMap[projectKeyField],
+			RepositoryKey: releaseBundleEntryMap[repoKeyField],
+			Name:          releaseBundleEntryMap[nameField],
+			Version:       releaseBundleEntryMap[versionField],
 		})
 	}
 	return bundles, nil
