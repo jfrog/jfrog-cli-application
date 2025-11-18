@@ -318,6 +318,14 @@ func TestParseReleaseBundles(t *testing.T) {
 			expectError:   true,
 			errorContains: "invalid release bundle format",
 		},
+		{
+			name:        "with project-key and repo-key",
+			input:       "name=rb1,version=1.0.0,project-key=proj1,repo-key=repo1",
+			expectError: false,
+			expectedReleaseBundles: []model.CreateVersionReleaseBundle{
+				{Name: "rb1", Version: "1.0.0", ProjectKey: "proj1", RepositoryKey: "repo1"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
