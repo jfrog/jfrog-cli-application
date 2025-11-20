@@ -29,6 +29,7 @@ type createAppVersionCommand struct {
 }
 
 type createVersionSpec struct {
+	Artifacts      []model.CreateVersionArtifact      `json:"artifacts,omitempty"`
 	Packages       []model.CreateVersionPackage       `json:"packages,omitempty"`
 	Builds         []model.CreateVersionBuild         `json:"builds,omitempty"`
 	ReleaseBundles []model.CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
@@ -137,11 +138,12 @@ func (cv *createAppVersionCommand) loadFromSpec(ctx *components.Context) (*model
 	}
 
 	// Validation: if all sources are empty, return error
-	if (len(spec.Packages) == 0) && (len(spec.Builds) == 0) && (len(spec.ReleaseBundles) == 0) && (len(spec.Versions) == 0) {
-		return nil, errorutils.CheckErrorf("Spec file is empty: must provide at least one source (packages, builds, release_bundles, or versions)")
+	if (len(spec.Packages) == 0) && (len(spec.Builds) == 0) && (len(spec.ReleaseBundles) == 0) && (len(spec.Versions) == 0) && (len(spec.Artifacts) == 0) {
+		return nil, errorutils.CheckErrorf("Spec file is empty: must provide at least one source (artifacts, packages, builds, release_bundles, or versions)")
 	}
 
 	sources := &model.CreateVersionSources{
+		Artifacts:      spec.Artifacts,
 		Packages:       spec.Packages,
 		Builds:         spec.Builds,
 		ReleaseBundles: spec.ReleaseBundles,

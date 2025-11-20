@@ -15,6 +15,7 @@ type CreateVersionPackage struct {
 }
 
 type CreateVersionSources struct {
+	Artifacts      []CreateVersionArtifact      `json:"artifacts,omitempty"`
 	Packages       []CreateVersionPackage       `json:"packages,omitempty"`
 	Builds         []CreateVersionBuild         `json:"builds,omitempty"`
 	ReleaseBundles []CreateVersionReleaseBundle `json:"release_bundles,omitempty"`

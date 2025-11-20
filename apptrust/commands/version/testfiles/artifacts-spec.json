@@ -1,0 +1,11 @@
+{
+  "artifacts": [
+    {
+      "path": "repo/path/to/artifact1.jar",
+      "sha256": "abc123def456"
+    },
+    {
+      "path": "repo/path/to/artifact2.war"
+    }
+  ]
+}

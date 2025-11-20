@@ -1,0 +1,60 @@
+{
+  "artifacts": [
+    {
+      "path": "repo/path/to/app.jar",
+      "sha256": "abc123def456789"
+    },
+    {
+      "path": "repo/path/to/lib.war"
+    }
+  ],
+  "packages": [
+    {
+      "type": "npm",
+      "name": "my-package",
+      "version": "1.2.3",
+      "repository_key": "npm-local"
+    },
+    {
+      "type": "docker",
+      "name": "my-docker-image",
+      "version": "2.0.0",
+      "repository_key": "docker-local"
+    }
+  ],
+  "builds": [
+    {
+      "name": "my-build",
+      "number": "123",
+      "include_dependencies": true
+    },
+    {
+      "name": "another-build",
+      "number": "456",
+      "repository_key": "build-info",
+      "include_dependencies": false
+    }
+  ],
+  "release_bundles": [
+    {
+      "name": "my-release-bundle",
+      "version": "1.0.0",
+      "project_key": "my-project",
+      "repository_key": "rb-repo"
+    },
+    {
+      "name": "another-bundle",
+      "version": "2.0.0"
+    }
+  ],
+  "versions": [
+    {
+      "application_key": "dependency-app-1",
+      "version": "3.0.0"
+    },
+    {
+      "application_key": "dependency-app-2",
+      "version": "4.5.6"
+    }
+  ]
+}
