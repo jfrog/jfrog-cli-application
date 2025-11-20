@@ -1,0 +1,23 @@
+{
+  "artifacts": [
+    {
+      "path": "repo/path/to/artifact.jar",
+      "sha256": "abc123"
+    }
+  ],
+  "packages": [
+    {
+      "type": "npm",
+      "name": "my-package",
+      "version": "1.0.0",
+      "repository_key": "npm-repo"
+    }
+  ],
+  "builds": [
+    {
+      "name": "build1",
+      "number": "42"
+    }
+  ]
+}
+

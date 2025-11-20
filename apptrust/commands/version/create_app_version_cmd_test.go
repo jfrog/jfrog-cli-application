@@ -462,6 +462,143 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			expectsError:  true,
 			errorContains: "Spec file is empty",
 		},
+		{
+			name:     "artifacts spec file",
+			specPath: "./testfiles/artifacts-spec.json",
+			args:     []string{"app-artifacts", "1.0.0"},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-artifacts",
+				Version:        "1.0.0",
+				Sources: &model.CreateVersionSources{
+					Artifacts: []model.CreateVersionArtifact{
+						{
+							Path:   "repo/path/to/artifact1.jar",
+							SHA256: "abc123def456",
+						},
+						{
+							Path: "repo/path/to/artifact2.war",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "artifacts only spec file",
+			specPath: "./testfiles/artifacts-only-spec.json",
+			args:     []string{"app-single-artifact", "2.0.0"},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-single-artifact",
+				Version:        "2.0.0",
+				Sources: &model.CreateVersionSources{
+					Artifacts: []model.CreateVersionArtifact{
+						{
+							Path:   "repo/path/to/single-artifact.jar",
+							SHA256: "1234567890abcdef",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "mixed sources with artifacts spec file",
+			specPath: "./testfiles/mixed-sources-spec.json",
+			args:     []string{"app-mixed", "3.0.0"},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-mixed",
+				Version:        "3.0.0",
+				Sources: &model.CreateVersionSources{
+					Artifacts: []model.CreateVersionArtifact{
+						{
+							Path:   "repo/path/to/artifact.jar",
+							SHA256: "abc123",
+						},
+					},
+					Packages: []model.CreateVersionPackage{
+						{
+							Type:       "npm",
+							Name:       "my-package",
+							Version:    "1.0.0",
+							Repository: "npm-repo",
+						},
+					},
+					Builds: []model.CreateVersionBuild{
+						{
+							Name:   "build1",
+							Number: "42",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "all sources spec file",
+			specPath: "./testfiles/all-sources-spec.json",
+			args:     []string{"app-all-sources", "5.0.0"},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-all-sources",
+				Version:        "5.0.0",
+				Sources: &model.CreateVersionSources{
+					Artifacts: []model.CreateVersionArtifact{
+						{
+							Path:   "repo/path/to/app.jar",
+							SHA256: "abc123def456789",
+						},
+						{
+							Path: "repo/path/to/lib.war",
+						},
+					},
+					Packages: []model.CreateVersionPackage{
+						{
+							Type:       "npm",
+							Name:       "my-package",
+							Version:    "1.2.3",
+							Repository: "npm-local",
+						},
+						{
+							Type:       "docker",
+							Name:       "my-docker-image",
+							Version:    "2.0.0",
+							Repository: "docker-local",
+						},
+					},
+					Builds: []model.CreateVersionBuild{
+						{
+							Name:                "my-build",
+							Number:              "123",
+							IncludeDependencies: true,
+						},
+						{
+							Name:                "another-build",
+							Number:              "456",
+							RepositoryKey:       "build-info",
+							IncludeDependencies: false,
+						},
+					},
+					ReleaseBundles: []model.CreateVersionReleaseBundle{
+						{
+							Name:          "my-release-bundle",
+							Version:       "1.0.0",
+							ProjectKey:    "my-project",
+							RepositoryKey: "rb-repo",
+						},
+						{
+							Name:    "another-bundle",
+							Version: "2.0.0",
+						},
+					},
+					Versions: []model.CreateVersionReference{
+						{
+							ApplicationKey: "dependency-app-1",
+							Version:        "3.0.0",
+						},
+						{
+							ApplicationKey: "dependency-app-2",
+							Version:        "4.5.6",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

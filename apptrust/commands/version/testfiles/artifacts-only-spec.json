@@ -1,0 +1,9 @@
+{
+  "artifacts": [
+    {
+      "path": "repo/path/to/single-artifact.jar",
+      "sha256": "1234567890abcdef"
+    }
+  ]
+}
+
