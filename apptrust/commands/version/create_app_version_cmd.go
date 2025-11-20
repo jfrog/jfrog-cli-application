@@ -116,6 +116,20 @@ func (cv *createAppVersionCommand) buildSourcesFromFlags(ctx *components.Context
 		}
 		sources.Versions = sourceVersions
 	}
+	if packagesStr := ctx.GetStringFlagValue(commands.SourceTypePackagesFlag); packagesStr != "" {
+		packages, err := cv.parsePackages(packagesStr)
+		if err != nil {
+			return nil, err
+		}
+		sources.Packages = packages
+	}
+	if artifactsStr := ctx.GetStringFlagValue(commands.SourceTypeArtifactsFlag); artifactsStr != "" {
+		artifacts, err := cv.parseArtifacts(artifactsStr)
+		if err != nil {
+			return nil, err
+		}
+		sources.Artifacts = artifacts
+	}
 	return sources, nil
 }
 
@@ -241,6 +255,61 @@ func (cv *createAppVersionCommand) parseSourceVersions(applicationVersionsStr st
 	return refs, nil
 }
 
+func (cv *createAppVersionCommand) parsePackages(packagesStr string) ([]model.CreateVersionPackage, error) {
+	const (
+		typeField       = "type"
+		nameField       = "name"
+		versionField    = "version"
+		repositoryField = "repo-key"
+	)
+
+	var packages []model.CreateVersionPackage
+	packageEntries := utils.ParseSliceFlag(packagesStr)
+	for _, entry := range packageEntries {
+		packageEntryMap, err := utils.ParseKeyValueString(entry, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid package format: %v", err)
+		}
+		err = validateRequiredFieldsInMap(packageEntryMap, typeField, nameField, versionField, repositoryField)
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid package format: %v", err)
+		}
+		packages = append(packages, model.CreateVersionPackage{
+			Type:       packageEntryMap[typeField],
+			Name:       packageEntryMap[nameField],
+			Version:    packageEntryMap[versionField],
+			Repository: packageEntryMap[repositoryField],
+		})
+	}
+	return packages, nil
+}
+
+func (cv *createAppVersionCommand) parseArtifacts(artifactsStr string) ([]model.CreateVersionArtifact, error) {
+	const (
+		pathField   = "path"
+		sha256Field = "sha256"
+	)
+
+	var artifacts []model.CreateVersionArtifact
+	artifactEntries := utils.ParseSliceFlag(artifactsStr)
+	for _, entry := range artifactEntries {
+		artifactEntryMap, err := utils.ParseKeyValueString(entry, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid artifact format: %v", err)
+		}
+		err = validateRequiredFieldsInMap(artifactEntryMap, pathField)
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid artifact format: %v", err)
+		}
+		artifact := model.CreateVersionArtifact{
+			Path:   artifactEntryMap[pathField],
+			SHA256: artifactEntryMap[sha256Field],
+		}
+		artifacts = append(artifacts, artifact)
+	}
+	return artifacts, nil
+}
+
 func validateCreateAppVersionContext(ctx *components.Context) error {
 	if err := validateNoSpecAndFlagsTogether(ctx); err != nil {
 		return err
@@ -252,12 +321,14 @@ func validateCreateAppVersionContext(ctx *components.Context) error {
 	hasSource := ctx.IsFlagSet(commands.SpecFlag) ||
 		ctx.IsFlagSet(commands.SourceTypeBuildsFlag) ||
 		ctx.IsFlagSet(commands.SourceTypeReleaseBundlesFlag) ||
-		ctx.IsFlagSet(commands.SourceTypeApplicationVersionsFlag)
+		ctx.IsFlagSet(commands.SourceTypeApplicationVersionsFlag) ||
+		ctx.IsFlagSet(commands.SourceTypePackagesFlag) ||
+		ctx.IsFlagSet(commands.SourceTypeArtifactsFlag)
 
 	if !hasSource {
 		return errorutils.CheckErrorf(
-			"At least one source flag is required to create an application version. Please provide --%s or at least one of the following: --%s, --%s, --%s.",
-			commands.SpecFlag, commands.SourceTypeBuildsFlag, commands.SourceTypeReleaseBundlesFlag, commands.SourceTypeApplicationVersionsFlag)
+			"At least one source flag is required to create an application version. Please provide --%s or at least one of the following: --%s, --%s, --%s, --%s, --%s.",
+			commands.SpecFlag, commands.SourceTypeBuildsFlag, commands.SourceTypeReleaseBundlesFlag, commands.SourceTypeApplicationVersionsFlag, commands.SourceTypePackagesFlag, commands.SourceTypeArtifactsFlag)
 	}
 
 	return nil
@@ -294,6 +365,8 @@ func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
 			commands.SourceTypeBuildsFlag,
 			commands.SourceTypeReleaseBundlesFlag,
 			commands.SourceTypeApplicationVersionsFlag,
+			commands.SourceTypePackagesFlag,
+			commands.SourceTypeArtifactsFlag,
 		}
 		for _, flag := range otherSourceFlags {
 			if ctx.IsFlagSet(flag) {

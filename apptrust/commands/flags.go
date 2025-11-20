@@ -49,6 +49,8 @@ const (
 	SourceTypeBuildsFlag              = "source-type-builds"
 	SourceTypeReleaseBundlesFlag      = "source-type-release-bundles"
 	SourceTypeApplicationVersionsFlag = "source-type-application-versions"
+	SourceTypePackagesFlag            = "source-type-packages"
+	SourceTypeArtifactsFlag           = "source-type-artifacts"
 	PropertiesFlag                    = "properties"
 	DeletePropertiesFlag              = "delete-properties"
 )
@@ -82,6 +84,8 @@ var flagsMap = map[string]components.Flag{
 	SourceTypeBuildsFlag:              components.NewStringFlag(SourceTypeBuildsFlag, "List of semicolon-separated (;) builds in the form of 'name=buildName1, id=runID1[, include-deps=true]; name=buildName2, id=runID2[, include-deps=true]' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SourceTypeReleaseBundlesFlag:      components.NewStringFlag(SourceTypeReleaseBundlesFlag, "List of semicolon-separated (;) release bundles in the form of 'name=releaseBundleName1, version=version1[, project-key=project1][, repo-key=repo1]; name=releaseBundleName2, version=version2[, project-key=project2][, repo-key=repo2]' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
 	SourceTypeApplicationVersionsFlag: components.NewStringFlag(SourceTypeApplicationVersionsFlag, "List of semicolon-separated (;) application versions in the form of 'application-key=app1, version=version1; application-key=app2, version=version2' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
+	SourceTypePackagesFlag:            components.NewStringFlag(SourceTypePackagesFlag, "List of semicolon-separated (;) packages in the form of 'type=packageType1, name=packageName1, version=version1, repo-key=repo1; type=packageType2, name=packageName2, version=version2, repo-key=repo2' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
+	SourceTypeArtifactsFlag:           components.NewStringFlag(SourceTypeArtifactsFlag, "List of semicolon-separated (;) artifacts in the form of 'path=repo/path/to/artifact1[, sha256=hash1]; path=repo/path/to/artifact2[, sha256=hash2]' to be included in the new version.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PropertiesFlag:                    components.NewStringFlag(PropertiesFlag, "Sets or updates custom properties for the application version in format 'key1=value1[,value2,...];key2=value3[,value4,...]'", func(f *components.StringFlag) { f.Mandatory = false }),
 	DeletePropertiesFlag:              components.NewStringFlag(DeletePropertiesFlag, "Remove a property key and all its values", func(f *components.StringFlag) { f.Mandatory = false }),
 }
@@ -96,6 +100,8 @@ var commandFlags = map[string][]string{
 		SourceTypeBuildsFlag,
 		SourceTypeReleaseBundlesFlag,
 		SourceTypeApplicationVersionsFlag,
+		SourceTypePackagesFlag,
+		SourceTypeArtifactsFlag,
 		SpecFlag,
 		SpecVarsFlag,
 	},

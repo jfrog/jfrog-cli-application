@@ -119,6 +119,8 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0,include_deps=true;name=build2,id=2.0.0,include_deps=false")
 				ctx.AddStringFlag(commands.SourceTypeReleaseBundlesFlag, "name=rb1,version=1.0.0;name=rb2,version=2.0.0")
 				ctx.AddStringFlag(commands.SourceTypeApplicationVersionsFlag, "application-key=source-app,version=3.2.1")
+				ctx.AddStringFlag(commands.SourceTypePackagesFlag, "type=npm,name=pkg1,version=1.0.0,repo-key=repo1;type=docker,name=pkg2,version=2.0.0,repo-key=repo2")
+				ctx.AddStringFlag(commands.SourceTypeArtifactsFlag, "path=repo/path/to/artifact1.jar,sha256=abc123;path=repo/path/to/artifact2.war")
 			},
 			expectsPayload: &model.CreateAppVersionRequest{
 				ApplicationKey: "app-key",
@@ -135,6 +137,14 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 					},
 					Versions: []model.CreateVersionReference{
 						{ApplicationKey: "source-app", Version: "3.2.1"},
+					},
+					Packages: []model.CreateVersionPackage{
+						{Type: "npm", Name: "pkg1", Version: "1.0.0", Repository: "repo1"},
+						{Type: "docker", Name: "pkg2", Version: "2.0.0", Repository: "repo2"},
+					},
+					Artifacts: []model.CreateVersionArtifact{
+						{Path: "repo/path/to/artifact1.jar", SHA256: "abc123"},
+						{Path: "repo/path/to/artifact2.war"},
 					},
 				},
 			},
@@ -157,7 +167,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions.",
+			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions, --source-type-packages, --source-type-artifacts.",
 		},
 		{
 			name: "empty flags",
@@ -166,7 +176,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions.",
+			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions, --source-type-packages, --source-type-artifacts.",
 		},
 	}
 
@@ -405,6 +415,134 @@ func TestParseSourceVersions(t *testing.T) {
 	}
 }
 
+func TestParsePackages(t *testing.T) {
+	cmd := &createAppVersionCommand{}
+
+	tests := []struct {
+		name             string
+		input            string
+		expectError      bool
+		errorContains    string
+		expectedPackages []model.CreateVersionPackage
+	}{
+		{
+			name:        "multiple packages",
+			input:       "type=npm,name=pkg1,version=1.0.0,repo-key=repo1;type=docker,name=pkg2,version=2.0.0,repo-key=repo2",
+			expectError: false,
+			expectedPackages: []model.CreateVersionPackage{
+				{Type: "npm", Name: "pkg1", Version: "1.0.0", Repository: "repo1"},
+				{Type: "docker", Name: "pkg2", Version: "2.0.0", Repository: "repo2"},
+			},
+		},
+		{
+			name:             "empty string",
+			input:            "",
+			expectError:      false,
+			expectedPackages: nil,
+		},
+		{
+			name:          "missing type field",
+			input:         "name=pkg1,version=1.0.0,repo-key=repo1",
+			expectError:   true,
+			errorContains: "missing required field: type",
+		},
+		{
+			name:          "missing name field",
+			input:         "type=npm,version=1.0.0,repo-key=repo1",
+			expectError:   true,
+			errorContains: "missing required field: name",
+		},
+		{
+			name:          "missing version field",
+			input:         "type=npm,name=pkg1,repo-key=repo1",
+			expectError:   true,
+			errorContains: "missing required field: version",
+		},
+		{
+			name:          "missing repo-key field",
+			input:         "type=npm,name=pkg1,version=1.0.0",
+			expectError:   true,
+			errorContains: "missing required field: repo-key",
+		},
+		{
+			name:          "invalid format",
+			input:         "pkg1",
+			expectError:   true,
+			errorContains: "invalid package format",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			packages, err := cmd.parsePackages(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedPackages, packages)
+			}
+		})
+	}
+}
+
+func TestParseArtifacts(t *testing.T) {
+	cmd := &createAppVersionCommand{}
+
+	tests := []struct {
+		name              string
+		input             string
+		expectError       bool
+		errorContains     string
+		expectedArtifacts []model.CreateVersionArtifact
+	}{
+		{
+			name:        "multiple artifacts",
+			input:       "path=repo/path/to/artifact1.jar,sha256=abc123def456;path=repo/path/to/artifact2.war",
+			expectError: false,
+			expectedArtifacts: []model.CreateVersionArtifact{
+				{Path: "repo/path/to/artifact1.jar", SHA256: "abc123def456"},
+				{Path: "repo/path/to/artifact2.war"},
+			},
+		},
+		{
+			name:              "empty string",
+			input:             "",
+			expectError:       false,
+			expectedArtifacts: nil,
+		},
+		{
+			name:          "missing path field",
+			input:         "sha256=abc123def456",
+			expectError:   true,
+			errorContains: "missing required field: path",
+		},
+		{
+			name:          "invalid format",
+			input:         "artifact1.jar",
+			expectError:   true,
+			errorContains: "invalid artifact format",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			artifacts, err := cmd.parseArtifacts(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedArtifacts, artifacts)
+			}
+		})
+	}
+}
+
 func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -617,6 +755,22 @@ func TestValidateCreateAppVersionContext(t *testing.T) {
 			expectError: false,
 		},
 		{
+			name: "valid context with packages flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SourceTypePackagesFlag, "type=npm,name=pkg1,version=1.0.0,repo-key=repo1")
+			},
+			expectError: false,
+		},
+		{
+			name: "valid context with artifacts flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SourceTypeArtifactsFlag, "path=repo/path/to/artifact1.jar")
+			},
+			expectError: false,
+		},
+		{
 			name: "valid context with spec flag",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
@@ -674,6 +828,24 @@ func TestValidateNoSpecAndFlagsTogether(t *testing.T) {
 			ctxSetup: func(ctx *components.Context) {
 				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
 				ctx.AddStringFlag(commands.SourceTypeApplicationVersionsFlag, "application-key=app1,version=1.0.0")
+			},
+			expectError:   true,
+			errorContains: "--spec provided",
+		},
+		{
+			name: "spec flag with packages flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.SourceTypePackagesFlag, "type=npm,name=pkg1,version=1.0.0,repo-key=repo1")
+			},
+			expectError:   true,
+			errorContains: "--spec provided",
+		},
+		{
+			name: "spec flag with artifacts flag",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.SourceTypeArtifactsFlag, "path=repo/path/to/artifact1.jar")
 			},
 			expectError:   true,
 			errorContains: "--spec provided",
