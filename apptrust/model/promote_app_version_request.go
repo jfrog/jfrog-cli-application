@@ -13,6 +13,7 @@ const (
 var PromotionTypeValues = []string{
 	PromotionTypeCopy,
 	PromotionTypeMove,
+	PromotionTypeKeep,
 }
 
 type CommonPromoteAppVersion struct {
