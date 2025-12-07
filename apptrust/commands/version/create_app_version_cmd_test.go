@@ -884,6 +884,81 @@ func TestValidateNoSpecAndFlagsTogether(t *testing.T) {
 	}
 }
 
+func TestValidateNoSpecAndFlagsTogether_WithFilterFlags(t *testing.T) {
+	tests := []struct {
+		name          string
+		ctxSetup      func(*components.Context)
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name: "spec with include filter flag - should error",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package, type=docker, name=frontend-*")
+			},
+			expectError:   true,
+			errorContains: "filter flags",
+		},
+		{
+			name: "spec with exclude filter flag - should error",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.ExcludeFilterFlag, "filter_type=package, name=*-dev")
+			},
+			expectError:   true,
+			errorContains: "filter flags",
+		},
+		{
+			name: "spec with both filter flags - should error",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package, type=docker")
+				ctx.AddStringFlag(commands.ExcludeFilterFlag, "filter_type=package, name=*-dev")
+			},
+			expectError:   true,
+			errorContains: "filter flags",
+		},
+		{
+			name: "spec without filter flags - should not error",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+			},
+			expectError: false,
+		},
+		{
+			name: "no spec with filter flags - should not error",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SourceTypePackagesFlag, "type=npm,name=test,version=1.0.0,repo-key=repo")
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package, type=docker")
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			tt.ctxSetup(ctx)
+
+			err := validateNoSpecAndFlagsTogether(ctx)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestValidateRequiredFieldsInMap(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -924,6 +999,489 @@ func TestValidateRequiredFieldsInMap(t *testing.T) {
 				}
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestParseFilters(t *testing.T) {
+	cmd := &createAppVersionCommand{}
+
+	tests := []struct {
+		name            string
+		input           []string
+		expectError     bool
+		errorContains   string
+		expectedFilters []*model.CreateVersionSourceFilter
+	}{
+		{
+			name:  "package filter with type and name",
+			input: []string{"filter_type=package, type=docker, name=frontend-*"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{PackageType: "docker", PackageName: "frontend-*"},
+			},
+		},
+		{
+			name:  "package filter with all fields",
+			input: []string{"filter_type=package, type=npm, name=my-package, version=1.0.0"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{PackageType: "npm", PackageName: "my-package", PackageVersion: "1.0.0"},
+			},
+		},
+		{
+			name:  "package filter with only name",
+			input: []string{"filter_type=package, name=*-dev"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{PackageName: "*-dev"},
+			},
+		},
+		{
+			name:  "package filter with only version",
+			input: []string{"filter_type=package, version=3.*"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{PackageVersion: "3.*"},
+			},
+		},
+		{
+			name:  "artifact filter with path",
+			input: []string{"filter_type=artifact, path=libs/*.jar"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{Path: "libs/*.jar"},
+			},
+		},
+		{
+			name:  "artifact filter with path and sha256",
+			input: []string{"filter_type=artifact, path=libs/artifact.jar, sha256=a1b2c3d4e5f6"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{Path: "libs/artifact.jar", SHA256: "a1b2c3d4e5f6"},
+			},
+		},
+		{
+			name:  "artifact filter with only sha256",
+			input: []string{"filter_type=artifact, sha256=a1b2c3d4e5f6789012345678901234567890123456789012345678901267890"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{SHA256: "a1b2c3d4e5f6789012345678901234567890123456789012345678901267890"},
+			},
+		},
+		{
+			name:  "multiple filters - package and artifact",
+			input: []string{"filter_type=package, type=docker, name=frontend-*", "filter_type=artifact, path=libs/*.jar"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{PackageType: "docker", PackageName: "frontend-*"},
+				{Path: "libs/*.jar"},
+			},
+		},
+		{
+			name:          "missing filter_type",
+			input:         []string{"type=docker, name=frontend-*"},
+			expectError:   true,
+			errorContains: "missing 'filter_type' field",
+		},
+		{
+			name:          "invalid filter_type",
+			input:         []string{"filter_type=invalid, type=docker"},
+			expectError:   true,
+			errorContains: "invalid filter_type 'invalid'",
+		},
+		{
+			name:          "package filter with no fields",
+			input:         []string{"filter_type=package"},
+			expectError:   true,
+			errorContains: "at least one of 'type', 'name', or 'version' must be specified",
+		},
+		{
+			name:          "artifact filter with no fields",
+			input:         []string{"filter_type=artifact"},
+			expectError:   true,
+			errorContains: "at least one of 'path' or 'sha256' must be specified",
+		},
+		{
+			name:          "invalid format - missing equals",
+			input:         []string{"filter_type=package type=docker"},
+			expectError:   true,
+			errorContains: "invalid filter_type",
+		},
+		{
+			name:            "empty input",
+			input:           []string{},
+			expectedFilters: []*model.CreateVersionSourceFilter{},
+		},
+		{
+			name:  "multiple package filters",
+			input: []string{"filter_type=package, type=docker, name=frontend-*", "filter_type=package, version=3.*"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{PackageType: "docker", PackageName: "frontend-*"},
+				{PackageVersion: "3.*"},
+			},
+		},
+		{
+			name:  "multiple artifact filters",
+			input: []string{"filter_type=artifact, path=libs/*.jar", "filter_type=artifact, path=libs/vulnerable-lib-1.2.3.jar"},
+			expectedFilters: []*model.CreateVersionSourceFilter{
+				{Path: "libs/*.jar"},
+				{Path: "libs/vulnerable-lib-1.2.3.jar"},
+			},
+		},
+		{
+			name:          "error in second filter",
+			input:         []string{"filter_type=package, type=docker, name=frontend-*", "filter_type=package"},
+			expectError:   true,
+			errorContains: "at least one of 'type', 'name', or 'version' must be specified",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			filters, err := cmd.parseFilters(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, len(tt.expectedFilters), len(filters))
+				for i, expected := range tt.expectedFilters {
+					assert.Equal(t, expected.PackageType, filters[i].PackageType)
+					assert.Equal(t, expected.PackageName, filters[i].PackageName)
+					assert.Equal(t, expected.PackageVersion, filters[i].PackageVersion)
+					assert.Equal(t, expected.Path, filters[i].Path)
+					assert.Equal(t, expected.SHA256, filters[i].SHA256)
+				}
+			}
+		})
+	}
+}
+
+func TestBuildFiltersFromFlags(t *testing.T) {
+	cmd := &createAppVersionCommand{}
+
+	tests := []struct {
+		name            string
+		ctxSetup        func(*components.Context)
+		expectError     bool
+		errorContains   string
+		expectedFilters *model.CreateVersionFilters
+	}{
+		{
+			name: "no filters",
+			ctxSetup: func(ctx *components.Context) {
+			},
+			expectedFilters: nil,
+		},
+		{
+			name: "single include filter",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package, type=docker, name=frontend-*")
+			},
+			expectedFilters: &model.CreateVersionFilters{
+				Included: []*model.CreateVersionSourceFilter{
+					{PackageType: "docker", PackageName: "frontend-*"},
+				},
+			},
+		},
+		{
+			name: "single exclude filter",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.ExcludeFilterFlag, "filter_type=package, name=*-dev")
+			},
+			expectedFilters: &model.CreateVersionFilters{
+				Excluded: []*model.CreateVersionSourceFilter{
+					{PackageName: "*-dev"},
+				},
+			},
+		},
+		{
+			name: "include and exclude filters",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package, type=docker, name=frontend-*")
+				ctx.AddStringFlag(commands.ExcludeFilterFlag, "filter_type=package, name=*-dev")
+			},
+			expectedFilters: &model.CreateVersionFilters{
+				Included: []*model.CreateVersionSourceFilter{
+					{PackageType: "docker", PackageName: "frontend-*"},
+				},
+				Excluded: []*model.CreateVersionSourceFilter{
+					{PackageName: "*-dev"},
+				},
+			},
+		},
+		{
+			name: "multiple include and exclude filters",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package, type=docker, name=frontend-*; filter_type=artifact, path=libs/*.jar")
+				ctx.AddStringFlag(commands.ExcludeFilterFlag, "filter_type=package, name=*-dev; filter_type=package, name=*versions*")
+			},
+			expectedFilters: &model.CreateVersionFilters{
+				Included: []*model.CreateVersionSourceFilter{
+					{PackageType: "docker", PackageName: "frontend-*"},
+					{Path: "libs/*.jar"},
+				},
+				Excluded: []*model.CreateVersionSourceFilter{
+					{PackageName: "*-dev"},
+					{PackageName: "*versions*"},
+				},
+			},
+		},
+		{
+			name: "invalid include filter",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package")
+			},
+			expectError:   true,
+			errorContains: "at least one of 'type', 'name', or 'version' must be specified",
+		},
+		{
+			name: "invalid exclude filter",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.ExcludeFilterFlag, "filter_type=artifact")
+			},
+			expectError:   true,
+			errorContains: "at least one of 'path' or 'sha256' must be specified",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			tt.ctxSetup(ctx)
+
+			filters, err := cmd.buildFiltersFromFlags(ctx)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				if tt.expectedFilters == nil {
+					assert.Nil(t, filters)
+				} else {
+					assert.NotNil(t, filters)
+					if tt.expectedFilters.Included != nil {
+						assert.Equal(t, len(tt.expectedFilters.Included), len(filters.Included))
+						for i, expected := range tt.expectedFilters.Included {
+							assert.Equal(t, expected.PackageType, filters.Included[i].PackageType)
+							assert.Equal(t, expected.PackageName, filters.Included[i].PackageName)
+							assert.Equal(t, expected.PackageVersion, filters.Included[i].PackageVersion)
+							assert.Equal(t, expected.Path, filters.Included[i].Path)
+							assert.Equal(t, expected.SHA256, filters.Included[i].SHA256)
+						}
+					}
+					if tt.expectedFilters.Excluded != nil {
+						assert.Equal(t, len(tt.expectedFilters.Excluded), len(filters.Excluded))
+						for i, expected := range tt.expectedFilters.Excluded {
+							assert.Equal(t, expected.PackageType, filters.Excluded[i].PackageType)
+							assert.Equal(t, expected.PackageName, filters.Excluded[i].PackageName)
+							assert.Equal(t, expected.PackageVersion, filters.Excluded[i].PackageVersion)
+							assert.Equal(t, expected.Path, filters.Excluded[i].Path)
+							assert.Equal(t, expected.SHA256, filters.Excluded[i].SHA256)
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestLoadFromSpec_WithFilters(t *testing.T) {
+	cmd := &createAppVersionCommand{}
+
+	tests := []struct {
+		name            string
+		specPath        string
+		expectError     bool
+		errorContains   string
+		expectedSources *model.CreateVersionSources
+		expectedFilters *model.CreateVersionFilters
+	}{
+		{
+			name:     "spec with included filters",
+			specPath: "./testfiles/filters-spec.json",
+			expectedSources: &model.CreateVersionSources{
+				Packages: []model.CreateVersionPackage{
+					{
+						Type:       "npm",
+						Name:       "pkg-with-filters",
+						Version:    "1.0.0",
+						Repository: "repo-filters",
+					},
+				},
+			},
+			expectedFilters: &model.CreateVersionFilters{
+				Included: []*model.CreateVersionSourceFilter{
+					{
+						PackageType: "docker",
+						PackageName: "frontend-*",
+					},
+				},
+				Excluded: []*model.CreateVersionSourceFilter{
+					{
+						Path: "libs/vulnerable-*.jar",
+					},
+				},
+			},
+		},
+		{
+			name:     "spec without filters",
+			specPath: "./testfiles/minimal-spec.json",
+			expectedSources: &model.CreateVersionSources{
+				Packages: []model.CreateVersionPackage{
+					{
+						Type:       "npm",
+						Name:       "pkg-min",
+						Version:    "0.1.0",
+						Repository: "repo-min",
+					},
+				},
+			},
+			expectedFilters: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			ctx.AddStringFlag(commands.SpecFlag, tt.specPath)
+			ctx.AddStringFlag("url", "https://example.com")
+
+			sources, filters, err := cmd.loadFromSpec(ctx)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedSources, sources)
+				if tt.expectedFilters == nil {
+					assert.Nil(t, filters)
+				} else {
+					assert.NotNil(t, filters)
+					if tt.expectedFilters.Included != nil {
+						assert.Equal(t, len(tt.expectedFilters.Included), len(filters.Included))
+						for i, expected := range tt.expectedFilters.Included {
+							assert.Equal(t, expected.PackageType, filters.Included[i].PackageType)
+							assert.Equal(t, expected.PackageName, filters.Included[i].PackageName)
+							assert.Equal(t, expected.PackageVersion, filters.Included[i].PackageVersion)
+							assert.Equal(t, expected.Path, filters.Included[i].Path)
+							assert.Equal(t, expected.SHA256, filters.Included[i].SHA256)
+						}
+					}
+					if tt.expectedFilters.Excluded != nil {
+						assert.Equal(t, len(tt.expectedFilters.Excluded), len(filters.Excluded))
+						for i, expected := range tt.expectedFilters.Excluded {
+							assert.Equal(t, expected.PackageType, filters.Excluded[i].PackageType)
+							assert.Equal(t, expected.PackageName, filters.Excluded[i].PackageName)
+							assert.Equal(t, expected.PackageVersion, filters.Excluded[i].PackageVersion)
+							assert.Equal(t, expected.Path, filters.Excluded[i].Path)
+							assert.Equal(t, expected.SHA256, filters.Excluded[i].SHA256)
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestBuildRequestPayload_Filters(t *testing.T) {
+	cmd := &createAppVersionCommand{}
+
+	tests := []struct {
+		name            string
+		ctxSetup        func(*components.Context)
+		expectError     bool
+		errorContains   string
+		expectedFilters *model.CreateVersionFilters
+	}{
+		{
+			name: "filters from spec when spec flag is set",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/filters-spec.json")
+				ctx.AddStringFlag("url", "https://example.com")
+			},
+			expectedFilters: &model.CreateVersionFilters{
+				Included: []*model.CreateVersionSourceFilter{
+					{
+						PackageType: "docker",
+						PackageName: "frontend-*",
+					},
+				},
+				Excluded: []*model.CreateVersionSourceFilter{
+					{
+						Path: "libs/vulnerable-*.jar",
+					},
+				},
+			},
+		},
+		{
+			name: "filters from flags when spec flag is not set",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SourceTypePackagesFlag, "type=npm,name=test,version=1.0.0,repo-key=repo")
+				ctx.AddStringFlag(commands.IncludeFilterFlag, "filter_type=package, type=docker, name=frontend-*")
+				ctx.AddStringFlag("url", "https://example.com")
+			},
+			expectedFilters: &model.CreateVersionFilters{
+				Included: []*model.CreateVersionSourceFilter{
+					{
+						PackageType: "docker",
+						PackageName: "frontend-*",
+					},
+				},
+			},
+		},
+		{
+			name: "no filters when spec has no filters and no filter flags",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+				ctx.AddStringFlag("url", "https://example.com")
+			},
+			expectedFilters: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			tt.ctxSetup(ctx)
+
+			payload, err := cmd.buildRequestPayload(ctx)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorContains != "" {
+					assert.Contains(t, err.Error(), tt.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, payload)
+				if tt.expectedFilters == nil {
+					assert.Nil(t, payload.Filters)
+				} else {
+					assert.NotNil(t, payload.Filters)
+					if tt.expectedFilters.Included != nil {
+						assert.Equal(t, len(tt.expectedFilters.Included), len(payload.Filters.Included))
+						for i, expected := range tt.expectedFilters.Included {
+							assert.Equal(t, expected.PackageType, payload.Filters.Included[i].PackageType)
+							assert.Equal(t, expected.PackageName, payload.Filters.Included[i].PackageName)
+							assert.Equal(t, expected.PackageVersion, payload.Filters.Included[i].PackageVersion)
+							assert.Equal(t, expected.Path, payload.Filters.Included[i].Path)
+							assert.Equal(t, expected.SHA256, payload.Filters.Included[i].SHA256)
+						}
+					}
+					if tt.expectedFilters.Excluded != nil {
+						assert.Equal(t, len(tt.expectedFilters.Excluded), len(payload.Filters.Excluded))
+						for i, expected := range tt.expectedFilters.Excluded {
+							assert.Equal(t, expected.PackageType, payload.Filters.Excluded[i].PackageType)
+							assert.Equal(t, expected.PackageName, payload.Filters.Excluded[i].PackageName)
+							assert.Equal(t, expected.PackageVersion, payload.Filters.Excluded[i].PackageVersion)
+							assert.Equal(t, expected.Path, payload.Filters.Excluded[i].Path)
+							assert.Equal(t, expected.SHA256, payload.Filters.Excluded[i].SHA256)
+						}
+					}
+				}
 			}
 		})
 	}

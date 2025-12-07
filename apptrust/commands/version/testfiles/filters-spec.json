@@ -1,0 +1,23 @@
+{
+  "packages": [
+    {
+      "type": "npm",
+      "name": "pkg-with-filters",
+      "version": "1.0.0",
+      "repository_key": "repo-filters"
+    }
+  ],
+  "filters": {
+    "included": [
+      {
+        "package_type": "docker",
+        "package_name": "frontend-*"
+      }
+    ],
+    "excluded": [
+      {
+        "path": "libs/vulnerable-*.jar"
+      }
+    ]
+  }
+}

@@ -5,6 +5,7 @@ type CreateAppVersionRequest struct {
 	Version        string                `json:"version"`
 	Sources        *CreateVersionSources `json:"sources,omitempty"`
 	Tag            string                `json:"tag,omitempty"`
+	Filters        *CreateVersionFilters `json:"filters,omitempty"`
 }
 
 type CreateVersionPackage struct {
@@ -20,6 +21,19 @@ type CreateVersionSources struct {
 	Builds         []CreateVersionBuild         `json:"builds,omitempty"`
 	ReleaseBundles []CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
 	Versions       []CreateVersionReference     `json:"versions,omitempty"`
+}
+
+type CreateVersionSourceFilter struct {
+	PackageType    string `json:"package_type,omitempty"`
+	PackageName    string `json:"package_name,omitempty"`
+	PackageVersion string `json:"package_version,omitempty"`
+	Path           string `json:"path,omitempty"`
+	SHA256         string `json:"sha256,omitempty"`
+}
+
+type CreateVersionFilters struct {
+	Included []*CreateVersionSourceFilter `json:"included,omitempty"`
+	Excluded []*CreateVersionSourceFilter `json:"excluded,omitempty"`
 }
 
 type CreateVersionArtifact struct {
