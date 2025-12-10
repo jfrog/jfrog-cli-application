@@ -34,6 +34,7 @@ type createVersionSpec struct {
 	Builds         []model.CreateVersionBuild         `json:"builds,omitempty"`
 	ReleaseBundles []model.CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
 	Versions       []model.CreateVersionReference     `json:"versions,omitempty"`
+	Filters        *model.CreateVersionFilters        `json:"filters,omitempty"`
 }
 
 func (cv *createAppVersionCommand) Run() error {
@@ -72,13 +73,18 @@ func (cv *createAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 func (cv *createAppVersionCommand) buildRequestPayload(ctx *components.Context) (*model.CreateAppVersionRequest, error) {
 	var (
 		sources *model.CreateVersionSources
+		filters *model.CreateVersionFilters
 		err     error
 	)
 
 	if ctx.IsFlagSet(commands.SpecFlag) {
-		sources, err = cv.loadFromSpec(ctx)
+		sources, filters, err = cv.loadFromSpec(ctx)
 	} else {
 		sources, err = cv.buildSourcesFromFlags(ctx)
+		if err != nil {
+			return nil, err
+		}
+		filters, err = cv.buildFiltersFromFlags(ctx)
 	}
 
 	if err != nil {
@@ -90,6 +96,7 @@ func (cv *createAppVersionCommand) buildRequestPayload(ctx *components.Context) 
 		Version:        ctx.Arguments[1],
 		Sources:        sources,
 		Tag:            ctx.GetStringFlagValue(commands.TagFlag),
+		Filters:        filters,
 	}, nil
 }
 
@@ -133,13 +140,13 @@ func (cv *createAppVersionCommand) buildSourcesFromFlags(ctx *components.Context
 	return sources, nil
 }
 
-func (cv *createAppVersionCommand) loadFromSpec(ctx *components.Context) (*model.CreateVersionSources, error) {
+func (cv *createAppVersionCommand) loadFromSpec(ctx *components.Context) (*model.CreateVersionSources, *model.CreateVersionFilters, error) {
 	specFilePath := ctx.GetStringFlagValue(commands.SpecFlag)
 	spec := new(createVersionSpec)
 	specVars := coreutils.SpecVarsStringToMap(ctx.GetStringFlagValue(commands.SpecVarsFlag))
 	content, err := fileutils.ReadFile(specFilePath)
 	if errorutils.CheckError(err) != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if len(specVars) > 0 {
@@ -148,12 +155,12 @@ func (cv *createAppVersionCommand) loadFromSpec(ctx *components.Context) (*model
 
 	err = json.Unmarshal(content, spec)
 	if errorutils.CheckError(err) != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Validation: if all sources are empty, return error
 	if (len(spec.Packages) == 0) && (len(spec.Builds) == 0) && (len(spec.ReleaseBundles) == 0) && (len(spec.Versions) == 0) && (len(spec.Artifacts) == 0) {
-		return nil, errorutils.CheckErrorf("Spec file is empty: must provide at least one source (artifacts, packages, builds, release_bundles, or versions)")
+		return nil, nil, errorutils.CheckErrorf("Spec file is empty: must provide at least one source (artifacts, packages, builds, release_bundles, or versions)")
 	}
 
 	sources := &model.CreateVersionSources{
@@ -164,7 +171,7 @@ func (cv *createAppVersionCommand) loadFromSpec(ctx *components.Context) (*model
 		Versions:       spec.Versions,
 	}
 
-	return sources, nil
+	return sources, spec.Filters, nil
 }
 
 func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.CreateVersionBuild, error) {
@@ -310,6 +317,92 @@ func (cv *createAppVersionCommand) parseArtifacts(artifactsStr string) ([]model.
 	return artifacts, nil
 }
 
+func (cv *createAppVersionCommand) buildFiltersFromFlags(ctx *components.Context) (*model.CreateVersionFilters, error) {
+	includeFilterValues := ctx.GetStringsArrFlagValue(commands.IncludeFilterFlag)
+	excludeFilterValues := ctx.GetStringsArrFlagValue(commands.ExcludeFilterFlag)
+
+	if len(includeFilterValues) == 0 && len(excludeFilterValues) == 0 {
+		return nil, nil
+	}
+	filters := &model.CreateVersionFilters{}
+	if includedFilters, err := cv.parseFilterValues(includeFilterValues); err != nil {
+		return nil, err
+	} else if len(includedFilters) > 0 {
+		filters.Included = includedFilters
+	}
+	if excludedFilters, err := cv.parseFilterValues(excludeFilterValues); err != nil {
+		return nil, err
+	} else if len(excludedFilters) > 0 {
+		filters.Excluded = excludedFilters
+	}
+
+	return filters, nil
+}
+
+func (cv *createAppVersionCommand) parseFilterValues(filterValues []string) ([]*model.CreateVersionSourceFilter, error) {
+	if len(filterValues) == 0 {
+		return nil, nil
+	}
+	return cv.parseFilters(filterValues)
+}
+
+func (cv *createAppVersionCommand) parseFilters(filterStrings []string) ([]*model.CreateVersionSourceFilter, error) {
+	const (
+		filterTypeField     = "filter_type"
+		packageTypeField    = "type"
+		packageNameField    = "name"
+		packageVersionField = "version"
+		artifactPathField   = "path"
+		artifactShaField    = "sha256"
+	)
+
+	var filters []*model.CreateVersionSourceFilter
+
+	for i, filterStr := range filterStrings {
+		filterMap, err := utils.ParseKeyValueString(filterStr, ",")
+		if err != nil {
+			return nil, errorutils.CheckErrorf("invalid filter format at index %d: %v", i, err)
+		}
+		filterType, ok := filterMap[filterTypeField]
+		if !ok {
+			return nil, errorutils.CheckErrorf("invalid filter format at index %d: missing 'filter_type' field", i)
+		}
+		filter := &model.CreateVersionSourceFilter{}
+
+		switch filterType {
+		case "package":
+			if val, ok := filterMap[packageTypeField]; ok {
+				filter.PackageType = val
+			}
+			if val, ok := filterMap[packageNameField]; ok {
+				filter.PackageName = val
+			}
+			if val, ok := filterMap[packageVersionField]; ok {
+				filter.PackageVersion = val
+			}
+			if filter.PackageType == "" && filter.PackageName == "" && filter.PackageVersion == "" {
+				return nil, errorutils.CheckErrorf("invalid package filter at index %d: at least one of 'type', 'name', or 'version' must be specified", i)
+			}
+		case "artifact":
+			if val, ok := filterMap[artifactPathField]; ok {
+				filter.Path = val
+			}
+			if val, ok := filterMap[artifactShaField]; ok {
+				filter.SHA256 = val
+			}
+			if filter.Path == "" && filter.SHA256 == "" {
+				return nil, errorutils.CheckErrorf("invalid artifact filter at index %d: at least one of 'path' or 'sha256' must be specified", i)
+			}
+		default:
+			return nil, errorutils.CheckErrorf("invalid filter_type '%s' at index %d: must be 'package' or 'artifact'", filterType, i)
+		}
+
+		filters = append(filters, filter)
+	}
+
+	return filters, nil
+}
+
 func validateCreateAppVersionContext(ctx *components.Context) error {
 	if err := validateNoSpecAndFlagsTogether(ctx); err != nil {
 		return err
@@ -358,7 +451,7 @@ func GetCreateAppVersionCommand(appContext app.Context) components.Command {
 	}
 }
 
-// Returns error if both --spec and any other source flag are set
+// Returns error if both --spec and any other source flag or filter flag are set
 func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
 	if ctx.IsFlagSet(commands.SpecFlag) {
 		otherSourceFlags := []string{
@@ -372,6 +465,12 @@ func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
 			if ctx.IsFlagSet(flag) {
 				return errorutils.CheckErrorf("--spec provided: all other source flags (e.g., --%s) are not allowed.", flag)
 			}
+		}
+		if ctx.IsFlagSet(commands.IncludeFilterFlag) {
+			return errorutils.CheckErrorf("--spec provided: filter flags (e.g., --%s) are not allowed.", commands.IncludeFilterFlag)
+		}
+		if ctx.IsFlagSet(commands.ExcludeFilterFlag) {
+			return errorutils.CheckErrorf("--spec provided: filter flags (e.g., --%s) are not allowed.", commands.ExcludeFilterFlag)
 		}
 	}
 	return nil
