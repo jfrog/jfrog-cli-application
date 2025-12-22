@@ -1,4 +1,4 @@
-name: Go Tests
+name: Tests
 on:
   push:
     branches:
@@ -16,22 +16,13 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-          cache: false
-
-      - name: Go Cache
-        uses: actions/cache@v4
-        with:
-          path: ~/go/pkg/mod
-          key: go-${{ hashFiles('**/go.sum') }}
-          restore-keys: go-
 
       - name: Run Tests
         run: |
@@ -44,3 +35,31 @@ jobs:
           check_name: Unit Tests Results
           files: |
             utests-report.xml
+
+  integration-tests:
+    name: "Integration tests [${{ matrix.os }}]"
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu, windows, macos ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Run Integration Tests
+        run: |
+          make itest-ci
+
+      - name: Publish Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Integration Tests Results
+          files: |
+            itests-report.xml
