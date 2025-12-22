@@ -6,7 +6,7 @@ on:
     tags-ignore:
       - '**'
   workflow_dispatch:
-  pull_request_target:
+  pull_request_target: # TODO: consider changing to pull_request. if keeping it, consider using "safe to test" label
 # Ensures that only the latest commit is running for each PR at a time.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.ref }}
@@ -32,7 +32,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          check_name: Unit Tests Results
+          check_name: Unit tests
           files: |
             utests-report.xml
 
@@ -60,6 +60,6 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          check_name: Integration Tests Results
+          check_name: "Integration tests [${{ matrix.os }}]"
           files: |
             itests-report.xml
