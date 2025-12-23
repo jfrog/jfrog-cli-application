@@ -51,6 +51,9 @@ jobs:
       - name: Run Integration Tests
         run: |
           make itest-ci
+        env:
+          JFROG_APPTRUST_CLI_TESTS_JFROG_URL: ${{ secrets.JFROG_APPTRUST_CLI_TESTS_JFROG_URL }}
+          JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN }}
 
       - name: Publish Results
         uses: EnricoMi/publish-unit-test-result-action@v2
