@@ -84,6 +84,6 @@ test: test-prereq
 test-ci: test-prereq
 	gotestsum --format testname --junitfile=utests-report.xml -- ./...
 e2e-test: test-prereq
-	go test ./test/... -tags=e2e
+	go test ./e2e/... -tags=e2e
 e2e-test-ci: test-prereq
-	gotestsum --format testname --junitfile=e2e-tests-report.xml -- ./test/... -tags=e2e
+	gotestsum --format testname --junitfile=e2e-tests-report.xml -- ./e2e/... -tags=e2e
