@@ -6,12 +6,16 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
-	"github.com/jfrog/jfrog-cli-application/cli"
-	"github.com/jfrog/jfrog-cli-core/v2/plugins"
+	"github.com/jfrog/jfrog-cli-core/v2/artifactory/utils"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	coreTests "github.com/jfrog/jfrog-cli-core/v2/utils/tests"
+	accessServices "github.com/jfrog/jfrog-client-go/access/services"
+	"github.com/jfrog/jfrog-client-go/utils/log"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -20,18 +24,18 @@ const (
 )
 
 var (
+	platformUrl      *string
+	adminAccessToken *string
+
 	credentials string
-	PlatformCli *coreTests.JfrogCli
+	AppTrustCli *coreTests.JfrogCli
+
+	testProjectKey string
 )
 
-func init() {
-	loadCredentials()
-	PlatformCli = coreTests.NewJfrogCli(plugins.RunCliWithPlugin(cli.GetJfrogCliApptrustApp()), "jf at", credentials)
-}
-
 func loadCredentials() {
-	platformUrl := flag.String("jfrog.url", getTestUrlDefaultValue(), "JFrog Platform URL")
-	adminAccessToken := flag.String("jfrog.adminToken", os.Getenv(TestJfrogTokenEnvVar), "JFrog Platform admin token")
+	platformUrl = flag.String("jfrog.url", getTestUrlDefaultValue(), "JFrog Platform URL")
+	adminAccessToken = flag.String("jfrog.adminToken", os.Getenv(TestJfrogTokenEnvVar), "JFrog Platform admin token")
 	credentials = fmt.Sprintf("--url=%s --access-token=%s", *platformUrl, *adminAccessToken)
 }
 
@@ -42,9 +46,56 @@ func getTestUrlDefaultValue() string {
 	return "http://localhost:8082/"
 }
 
-// GenerateUniqueAppKey generates a unique app key for testing
-func GenerateUniqueAppKey(t *testing.T, prefix string) string {
-	// Use timestamp and PID for uniqueness
-	timestamp := time.Now().UnixNano()
-	return fmt.Sprintf("%s-%d-%d", prefix, timestamp, os.Getpid())
+func GetTestProjectKey(t *testing.T) string {
+	if testProjectKey == "" {
+		createTestProject(t)
+	}
+	return testProjectKey
+}
+
+func createTestProject(t *testing.T) {
+	serverDetails := &config.ServerDetails{
+		Url:         *platformUrl,
+		AccessToken: *adminAccessToken,
+	}
+	accessManager, err := utils.CreateAccessServiceManager(serverDetails, false)
+	assert.NoError(t, err)
+	projectKey := GenerateUniqueKey("apptrust-cli-tests")
+	projectParams := accessServices.ProjectParams{
+		ProjectDetails: accessServices.Project{
+			DisplayName: projectKey,
+			ProjectKey:  projectKey,
+		},
+	}
+	err = accessManager.CreateProject(projectParams)
+	assert.NoError(t, err)
+	testProjectKey = projectKey
+}
+
+func deleteTestProject() {
+	if testProjectKey == "" {
+		return
+	}
+	serverDetails := &config.ServerDetails{
+		Url:         *platformUrl,
+		AccessToken: *adminAccessToken,
+	}
+	accessManager, err := utils.CreateAccessServiceManager(serverDetails, false)
+	if err != nil {
+		log.Error("Failed to create Access service manager", err)
+	}
+	err = accessManager.DeleteProject(testProjectKey)
+	if err != nil {
+		log.Error("Failed to delete project", err)
+	}
+}
+
+func DeleteApplication(t *testing.T, appKey string) {
+	err := AppTrustCli.Exec("ad", appKey)
+	assert.NoError(t, err)
+}
+
+func GenerateUniqueKey(prefix string) string {
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	return fmt.Sprintf("%s-%s", prefix, timestamp)
 }
