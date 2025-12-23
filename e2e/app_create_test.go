@@ -1,6 +1,6 @@
-//go:build itest
+//go:build e2e
 
-package test
+package e2e
 
 import (
 	"testing"

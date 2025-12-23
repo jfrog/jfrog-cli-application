@@ -36,8 +36,8 @@ jobs:
           files: |
             utests-report.xml
 
-  integration-tests:
-    name: Integration tests
+  e2e-tests:
+    name: E2E tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -48,9 +48,9 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Run Integration Tests
+      - name: Run E2E Tests
         run: |
-          make itest-ci
+          make e2e-test-ci
         env:
           JFROG_APPTRUST_CLI_TESTS_JFROG_URL: ${{ secrets.JFROG_APPTRUST_CLI_TESTS_JFROG_URL }}
           JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN }}
@@ -59,6 +59,6 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          check_name: Integration tests
+          check_name: E2E tests
           files: |
-            itests-report.xml
+            e2e-tests-report.xml
