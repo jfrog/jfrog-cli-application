@@ -31,7 +31,8 @@ func TestCreateApp(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was created correctly
-	app := GetApplication(t, appKey)
+	app, _, err := GetApplication(appKey)
+	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 	assert.Equal(t, appName, app.ApplicationName)
 	assert.Equal(t, projectKey, app.ProjectKey)
@@ -70,7 +71,8 @@ func TestUpdateApp(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was updated correctly
-	app := GetApplication(t, appKey)
+	app, _, err := GetApplication(appKey)
+	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 	assert.Equal(t, updatedAppName, app.ApplicationName)
 	assert.Equal(t, projectKey, app.ProjectKey)
@@ -82,4 +84,23 @@ func TestUpdateApp(t *testing.T) {
 	assert.Equal(t, updatedGroupOwners, *app.GroupOwners)
 
 	DeleteApplication(t, appKey)
+}
+
+func TestDeleteApp(t *testing.T) {
+	appKey := GenerateUniqueKey("app-delete")
+	CreateBasicApplication(t, appKey)
+
+	// Verify the application exists
+	app, _, err := GetApplication(appKey)
+	assert.NoError(t, err)
+	assert.Equal(t, appKey, app.ApplicationKey)
+
+	// Delete the application
+	err = AppTrustCli.Exec("ad", appKey)
+	assert.NoError(t, err)
+
+	// Verify the application no longer exists
+	_, statusCode, err := GetApplication(appKey)
+	assert.NoError(t, err)
+	assert.Equal(t, 404, statusCode)
 }

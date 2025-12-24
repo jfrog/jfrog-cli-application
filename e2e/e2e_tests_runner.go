@@ -107,18 +107,27 @@ func GenerateUniqueKey(prefix string) string {
 	return fmt.Sprintf("%s-%s", prefix, timestamp)
 }
 
-func GetApplication(t *testing.T, appKey string) *model.AppDescriptor {
+func GetApplication(appKey string) (*model.AppDescriptor, int, error) {
+	statusCode := 0
 	ctx, err := service.NewContext(*serverDetails)
-	assert.NoError(t, err)
+	if err != nil {
+		return nil, statusCode, err
+	}
 
 	endpoint := fmt.Sprintf("/v1/applications/%s", appKey)
 	response, responseBody, err := ctx.GetHttpClient().Get(endpoint)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, response.StatusCode, "Expected status 200, got %d. Response: %s", response.StatusCode, string(responseBody))
+	if response != nil {
+		statusCode = response.StatusCode
+	}
+	if err != nil || statusCode != http.StatusOK {
+		return nil, statusCode, err
+	}
 
 	var appDescriptor model.AppDescriptor
 	err = json.Unmarshal(responseBody, &appDescriptor)
-	assert.NoError(t, errorutils.CheckError(err))
+	if err != nil {
+		return nil, statusCode, errorutils.CheckError(err)
+	}
 
-	return &appDescriptor
+	return &appDescriptor, statusCode, nil
 }
