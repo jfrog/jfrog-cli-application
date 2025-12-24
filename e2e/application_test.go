@@ -44,3 +44,42 @@ func TestCreateApp(t *testing.T) {
 
 	DeleteApplication(t, appKey)
 }
+
+func TestUpdateApp(t *testing.T) {
+	projectKey := GetTestProjectKey(t)
+	appKey := GenerateUniqueKey("app-update")
+
+	CreateBasicApplication(t, appKey)
+
+	// Update the application with new values
+	updatedAppName := "Updated Test Application"
+	updatedDescription := "Updated description"
+	updatedBusinessCriticality := "high"
+	updatedMaturityLevel := "production"
+	updatedUserOwners := []string{"app-admin", "frog"}
+	updatedGroupOwners := []string{"dev-team", "security-team"}
+
+	err := AppTrustCli.Exec("au", appKey,
+		"--application-name="+updatedAppName,
+		"--desc="+updatedDescription,
+		"--business-criticality="+updatedBusinessCriticality,
+		"--maturity-level="+updatedMaturityLevel,
+		"--labels=env=qa;team=dev",
+		"--user-owners="+strings.Join(updatedUserOwners, ";"),
+		"--group-owners="+strings.Join(updatedGroupOwners, ";"))
+	assert.NoError(t, err)
+
+	// Fetch and verify the application was updated correctly
+	app := GetApplication(t, appKey)
+	assert.Equal(t, appKey, app.ApplicationKey)
+	assert.Equal(t, updatedAppName, app.ApplicationName)
+	assert.Equal(t, projectKey, app.ProjectKey)
+	assert.Equal(t, updatedDescription, *app.Description)
+	assert.Equal(t, updatedBusinessCriticality, *app.BusinessCriticality)
+	assert.Equal(t, updatedMaturityLevel, *app.MaturityLevel)
+	assert.Equal(t, map[string]string{"env": "qa", "team": "dev"}, *app.Labels)
+	assert.Equal(t, updatedUserOwners, *app.UserOwners)
+	assert.Equal(t, updatedGroupOwners, *app.GroupOwners)
+
+	DeleteApplication(t, appKey)
+}
