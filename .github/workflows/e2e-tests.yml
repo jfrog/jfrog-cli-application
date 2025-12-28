@@ -48,4 +48,3 @@ jobs:
         with:
           files: |
             e2e-tests-report.xml
-

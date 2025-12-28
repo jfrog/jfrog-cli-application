@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -15,12 +17,16 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
 	"github.com/jfrog/jfrog-cli-core/v2/artifactory/utils"
-	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
+	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	coreTests "github.com/jfrog/jfrog-cli-core/v2/utils/tests"
 	accessServices "github.com/jfrog/jfrog-client-go/access/services"
+	"github.com/jfrog/jfrog-client-go/artifactory"
+	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	clientUtils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -29,23 +35,29 @@ const (
 )
 
 var (
-	serverDetails *config.ServerDetails
+	serverDetails              *coreConfig.ServerDetails
+	artifactoryServicesManager artifactory.ArtifactoryServicesManager
 
 	credentials string
 	AppTrustCli *coreTests.JfrogCli
 
-	testProjectKey string
+	testProjectKey  string
+	testRepoKey     string
+	testPackagePath string
 )
 
 func loadCredentials() {
-	platformUrl := flag.String("jfrog.url", getTestUrlDefaultValue(), "JFrog Platform URL")
-	adminAccessToken := flag.String("jfrog.adminToken", os.Getenv(TestJfrogTokenEnvVar), "JFrog Platform admin token")
+	platformUrlFlag := flag.String("jfrog.url", getTestUrlDefaultValue(), "JFrog Platform URL")
+	accessTokenFlag := flag.String("jfrog.adminToken", os.Getenv(TestJfrogTokenEnvVar), "JFrog Platform admin token")
+	platformUrl := clientUtils.AddTrailingSlashIfNeeded(*platformUrlFlag)
+	artifactoryUrl := platformUrl + "artifactory/"
 
-	serverDetails = &config.ServerDetails{
-		Url:         *platformUrl,
-		AccessToken: *adminAccessToken,
+	serverDetails = &coreConfig.ServerDetails{
+		Url:            clientUtils.AddTrailingSlashIfNeeded(*platformUrlFlag),
+		ArtifactoryUrl: artifactoryUrl,
+		AccessToken:    *accessTokenFlag,
 	}
-	credentials = fmt.Sprintf("--url=%s --access-token=%s", *platformUrl, *adminAccessToken)
+	credentials = fmt.Sprintf("--url=%s --access-token=%s", *platformUrlFlag, *accessTokenFlag)
 }
 
 func getTestUrlDefaultValue() string {
@@ -81,6 +93,7 @@ func deleteTestProject() {
 	if testProjectKey == "" {
 		return
 	}
+	deleteNpmRepo()
 	accessManager, err := utils.CreateAccessServiceManager(serverDetails, false)
 	if err != nil {
 		log.Error("Failed to create Access service manager", err)
@@ -130,4 +143,63 @@ func GetApplication(appKey string) (*model.AppDescriptor, int, error) {
 	}
 
 	return &appDescriptor, statusCode, nil
+}
+
+func GetTestPackage(t *testing.T) string {
+	if testPackagePath == "" {
+		uploadPackageToArtifactory(t)
+	}
+	return testPackagePath
+}
+
+func uploadPackageToArtifactory(t *testing.T) {
+	createNpmRepo(t)
+
+	// Get the absolute path to the testdata file
+	_, testFilePath, _, _ := runtime.Caller(0)
+	npmPackageFilePath := filepath.Join(filepath.Dir(testFilePath), "testdata", "pizza-frontend.tgz")
+
+	targetPath := testRepoKey + "/pizza-frontend.tgz"
+	servicesManager := getArtifactoryServicesManager(t)
+	uploadParams := services.NewUploadParams()
+	uploadParams.Pattern = npmPackageFilePath
+	uploadParams.Target = targetPath
+	uploadParams.Flat = true
+	uploaded, failed, err := servicesManager.UploadFiles(artifactory.UploadServiceOptions{FailFast: false}, uploadParams)
+	require.NoError(t, err)
+	require.Equal(t, 1, uploaded, "Expected exactly one uploaded file")
+	require.Equal(t, 0, failed, "Expected zero failed uploads")
+	testPackagePath = targetPath
+}
+
+func createNpmRepo(t *testing.T) {
+	servicesManager := getArtifactoryServicesManager(t)
+	repoKey := GetTestProjectKey(t) + "-npm-local"
+	localRepoConfig := services.NewNpmLocalRepositoryParams()
+	localRepoConfig.ProjectKey = GetTestProjectKey(t)
+	localRepoConfig.Key = repoKey
+	err := servicesManager.CreateLocalRepository().Npm(localRepoConfig)
+	require.NoError(t, err)
+	testRepoKey = repoKey
+}
+
+func deleteNpmRepo() {
+	if testRepoKey == "" || artifactoryServicesManager == nil {
+		return
+	}
+
+	err := artifactoryServicesManager.DeleteRepository(testRepoKey)
+	if err != nil {
+		log.Error("Failed to delete npm repo", err)
+	}
+}
+
+func getArtifactoryServicesManager(t *testing.T) artifactory.ArtifactoryServicesManager {
+	if artifactoryServicesManager == nil {
+		var err error
+		artifactoryServicesManager, err = utils.CreateServiceManager(serverDetails, -1, 0, false)
+		require.NoError(t, err)
+	}
+
+	return artifactoryServicesManager
 }
