@@ -49,6 +49,29 @@ func populateApplicationFromFlags(ctx *components.Context, descriptor *model.App
 		descriptor.Labels = &labelsMap
 	}
 
+	// Only set LabelUpdates if at least one of add-labels or remove-labels flags is set
+	if ctx.IsFlagSet(commands.AddLabelsFlag) || ctx.IsFlagSet(commands.RemoveLabelsFlag) {
+		labelUpdates := &model.LabelUpdates{}
+
+		if ctx.IsFlagSet(commands.AddLabelsFlag) {
+			addLabels, err := utils.ParseLabelKeyValuePairs(ctx.GetStringFlagValue(commands.AddLabelsFlag))
+			if err != nil {
+				return err
+			}
+			labelUpdates.Add = addLabels
+		}
+
+		if ctx.IsFlagSet(commands.RemoveLabelsFlag) {
+			removeLabels, err := utils.ParseLabelKeyValuePairs(ctx.GetStringFlagValue(commands.RemoveLabelsFlag))
+			if err != nil {
+				return err
+			}
+			labelUpdates.Remove = removeLabels
+		}
+
+		descriptor.LabelUpdates = labelUpdates
+	}
+
 	if ctx.IsFlagSet(commands.UserOwnersFlag) {
 		userOwners := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.UserOwnersFlag))
 		descriptor.UserOwners = &userOwners

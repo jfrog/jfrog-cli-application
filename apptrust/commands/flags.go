@@ -37,6 +37,8 @@ const (
 	BusinessCriticalityFlag           = "business-criticality"
 	MaturityLevelFlag                 = "maturity-level"
 	LabelsFlag                        = "labels"
+	AddLabelsFlag                     = "add-labels"
+	RemoveLabelsFlag                  = "remove-labels"
 	UserOwnersFlag                    = "user-owners"
 	GroupOwnersFlag                   = "group-owners"
 	SyncFlag                          = "sync"
@@ -74,6 +76,8 @@ var flagsMap = map[string]components.Flag{
 	BusinessCriticalityFlag:           components.NewStringFlag(BusinessCriticalityFlag, "The business criticality level. The following values are supported: "+coreutils.ListToText(model.BusinessCriticalityValues), func(f *components.StringFlag) { f.Mandatory = false }),
 	MaturityLevelFlag:                 components.NewStringFlag(MaturityLevelFlag, "The maturity level. The following values are supported: "+coreutils.ListToText(model.MaturityLevelValues), func(f *components.StringFlag) { f.Mandatory = false }),
 	LabelsFlag:                        components.NewStringFlag(LabelsFlag, "List of semicolon-separated (;) labels in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes).", func(f *components.StringFlag) { f.Mandatory = false }),
+	AddLabelsFlag:                     components.NewStringFlag(AddLabelsFlag, "List of semicolon-separated (;) labels to add in the form of \"key1=value1;key1=value2;key2=value3;...\" (wrapped by quotes)..", func(f *components.StringFlag) { f.Mandatory = false }),
+	RemoveLabelsFlag:                  components.NewStringFlag(RemoveLabelsFlag, "List of semicolon-separated (;) labels to remove in the form of \"key1=value1;key2=value2;...\" (wrapped by quotes).", func(f *components.StringFlag) { f.Mandatory = false }),
 	UserOwnersFlag:                    components.NewStringFlag(UserOwnersFlag, "semicolon-separated (;) list of user owners in the form of \"user1;user2;...\" (wrapped by quotes).", func(f *components.StringFlag) { f.Mandatory = false }),
 	GroupOwnersFlag:                   components.NewStringFlag(GroupOwnersFlag, "semicolon-separated (;) list of group owners in the form of \"group1;group2;...\" (wrapped by quotes).", func(f *components.StringFlag) { f.Mandatory = false }),
 	SyncFlag:                          components.NewBoolFlag(SyncFlag, "Whether to synchronize the operation.", components.WithBoolDefaultValueTrue()),
@@ -204,6 +208,8 @@ var commandFlags = map[string][]string{
 		BusinessCriticalityFlag,
 		MaturityLevelFlag,
 		LabelsFlag,
+		AddLabelsFlag,
+		RemoveLabelsFlag,
 		UserOwnersFlag,
 		GroupOwnersFlag,
 	},
