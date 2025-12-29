@@ -60,3 +60,40 @@ func TestCreateVersion_Artifact(t *testing.T) {
 	assert.Equal(t, version, versions.Versions[0].Version)
 	assert.Equal(t, "COMPLETED", versions.Versions[0].Status)
 }
+
+func TestCreateVersion_ApplicationVersion(t *testing.T) {
+	// Prepare - create source application with a version
+	sourceAppKey := generateUniqueKey("app-source-version")
+	createBasicApplication(t, sourceAppKey)
+	defer deleteApplication(t, sourceAppKey)
+
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	sourceVersion := "1.0.2"
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	err := AppTrustCli.Exec("vc", sourceAppKey, sourceVersion, packageFlag)
+	require.NoError(t, err)
+	defer deleteVersion(t, sourceAppKey, sourceVersion)
+
+	// Prepare - create target application
+	targetAppKey := generateUniqueKey("app-target-version")
+	createBasicApplication(t, targetAppKey)
+	defer deleteApplication(t, targetAppKey)
+
+	targetVersion := "1.0.3"
+
+	// Execute
+	appVersionFlag := fmt.Sprintf("--source-type-application-versions=application-key=%s, version=%s", sourceAppKey, sourceVersion)
+	err = AppTrustCli.Exec("vc", targetAppKey, targetVersion, appVersionFlag)
+	require.NoError(t, err)
+	defer deleteVersion(t, targetAppKey, targetVersion)
+
+	// Assert
+	versions, statusCode, err := getApplicationVersions(targetAppKey)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versions)
+	assert.Len(t, versions.Versions, 1)
+	assert.Equal(t, targetAppKey, versions.Versions[0].ApplicationKey)
+	assert.Equal(t, targetVersion, versions.Versions[0].Version)
+	assert.Equal(t, "COMPLETED", versions.Versions[0].Status)
+}
