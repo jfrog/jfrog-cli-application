@@ -49,6 +49,7 @@ var (
 	testPackageType    string
 	testPackageName    string
 	testPackageVersion string
+	testPackagePath    string
 )
 
 func loadCredentials() {
@@ -120,6 +121,11 @@ func deleteApplication(t *testing.T, appKey string) {
 	assert.NoError(t, err)
 }
 
+func deleteVersion(t *testing.T, appKey, version string) {
+	err := AppTrustCli.Exec("vd", appKey, version)
+	assert.NoError(t, err)
+}
+
 func generateUniqueKey(prefix string) string {
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	return fmt.Sprintf("%s-%s", prefix, timestamp)
@@ -150,12 +156,12 @@ func getApplication(appKey string) (*model.AppDescriptor, int, error) {
 	return &appDescriptor, statusCode, nil
 }
 
-func getTestPackage(t *testing.T) (pkgType, pkgName, pkgVersion string) {
+func getTestPackage(t *testing.T) (pkgType, pkgName, pkgVersion, pkgPath string) {
 	// Upload the test package to Artifactory if not already done
 	if testPackageName == "" {
 		uploadPackageToArtifactory(t)
 	}
-	return testPackageType, testPackageName, testPackageVersion
+	return testPackageType, testPackageName, testPackageVersion, testPackagePath
 }
 
 func uploadPackageToArtifactory(t *testing.T) {
@@ -165,10 +171,11 @@ func uploadPackageToArtifactory(t *testing.T) {
 	_, testFilePath, _, _ := runtime.Caller(0)
 	npmPackageFilePath := filepath.Join(filepath.Dir(testFilePath), "testdata", "pizza-frontend.tgz")
 
+	targetPath := testRepoKey + "/pizza-frontend.tgz"
 	servicesManager := getArtifactoryServicesManager(t)
 	uploadParams := services.NewUploadParams()
 	uploadParams.Pattern = npmPackageFilePath
-	uploadParams.Target = testRepoKey + "/pizza-frontend.tgz"
+	uploadParams.Target = targetPath
 	uploadParams.Flat = true
 	uploaded, failed, err := servicesManager.UploadFiles(artifactory.UploadServiceOptions{FailFast: false}, uploadParams)
 	require.NoError(t, err)
@@ -178,6 +185,7 @@ func uploadPackageToArtifactory(t *testing.T) {
 	testPackageType = "npm"
 	testPackageName = "@gpizza/pizza-frontend"
 	testPackageVersion = "1.0.0"
+	testPackagePath = targetPath
 
 	// Wait for the package to be indexed in Artifactory
 	waitForPackageIndexing(t, testPackageName, testPackageVersion)
@@ -304,4 +312,40 @@ func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
 			}
 		}
 	}
+}
+
+type versionsResponse struct {
+	Versions []appVersion `json:"versions"`
+}
+
+type appVersion struct {
+	ApplicationKey string `json:"application_key"`
+	Version        string `json:"version"`
+	Status         string `json:"status"`
+	CurrentStage   string `json:"current_stage,omitempty"`
+}
+
+func getApplicationVersions(appKey string) (*versionsResponse, int, error) {
+	statusCode := 0
+	ctx, err := service.NewContext(*serverDetails)
+	if err != nil {
+		return nil, statusCode, err
+	}
+
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions", appKey)
+	response, responseBody, err := ctx.GetHttpClient().Get(endpoint)
+	if response != nil {
+		statusCode = response.StatusCode
+	}
+	if err != nil || statusCode != http.StatusOK {
+		return nil, statusCode, err
+	}
+
+	var versionsRes *versionsResponse
+	err = json.Unmarshal(responseBody, &versionsRes)
+	if err != nil {
+		return nil, statusCode, errorutils.CheckError(err)
+	}
+
+	return versionsRes, statusCode, nil
 }

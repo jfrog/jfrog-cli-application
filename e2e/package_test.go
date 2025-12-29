@@ -13,7 +13,7 @@ func TestBindPackage(t *testing.T) {
 	appKey := generateUniqueKey("package-bind")
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
-	packageType, packageName, packageVersion := getTestPackage(t)
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
 
 	// Execute
 	err := AppTrustCli.Exec("pb", appKey, packageType, packageName, packageVersion)
@@ -36,7 +36,7 @@ func TestUnbindPackage(t *testing.T) {
 	appKey := generateUniqueKey("package-unbind")
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
-	packageType, packageName, packageVersion := getTestPackage(t)
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
 
 	// First bind the package
 	err := AppTrustCli.Exec("pb", appKey, packageType, packageName, packageVersion)
