@@ -24,7 +24,7 @@ const apptrustApiPath = "apptrust/api"
 type ApptrustHttpClient interface {
 	GetHttpClient() *jfroghttpclient.JfrogHttpClient
 	Post(path string, requestBody interface{}, params map[string]string) (resp *http.Response, body []byte, err error)
-	Get(path string) (resp *http.Response, body []byte, err error)
+	Get(path string, params map[string]string) (resp *http.Response, body []byte, err error)
 	Patch(path string, requestBody interface{}) (resp *http.Response, body []byte, err error)
 	Delete(path string, params map[string]string) (resp *http.Response, body []byte, err error)
 }
@@ -101,8 +101,8 @@ func (c *apptrustHttpClient) Post(path string, requestBody interface{}, params m
 	return c.client.SendPost(url, requestContent, c.getJsonHttpClientDetails())
 }
 
-func (c *apptrustHttpClient) Get(path string) (resp *http.Response, body []byte, err error) {
-	url, err := utils.BuildUrl(c.serverDetails.Url, apptrustApiPath+path, nil)
+func (c *apptrustHttpClient) Get(path string, params map[string]string) (resp *http.Response, body []byte, err error) {
+	url, err := utils.BuildUrl(c.serverDetails.Url, apptrustApiPath+path, params)
 	if err != nil {
 		return nil, nil, err
 	}

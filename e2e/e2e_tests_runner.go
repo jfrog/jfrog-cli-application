@@ -139,7 +139,7 @@ func getApplication(appKey string) (*model.AppDescriptor, int, error) {
 	}
 
 	endpoint := fmt.Sprintf("/v1/applications/%s", appKey)
-	response, responseBody, err := ctx.GetHttpClient().Get(endpoint)
+	response, responseBody, err := ctx.GetHttpClient().Get(endpoint, nil)
 	if response != nil {
 		statusCode = response.StatusCode
 	}
@@ -242,7 +242,7 @@ func getPackageBindings(appKey string) (*packagesResponse, int, error) {
 	}
 
 	endpoint := fmt.Sprintf("/v1/applications/%s/packages", appKey)
-	response, responseBody, err := ctx.GetHttpClient().Get(endpoint)
+	response, responseBody, err := ctx.GetHttpClient().Get(endpoint, nil)
 	if response != nil {
 		statusCode = response.StatusCode
 	}
@@ -314,26 +314,34 @@ func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
 	}
 }
 
-type versionsResponse struct {
-	Versions []appVersion `json:"versions"`
+type versionContentResponse struct {
+	ApplicationKey string       `json:"application_key"`
+	Version        string       `json:"version"`
+	Status         string       `json:"status"`
+	CurrentStage   string       `json:"current_stage,omitempty"`
+	Releasables    []releasable `json:"releasables"`
 }
 
-type appVersion struct {
-	ApplicationKey string `json:"application_key"`
-	Version        string `json:"version"`
-	Status         string `json:"status"`
-	CurrentStage   string `json:"current_stage,omitempty"`
+type releasable struct {
+	Name        string     `json:"name"`
+	Version     string     `json:"version"`
+	PackageType string     `json:"package_type"`
+	Artifacts   []artifact `json:"artifacts,omitempty"`
 }
 
-func getApplicationVersions(appKey string) (*versionsResponse, int, error) {
+type artifact struct {
+	Path string `json:"path"`
+}
+
+func getApplicationVersion(appKey, version string) (*versionContentResponse, int, error) {
 	statusCode := 0
 	ctx, err := service.NewContext(*serverDetails)
 	if err != nil {
 		return nil, statusCode, err
 	}
 
-	endpoint := fmt.Sprintf("/v1/applications/%s/versions", appKey)
-	response, responseBody, err := ctx.GetHttpClient().Get(endpoint)
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/content", appKey, version)
+	response, responseBody, err := ctx.GetHttpClient().Get(endpoint, map[string]string{"include": "releasables_expanded"})
 	if response != nil {
 		statusCode = response.StatusCode
 	}
@@ -341,11 +349,11 @@ func getApplicationVersions(appKey string) (*versionsResponse, int, error) {
 		return nil, statusCode, err
 	}
 
-	var versionsRes *versionsResponse
-	err = json.Unmarshal(responseBody, &versionsRes)
+	var versionRes *versionContentResponse
+	err = json.Unmarshal(responseBody, &versionRes)
 	if err != nil {
 		return nil, statusCode, errorutils.CheckError(err)
 	}
 
-	return versionsRes, statusCode, nil
+	return versionRes, statusCode, nil
 }

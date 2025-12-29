@@ -20,7 +20,7 @@ func NewSystemService() SystemService {
 }
 
 func (ss *systemService) Ping(ctx service.Context) error {
-	response, body, err := ctx.GetHttpClient().Get("/v1/system/ping")
+	response, body, err := ctx.GetHttpClient().Get("/v1/system/ping", nil)
 	if err != nil {
 		return err
 	}
