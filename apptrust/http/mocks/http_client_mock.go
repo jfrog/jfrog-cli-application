@@ -58,9 +58,9 @@ func (mr *MockApptrustHttpClientMockRecorder) Delete(path, params any) *gomock.C
 }
 
 // Get mocks base method.
-func (m *MockApptrustHttpClient) Get(path string) (*http.Response, []byte, error) {
+func (m *MockApptrustHttpClient) Get(path string, params map[string]string) (*http.Response, []byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", path)
+	ret := m.ctrl.Call(m, "Get", path, params)
 	ret0, _ := ret[0].(*http.Response)
 	ret1, _ := ret[1].([]byte)
 	ret2, _ := ret[2].(error)
@@ -68,9 +68,9 @@ func (m *MockApptrustHttpClient) Get(path string) (*http.Response, []byte, error
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockApptrustHttpClientMockRecorder) Get(path any) *gomock.Call {
+func (mr *MockApptrustHttpClientMockRecorder) Get(path, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockApptrustHttpClient)(nil).Get), path)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockApptrustHttpClient)(nil).Get), path, params)
 }
 
 // GetHttpClient mocks base method.

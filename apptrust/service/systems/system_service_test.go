@@ -53,7 +53,7 @@ func TestSystemService_Ping(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Get("/v1/system/ping").
+			mockHttpClient.EXPECT().Get("/v1/system/ping", nil).
 				Return(tt.mockResponse, tt.mockBody, tt.mockError)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
