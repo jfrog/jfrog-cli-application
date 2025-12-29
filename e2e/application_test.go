@@ -11,7 +11,7 @@ import (
 
 func TestCreateApp(t *testing.T) {
 	projectKey := GetTestProjectKey(t)
-	appKey := GenerateUniqueKey("app-create")
+	appKey := generateUniqueKey("app-create")
 	appName := "Full Test Application"
 	description := "Application with all fields populated"
 	businessCriticality := "critical"
@@ -31,7 +31,7 @@ func TestCreateApp(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was created correctly
-	app, _, err := GetApplication(appKey)
+	app, _, err := getApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 	assert.Equal(t, appName, app.ApplicationName)
@@ -43,14 +43,14 @@ func TestCreateApp(t *testing.T) {
 	assert.Equal(t, userOwners, *app.UserOwners)
 	assert.Equal(t, groupOwners, *app.GroupOwners)
 
-	DeleteApplication(t, appKey)
+	deleteApplication(t, appKey)
 }
 
 func TestUpdateApp(t *testing.T) {
 	projectKey := GetTestProjectKey(t)
-	appKey := GenerateUniqueKey("app-update")
+	appKey := generateUniqueKey("app-update")
 
-	CreateBasicApplication(t, appKey)
+	createBasicApplication(t, appKey)
 
 	// Update the application with new values
 	updatedAppName := "Updated Test Application"
@@ -71,7 +71,7 @@ func TestUpdateApp(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was updated correctly
-	app, _, err := GetApplication(appKey)
+	app, _, err := getApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 	assert.Equal(t, updatedAppName, app.ApplicationName)
@@ -83,15 +83,15 @@ func TestUpdateApp(t *testing.T) {
 	assert.Equal(t, updatedUserOwners, *app.UserOwners)
 	assert.Equal(t, updatedGroupOwners, *app.GroupOwners)
 
-	DeleteApplication(t, appKey)
+	deleteApplication(t, appKey)
 }
 
 func TestDeleteApp(t *testing.T) {
-	appKey := GenerateUniqueKey("app-delete")
-	CreateBasicApplication(t, appKey)
+	appKey := generateUniqueKey("app-delete")
+	createBasicApplication(t, appKey)
 
 	// Verify the application exists
-	app, _, err := GetApplication(appKey)
+	app, _, err := getApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 
@@ -100,7 +100,7 @@ func TestDeleteApp(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify the application no longer exists
-	_, statusCode, err := GetApplication(appKey)
+	_, statusCode, err := getApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, statusCode)
 }

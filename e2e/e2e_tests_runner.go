@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -30,8 +32,8 @@ import (
 )
 
 const (
-	TestJfrogUrlEnvVar   = "JFROG_APPTRUST_CLI_TESTS_JFROG_URL"
-	TestJfrogTokenEnvVar = "JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN"
+	testJfrogUrlEnvVar   = "JFROG_APPTRUST_CLI_TESTS_JFROG_URL"
+	testJfrogTokenEnvVar = "JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN"
 )
 
 var (
@@ -41,14 +43,17 @@ var (
 	credentials string
 	AppTrustCli *coreTests.JfrogCli
 
-	testProjectKey  string
-	testRepoKey     string
-	testPackagePath string
+	testProjectKey string
+	testRepoKey    string
+
+	testPackageType    string
+	testPackageName    string
+	testPackageVersion string
 )
 
 func loadCredentials() {
 	platformUrlFlag := flag.String("jfrog.url", getTestUrlDefaultValue(), "JFrog Platform URL")
-	accessTokenFlag := flag.String("jfrog.adminToken", os.Getenv(TestJfrogTokenEnvVar), "JFrog Platform admin token")
+	accessTokenFlag := flag.String("jfrog.adminToken", os.Getenv(testJfrogTokenEnvVar), "JFrog Platform admin token")
 	platformUrl := clientUtils.AddTrailingSlashIfNeeded(*platformUrlFlag)
 	artifactoryUrl := platformUrl + "artifactory/"
 
@@ -61,8 +66,8 @@ func loadCredentials() {
 }
 
 func getTestUrlDefaultValue() string {
-	if os.Getenv(TestJfrogUrlEnvVar) != "" {
-		return os.Getenv(TestJfrogUrlEnvVar)
+	if os.Getenv(testJfrogUrlEnvVar) != "" {
+		return os.Getenv(testJfrogUrlEnvVar)
 	}
 	return "http://localhost:8082/"
 }
@@ -77,7 +82,7 @@ func GetTestProjectKey(t *testing.T) string {
 func createTestProject(t *testing.T) {
 	accessManager, err := utils.CreateAccessServiceManager(serverDetails, false)
 	assert.NoError(t, err)
-	projectKey := GenerateUniqueKey("apptrust-cli-tests")
+	projectKey := generateUniqueKey("apptrust-cli-tests")
 	projectParams := accessServices.ProjectParams{
 		ProjectDetails: accessServices.Project{
 			DisplayName: projectKey,
@@ -104,23 +109,23 @@ func deleteTestProject() {
 	}
 }
 
-func CreateBasicApplication(t *testing.T, appKey string) {
+func createBasicApplication(t *testing.T, appKey string) {
 	projectKey := GetTestProjectKey(t)
 	err := AppTrustCli.Exec("ac", appKey, "--project="+projectKey, "--application-name="+appKey)
 	assert.NoError(t, err)
 }
 
-func DeleteApplication(t *testing.T, appKey string) {
+func deleteApplication(t *testing.T, appKey string) {
 	err := AppTrustCli.Exec("ad", appKey)
 	assert.NoError(t, err)
 }
 
-func GenerateUniqueKey(prefix string) string {
+func generateUniqueKey(prefix string) string {
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	return fmt.Sprintf("%s-%s", prefix, timestamp)
 }
 
-func GetApplication(appKey string) (*model.AppDescriptor, int, error) {
+func getApplication(appKey string) (*model.AppDescriptor, int, error) {
 	statusCode := 0
 	ctx, err := service.NewContext(*serverDetails)
 	if err != nil {
@@ -145,11 +150,12 @@ func GetApplication(appKey string) (*model.AppDescriptor, int, error) {
 	return &appDescriptor, statusCode, nil
 }
 
-func GetTestPackage(t *testing.T) string {
-	if testPackagePath == "" {
+func getTestPackage(t *testing.T) (pkgType, pkgName, pkgVersion string) {
+	// Upload the test package to Artifactory if not already done
+	if testPackageName == "" {
 		uploadPackageToArtifactory(t)
 	}
-	return testPackagePath
+	return testPackageType, testPackageName, testPackageVersion
 }
 
 func uploadPackageToArtifactory(t *testing.T) {
@@ -159,17 +165,22 @@ func uploadPackageToArtifactory(t *testing.T) {
 	_, testFilePath, _, _ := runtime.Caller(0)
 	npmPackageFilePath := filepath.Join(filepath.Dir(testFilePath), "testdata", "pizza-frontend.tgz")
 
-	targetPath := testRepoKey + "/pizza-frontend.tgz"
 	servicesManager := getArtifactoryServicesManager(t)
 	uploadParams := services.NewUploadParams()
 	uploadParams.Pattern = npmPackageFilePath
-	uploadParams.Target = targetPath
+	uploadParams.Target = testRepoKey + "/pizza-frontend.tgz"
 	uploadParams.Flat = true
 	uploaded, failed, err := servicesManager.UploadFiles(artifactory.UploadServiceOptions{FailFast: false}, uploadParams)
 	require.NoError(t, err)
 	require.Equal(t, 1, uploaded, "Expected exactly one uploaded file")
 	require.Equal(t, 0, failed, "Expected zero failed uploads")
-	testPackagePath = targetPath
+
+	testPackageType = "npm"
+	testPackageName = "@gpizza/pizza-frontend"
+	testPackageVersion = "1.0.0"
+
+	// Wait for the package to be indexed in Artifactory
+	waitForPackageIndexing(t, testPackageName, testPackageVersion)
 }
 
 func createNpmRepo(t *testing.T) {
@@ -202,4 +213,95 @@ func getArtifactoryServicesManager(t *testing.T) artifactory.ArtifactoryServices
 	}
 
 	return artifactoryServicesManager
+}
+
+type packagesResponse struct {
+	Packages []packageBinding `json:"packages"`
+}
+
+type packageBinding struct {
+	Type          string `json:"type"`
+	Name          string `json:"name"`
+	NumVersions   int    `json:"num_versions"`
+	LatestVersion string `json:"latest_version"`
+}
+
+func getPackageBindings(appKey string) (*packagesResponse, int, error) {
+	statusCode := 0
+	ctx, err := service.NewContext(*serverDetails)
+	if err != nil {
+		return nil, statusCode, err
+	}
+
+	endpoint := fmt.Sprintf("/v1/applications/%s/packages", appKey)
+	response, responseBody, err := ctx.GetHttpClient().Get(endpoint)
+	if response != nil {
+		statusCode = response.StatusCode
+	}
+	if err != nil || statusCode != http.StatusOK {
+		return nil, statusCode, err
+	}
+
+	var packagesRes *packagesResponse
+	err = json.Unmarshal(responseBody, &packagesRes)
+	if err != nil {
+		return nil, statusCode, errorutils.CheckError(err)
+	}
+
+	return packagesRes, statusCode, nil
+}
+
+func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
+	found := false
+	timeout := time.After(5 * time.Minute)
+	log.Info(fmt.Sprintf("Waiting up to 5 minutes for package indexing on %s", serverDetails.Url))
+
+	query := fmt.Sprintf(`{"query": "query { versions (first: 100, filter: {name: \"%s\", repositoriesIn: [{name: \"%s\"}]}) { edges { node { package { name }}}}}"}`, packageVersion, testRepoKey)
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	for !found {
+		select {
+		case <-timeout:
+			log.Warn("Timeout reached waiting for package indexing")
+			require.FailNow(t, "Package indexing timeout: package %s was not indexed within 5 minutes", packageName)
+		default:
+			metadataUrl := serverDetails.Url + "metadata/api/v1/query"
+			req, err := http.NewRequest(http.MethodPost, metadataUrl, strings.NewReader(query))
+			if err != nil {
+				log.Error("Error creating request:", err)
+				break
+			}
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+serverDetails.AccessToken)
+
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Error("Error querying packages:", err)
+				break
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Error("Error reading response body:", err)
+				break
+			}
+			err = resp.Body.Close()
+			if err != nil {
+				log.Debug("Error reading response body:", err)
+				break
+			}
+
+			stringBody := string(body)
+			if strings.Contains(stringBody, packageName) {
+				log.Info(fmt.Sprintf("Package %s found and indexed", packageName))
+				found = true
+			} else {
+				log.Debug(fmt.Sprintf("Package %s not found yet, retrying in 2 seconds", packageName))
+				time.Sleep(2 * time.Second)
+			}
+		}
+	}
 }
