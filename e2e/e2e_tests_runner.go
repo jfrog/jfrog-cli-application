@@ -191,6 +191,61 @@ func uploadPackageToArtifactory(t *testing.T) {
 	waitForPackageIndexing(t, testPackageName, testPackageVersion)
 }
 
+func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
+	found := false
+	timeout := time.After(5 * time.Minute)
+	log.Info(fmt.Sprintf("Waiting up to 5 minutes for package indexing on %s", serverDetails.Url))
+
+	query := fmt.Sprintf(`{"query": "query { versions (first: 100, filter: {name: \"%s\", repositoriesIn: [{name: \"%s\"}]}) { edges { node { package { name }}}}}"}`, packageVersion, testRepoKey)
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	for !found {
+		select {
+		case <-timeout:
+			log.Warn("Timeout reached waiting for package indexing")
+			require.FailNow(t, "Package indexing timeout: package %s was not indexed within 5 minutes", packageName)
+		default:
+			metadataUrl := serverDetails.Url + "metadata/api/v1/query"
+			req, err := http.NewRequest(http.MethodPost, metadataUrl, strings.NewReader(query))
+			if err != nil {
+				log.Error("Error creating request:", err)
+				break
+			}
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+serverDetails.AccessToken)
+
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Error("Error querying packages:", err)
+				break
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Error("Error reading response body:", err)
+				break
+			}
+			err = resp.Body.Close()
+			if err != nil {
+				log.Debug("Error reading response body:", err)
+				break
+			}
+
+			stringBody := string(body)
+			if strings.Contains(stringBody, packageName) {
+				log.Info(fmt.Sprintf("Package %s found and indexed", packageName))
+				found = true
+			} else {
+				log.Debug(fmt.Sprintf("Package %s not found yet, retrying in 2 seconds", packageName))
+				time.Sleep(2 * time.Second)
+			}
+		}
+	}
+}
+
 func createNpmRepo(t *testing.T) {
 	servicesManager := getArtifactoryServicesManager(t)
 	repoKey := GetTestProjectKey(t) + "-npm-local"
@@ -259,66 +314,12 @@ func getPackageBindings(appKey string) (*packagesResponse, int, error) {
 	return packagesRes, statusCode, nil
 }
 
-func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
-	found := false
-	timeout := time.After(5 * time.Minute)
-	log.Info(fmt.Sprintf("Waiting up to 5 minutes for package indexing on %s", serverDetails.Url))
-
-	query := fmt.Sprintf(`{"query": "query { versions (first: 100, filter: {name: \"%s\", repositoriesIn: [{name: \"%s\"}]}) { edges { node { package { name }}}}}"}`, packageVersion, testRepoKey)
-
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	for !found {
-		select {
-		case <-timeout:
-			log.Warn("Timeout reached waiting for package indexing")
-			require.FailNow(t, "Package indexing timeout: package %s was not indexed within 5 minutes", packageName)
-		default:
-			metadataUrl := serverDetails.Url + "metadata/api/v1/query"
-			req, err := http.NewRequest(http.MethodPost, metadataUrl, strings.NewReader(query))
-			if err != nil {
-				log.Error("Error creating request:", err)
-				break
-			}
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", "Bearer "+serverDetails.AccessToken)
-
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Error("Error querying packages:", err)
-				break
-			}
-
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				log.Error("Error reading response body:", err)
-				break
-			}
-			err = resp.Body.Close()
-			if err != nil {
-				log.Debug("Error reading response body:", err)
-				break
-			}
-
-			stringBody := string(body)
-			if strings.Contains(stringBody, packageName) {
-				log.Info(fmt.Sprintf("Package %s found and indexed", packageName))
-				found = true
-			} else {
-				log.Debug(fmt.Sprintf("Package %s not found yet, retrying in 2 seconds", packageName))
-				time.Sleep(2 * time.Second)
-			}
-		}
-	}
-}
-
 type versionContentResponse struct {
 	ApplicationKey string       `json:"application_key"`
 	Version        string       `json:"version"`
 	Status         string       `json:"status"`
 	CurrentStage   string       `json:"current_stage,omitempty"`
+	Tag            string       `json:"tag,omitempty"`
 	Releasables    []releasable `json:"releasables"`
 }
 

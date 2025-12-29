@@ -112,3 +112,63 @@ func TestCreateVersion_ApplicationVersion(t *testing.T) {
 	assert.Len(t, versionContent.Releasables[0].Artifacts, 1)
 	assert.Contains(t, packagePath, versionContent.Releasables[0].Artifacts[0].Path)
 }
+
+func TestUpdateVersion(t *testing.T) {
+	// Prepare
+	appKey := generateUniqueKey("app-version-update")
+	createBasicApplication(t, appKey)
+	defer deleteApplication(t, appKey)
+
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	version := "1.0.4"
+
+	// Create a version first
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
+	require.NoError(t, err)
+	defer deleteVersion(t, appKey, version)
+
+	// Execute
+	tag := "release-candidate"
+	err = AppTrustCli.Exec("vu", appKey, version, "--tag="+tag)
+	require.NoError(t, err)
+
+	// Assert
+	versionContent, statusCode, err := getApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Equal(t, tag, versionContent.Tag)
+}
+
+func TestDeleteVersion(t *testing.T) {
+	// Prepare
+	appKey := generateUniqueKey("app-version-delete")
+	createBasicApplication(t, appKey)
+	defer deleteApplication(t, appKey)
+
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	version := "1.0.5"
+
+	// Create a version first
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
+	require.NoError(t, err)
+
+	// Verify the version exists
+	versionContent, statusCode, err := getApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, version, versionContent.Version)
+
+	// Execute
+	deleteVersion(t, appKey, version)
+
+	// Assert
+	_, statusCode, err = getApplicationVersion(appKey, version)
+	assert.NoError(t, err)
+	assert.Equal(t, 404, statusCode)
+}
