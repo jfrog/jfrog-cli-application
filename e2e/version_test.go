@@ -172,3 +172,62 @@ func TestDeleteVersion(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 404, statusCode)
 }
+
+func TestPromoteVersion(t *testing.T) {
+	// Prepare
+	appKey := generateUniqueKey("app-version-promote")
+	createBasicApplication(t, appKey)
+	defer deleteApplication(t, appKey)
+
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	version := "1.0.6"
+
+	// Create a version first
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
+	require.NoError(t, err)
+	defer deleteVersion(t, appKey, version)
+
+	// Execute
+	targetStage := "DEV"
+	err = AppTrustCli.Exec("vp", appKey, version, targetStage)
+	require.NoError(t, err)
+
+	// Assert
+	versionContent, statusCode, err := getApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Equal(t, targetStage, versionContent.CurrentStage)
+}
+
+func TestReleaseVersion(t *testing.T) {
+	// Prepare
+	appKey := generateUniqueKey("app-version-release")
+	createBasicApplication(t, appKey)
+	defer deleteApplication(t, appKey)
+
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	version := "1.0.7"
+
+	// Create a version first
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
+	require.NoError(t, err)
+	defer deleteVersion(t, appKey, version)
+
+	// Execute
+	err = AppTrustCli.Exec("vr", appKey, version)
+	require.NoError(t, err)
+
+	// Assert
+	versionContent, statusCode, err := getApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Equal(t, "PROD", versionContent.CurrentStage)
+}
