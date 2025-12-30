@@ -7,17 +7,20 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/lifecycle"
+	"github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateVersion_Package(t *testing.T) {
 	// Prepare
-	appKey := generateUniqueKey("app-version-create")
+	appKey := generateUniqueKey("app-version-create-package")
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, packagePath := getTestPackage(t)
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
 	version := "1.0.0"
 
 	// Execute
@@ -29,17 +32,7 @@ func TestCreateVersion_Package(t *testing.T) {
 	// Assert
 	versionContent, statusCode, err := getApplicationVersion(appKey, version)
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, statusCode)
-	require.NotNil(t, versionContent)
-	assert.Equal(t, appKey, versionContent.ApplicationKey)
-	assert.Equal(t, version, versionContent.Version)
-	assert.Equal(t, "COMPLETED", versionContent.Status)
-	assert.Len(t, versionContent.Releasables, 1)
-	assert.Equal(t, packageType, versionContent.Releasables[0].PackageType)
-	assert.Equal(t, packageName, versionContent.Releasables[0].Name)
-	assert.Equal(t, packageVersion, versionContent.Releasables[0].Version)
-	assert.Len(t, versionContent.Releasables[0].Artifacts, 1)
-	assert.Contains(t, packagePath, versionContent.Releasables[0].Artifacts[0].Path)
+	assertVersionContent(t, versionContent, statusCode, appKey, version)
 }
 
 func TestCreateVersion_Artifact(t *testing.T) {
@@ -48,7 +41,7 @@ func TestCreateVersion_Artifact(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, packagePath := getTestPackage(t)
+	_, _, _, packagePath := getTestPackage(t)
 	version := "1.0.1"
 
 	// Execute
@@ -60,26 +53,16 @@ func TestCreateVersion_Artifact(t *testing.T) {
 	// Assert
 	versionContent, statusCode, err := getApplicationVersion(appKey, version)
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, statusCode)
-	require.NotNil(t, versionContent)
-	assert.Equal(t, appKey, versionContent.ApplicationKey)
-	assert.Equal(t, version, versionContent.Version)
-	assert.Equal(t, "COMPLETED", versionContent.Status)
-	assert.Len(t, versionContent.Releasables, 1)
-	assert.Equal(t, packageType, versionContent.Releasables[0].PackageType)
-	assert.Equal(t, packageName, versionContent.Releasables[0].Name)
-	assert.Equal(t, packageVersion, versionContent.Releasables[0].Version)
-	assert.Len(t, versionContent.Releasables[0].Artifacts, 1)
-	assert.Contains(t, packagePath, versionContent.Releasables[0].Artifacts[0].Path)
+	assertVersionContent(t, versionContent, statusCode, appKey, version)
 }
 
 func TestCreateVersion_ApplicationVersion(t *testing.T) {
 	// Prepare - create source application with a version
-	sourceAppKey := generateUniqueKey("app-source-version")
+	sourceAppKey := generateUniqueKey("app-version-create-app-version")
 	createBasicApplication(t, sourceAppKey)
 	defer deleteApplication(t, sourceAppKey)
 
-	packageType, packageName, packageVersion, packagePath := getTestPackage(t)
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
 	sourceVersion := "1.0.2"
 	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", sourceAppKey, sourceVersion, packageFlag)
@@ -102,17 +85,74 @@ func TestCreateVersion_ApplicationVersion(t *testing.T) {
 	// Assert
 	versionContent, statusCode, err := getApplicationVersion(targetAppKey, targetVersion)
 	require.NoError(t, err)
+	assertVersionContent(t, versionContent, statusCode, targetAppKey, targetVersion)
+}
+
+func TestCreateVersion_ReleaseBundle(t *testing.T) {
+	// Prepare
+	appKey := generateUniqueKey("app-version-create-release-bundle")
+	createBasicApplication(t, appKey)
+	defer deleteApplication(t, appKey)
+
+	lcDetails, err := serverDetails.CreateLifecycleAuthConfig()
+	require.NoError(t, err)
+	serviceConfig, err := config.NewConfigBuilder().SetServiceDetails(lcDetails).Build()
+	require.NoError(t, err)
+	lifecycleManager, err := lifecycle.New(serviceConfig)
+	require.NoError(t, err)
+
+	projectKey := GetTestProjectKey(t)
+	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	bundleName := generateUniqueKey("apptrust-cli-tests-rb")
+	bundleVersion := "1.0.0"
+
+	rbDetails := services.ReleaseBundleDetails{ReleaseBundleName: bundleName, ReleaseBundleVersion: bundleVersion}
+	params := services.CommonOptionalQueryParams{
+		ProjectKey: projectKey,
+	}
+
+	source := services.CreateFromPackagesSource{Packages: []services.PackageSource{
+		{
+			PackageName:    packageName,
+			PackageVersion: packageVersion,
+			PackageType:    packageType,
+			RepositoryKey:  testRepoKey,
+		},
+	}}
+	err = lifecycleManager.CreateReleaseBundleFromPackages(rbDetails, params, "default-lifecycle-key", source)
+	require.NoError(t, err)
+
+	defer func() {
+		err = lifecycleManager.DeleteReleaseBundleVersion(rbDetails, params)
+		require.NoError(t, err)
+	}()
+
+	version := "1.0.9"
+
+	// Execute
+	releaseBundleFlag := fmt.Sprintf("--source-type-release-bundles=name=%s, version=%s, project-key=%s", bundleName, bundleVersion, projectKey)
+	err = AppTrustCli.Exec("vc", appKey, version, releaseBundleFlag)
+	require.NoError(t, err)
+	defer deleteVersion(t, appKey, version)
+
+	// Assert
+	versionContent, statusCode, err := getApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assertVersionContent(t, versionContent, statusCode, appKey, version)
+}
+
+func assertVersionContent(t *testing.T, versionContent *versionContentResponse, statusCode int, appKey, version string) {
 	assert.Equal(t, http.StatusOK, statusCode)
 	require.NotNil(t, versionContent)
-	assert.Equal(t, targetAppKey, versionContent.ApplicationKey)
-	assert.Equal(t, targetVersion, versionContent.Version)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
 	assert.Equal(t, "COMPLETED", versionContent.Status)
 	assert.Len(t, versionContent.Releasables, 1)
-	assert.Equal(t, packageType, versionContent.Releasables[0].PackageType)
-	assert.Equal(t, packageName, versionContent.Releasables[0].Name)
-	assert.Equal(t, packageVersion, versionContent.Releasables[0].Version)
+	assert.Equal(t, testPackageType, versionContent.Releasables[0].PackageType)
+	assert.Equal(t, testPackageName, versionContent.Releasables[0].Name)
+	assert.Equal(t, testPackageVersion, versionContent.Releasables[0].Version)
 	assert.Len(t, versionContent.Releasables[0].Artifacts, 1)
-	assert.Contains(t, packagePath, versionContent.Releasables[0].Artifacts[0].Path)
+	assert.Contains(t, testPackagePath, versionContent.Releasables[0].Artifacts[0].Path)
 }
 
 func TestUpdateVersion(t *testing.T) {

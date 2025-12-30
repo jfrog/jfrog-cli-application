@@ -39,11 +39,11 @@ func loadCredentials() {
 	platformUrlFlag := flag.String("jfrog.url", getTestUrlDefaultValue(), "JFrog Platform URL")
 	accessTokenFlag := flag.String("jfrog.adminToken", os.Getenv(testJfrogTokenEnvVar), "JFrog Platform admin token")
 	platformUrl := clientUtils.AddTrailingSlashIfNeeded(*platformUrlFlag)
-	artifactoryUrl := platformUrl + "artifactory/"
 
 	serverDetails = &coreConfig.ServerDetails{
-		Url:            clientUtils.AddTrailingSlashIfNeeded(*platformUrlFlag),
-		ArtifactoryUrl: artifactoryUrl,
+		Url:            platformUrl,
+		ArtifactoryUrl: platformUrl + "artifactory/",
+		LifecycleUrl:   platformUrl + "lifecycle/",
 		AccessToken:    *accessTokenFlag,
 	}
 	credentials = fmt.Sprintf("--url=%s --access-token=%s", *platformUrlFlag, *accessTokenFlag)
