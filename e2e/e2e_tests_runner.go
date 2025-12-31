@@ -70,7 +70,7 @@ func GetTestProjectKey(t *testing.T) string {
 
 func getTestPackage(t *testing.T) *testPackageResources {
 	// Upload the test package to Artifactory if not already done
-	if testPackageRes.packageName == "" {
+	if testPackageRes == nil {
 		uploadPackageToArtifactory(t)
 	}
 	return testPackageRes
