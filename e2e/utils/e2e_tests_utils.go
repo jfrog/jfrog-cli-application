@@ -5,7 +5,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -143,8 +142,8 @@ func uploadPackageToArtifactory(t *testing.T) {
 	packageName := "@gpizza/pizza-frontend"
 	packageVersion := "1.0.0"
 
-	// Wait for the package to be indexed in Artifactory
-	waitForPackageIndexing(t, packageName, packageVersion, repoKey)
+	// Reindex the repo for the package to be available
+	reindexRepo(t, repoKey)
 
 	testPackageRes = &TestPackageResources{
 		PackageType:    "npm",
@@ -159,59 +158,28 @@ func uploadPackageToArtifactory(t *testing.T) {
 	publishBuild(t, buildName, buildNumber, artifactDetails.Checksums.Sha256)
 }
 
-func waitForPackageIndexing(t *testing.T, packageName, packageVersion, repoKey string) {
-	found := false
-	timeout := time.After(5 * time.Minute)
-	log.Info(fmt.Sprintf("Waiting up to 5 minutes for package indexing on %s", serverDetails.Url))
+func reindexRepo(t *testing.T, repoKey string) {
+	log.Info(fmt.Sprintf("Reindexing repository %s", repoKey))
 
-	query := fmt.Sprintf(`{"query": "query { versions (first: 100, filter: {name: \"%s\", repositoriesIn: [{name: \"%s\"}]}) { edges { node { package { name }}}}}"}`, packageVersion, repoKey)
+	query := fmt.Sprintf(`{"paths": ["%s"]}`, repoKey)
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
-	for !found {
-		select {
-		case <-timeout:
-			log.Warn("Timeout reached waiting for package indexing")
-			require.FailNow(t, "Package indexing timeout: package %s was not indexed within 5 minutes", packageName)
-		default:
-			metadataUrl := serverDetails.Url + "metadata/api/v1/query"
-			req, err := http.NewRequest(http.MethodPost, metadataUrl, strings.NewReader(query))
-			if err != nil {
-				log.Error("Error creating request:", err)
-				break
-			}
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("Authorization", "Bearer "+serverDetails.AccessToken)
+	metadataUrl := serverDetails.GetArtifactoryUrl() + "api/metadata_server/reindex?async=false"
+	req, err := http.NewRequest(http.MethodPost, metadataUrl, strings.NewReader(query))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+serverDetails.AccessToken)
 
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Error("Error querying packages:", err)
-				break
-			}
-
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				log.Error("Error reading response body:", err)
-				break
-			}
-			err = resp.Body.Close()
-			if err != nil {
-				log.Debug("Error reading response body:", err)
-				break
-			}
-
-			stringBody := string(body)
-			if strings.Contains(stringBody, packageName) {
-				log.Info(fmt.Sprintf("Package %s found and indexed", packageName))
-				found = true
-			} else {
-				log.Debug(fmt.Sprintf("Package %s not found yet, retrying in 2 seconds", packageName))
-				time.Sleep(2 * time.Second)
-			}
-		}
-	}
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	defer func() {
+		err = resp.Body.Close()
+		require.NoError(t, err)
+	}()
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func createNpmRepo(t *testing.T) string {
