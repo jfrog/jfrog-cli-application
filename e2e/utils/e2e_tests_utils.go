@@ -1,6 +1,6 @@
 //go:build e2e
 
-package e2e
+package utils
 
 import (
 	"encoding/json"
@@ -23,6 +23,9 @@ import (
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
 	artClientUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
+	"github.com/jfrog/jfrog-client-go/config"
+	"github.com/jfrog/jfrog-client-go/lifecycle"
+	lifecycleServices "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +35,7 @@ import (
 func createTestProject(t *testing.T) {
 	accessManager, err := utils.CreateAccessServiceManager(serverDetails, false)
 	assert.NoError(t, err)
-	projectKey := generateUniqueKey("apptrust-cli-tests")
+	projectKey := GenerateUniqueKey("apptrust-cli-tests")
 	projectParams := accessServices.ProjectParams{
 		ProjectDetails: accessServices.Project{
 			DisplayName: projectKey,
@@ -44,7 +47,7 @@ func createTestProject(t *testing.T) {
 	testProjectKey = projectKey
 }
 
-func deleteTestProject() {
+func DeleteTestProject() {
 	if testProjectKey == "" {
 		return
 	}
@@ -60,28 +63,28 @@ func deleteTestProject() {
 	}
 }
 
-func createBasicApplication(t *testing.T, appKey string) {
+func CreateBasicApplication(t *testing.T, appKey string) {
 	projectKey := GetTestProjectKey(t)
 	err := AppTrustCli.Exec("app-create", appKey, "--project="+projectKey, "--application-name="+appKey)
 	assert.NoError(t, err)
 }
 
-func deleteApplication(t *testing.T, appKey string) {
+func DeleteApplication(t *testing.T, appKey string) {
 	err := AppTrustCli.Exec("app-delete", appKey)
 	assert.NoError(t, err)
 }
 
-func deleteVersion(t *testing.T, appKey, version string) {
+func DeleteVersion(t *testing.T, appKey, version string) {
 	err := AppTrustCli.Exec("version-delete", appKey, version)
 	assert.NoError(t, err)
 }
 
-func generateUniqueKey(prefix string) string {
+func GenerateUniqueKey(prefix string) string {
 	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 	return fmt.Sprintf("%s-%s", prefix, timestamp)
 }
 
-func getApplication(appKey string) (*model.AppDescriptor, int, error) {
+func GetApplication(appKey string) (*model.AppDescriptor, int, error) {
 	statusCode := 0
 	ctx, err := service.NewContext(*serverDetails)
 	if err != nil {
@@ -107,14 +110,14 @@ func getApplication(appKey string) (*model.AppDescriptor, int, error) {
 }
 
 func uploadPackageToArtifactory(t *testing.T) {
-	createNpmRepo(t)
+	repoKey := createNpmRepo(t)
 
 	// Get the absolute path to the testdata file
 	_, testFilePath, _, _ := runtime.Caller(0)
 	npmPackageFilePath := filepath.Join(filepath.Dir(testFilePath), "testdata", "pizza-frontend.tgz")
 
-	targetPath := testRepoKey + "/pizza-frontend.tgz"
-	buildName := generateUniqueKey("apptrust-cli-tests-build")
+	targetPath := repoKey + "/pizza-frontend.tgz"
+	buildName := GenerateUniqueKey("apptrust-cli-tests-build")
 	buildNumber := "1"
 	buildProps, _ := build.CreateBuildProperties(buildName, buildNumber, "")
 
@@ -141,26 +144,27 @@ func uploadPackageToArtifactory(t *testing.T) {
 	packageVersion := "1.0.0"
 
 	// Wait for the package to be indexed in Artifactory
-	waitForPackageIndexing(t, packageName, packageVersion)
+	waitForPackageIndexing(t, packageName, packageVersion, repoKey)
 
-	testPackageRes = &testPackageResources{
-		packageType:    "npm",
-		packageName:    packageName,
-		packageVersion: packageVersion,
-		packagePath:    targetPath,
-		buildName:      buildName,
-		buildNumber:    buildNumber,
+	testPackageRes = &TestPackageResources{
+		PackageType:    "npm",
+		PackageName:    packageName,
+		PackageVersion: packageVersion,
+		PackagePath:    targetPath,
+		RepoKey:        repoKey,
+		BuildName:      buildName,
+		BuildNumber:    buildNumber,
 	}
 
 	publishBuild(t, buildName, buildNumber, artifactDetails.Checksums.Sha256)
 }
 
-func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
+func waitForPackageIndexing(t *testing.T, packageName, packageVersion, repoKey string) {
 	found := false
 	timeout := time.After(5 * time.Minute)
 	log.Info(fmt.Sprintf("Waiting up to 5 minutes for package indexing on %s", serverDetails.Url))
 
-	query := fmt.Sprintf(`{"query": "query { versions (first: 100, filter: {name: \"%s\", repositoriesIn: [{name: \"%s\"}]}) { edges { node { package { name }}}}}"}`, packageVersion, testRepoKey)
+	query := fmt.Sprintf(`{"query": "query { versions (first: 100, filter: {name: \"%s\", repositoriesIn: [{name: \"%s\"}]}) { edges { node { package { name }}}}}"}`, packageVersion, repoKey)
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
@@ -210,7 +214,7 @@ func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
 	}
 }
 
-func createNpmRepo(t *testing.T) {
+func createNpmRepo(t *testing.T) string {
 	servicesManager := getArtifactoryServicesManager(t)
 	repoKey := GetTestProjectKey(t) + "-npm-local"
 	localRepoConfig := services.NewNpmLocalRepositoryParams()
@@ -219,15 +223,15 @@ func createNpmRepo(t *testing.T) {
 	localRepoConfig.Environments = []string{"DEV", "PROD"}
 	err := servicesManager.CreateLocalRepository().Npm(localRepoConfig)
 	require.NoError(t, err)
-	testRepoKey = repoKey
+	return repoKey
 }
 
 func deleteNpmRepo() {
-	if testRepoKey == "" || artifactoryServicesManager == nil {
+	if testPackageRes == nil || artifactoryServicesManager == nil {
 		return
 	}
 
-	err := artifactoryServicesManager.DeleteRepository(testRepoKey)
+	err := artifactoryServicesManager.DeleteRepository(testPackageRes.RepoKey)
 	if err != nil {
 		log.Error("Failed to delete npm repo", err)
 	}
@@ -243,6 +247,39 @@ func getArtifactoryServicesManager(t *testing.T) artifactory.ArtifactoryServices
 	return artifactoryServicesManager
 }
 
+func CreateReleaseBundle(t *testing.T, projectKey string, testPackage *TestPackageResources) (bundleName, bundleVersion string, cleanup func()) {
+	lcDetails, err := serverDetails.CreateLifecycleAuthConfig()
+	require.NoError(t, err)
+	serviceConfig, err := config.NewConfigBuilder().SetServiceDetails(lcDetails).Build()
+	require.NoError(t, err)
+	lifecycleManager, err := lifecycle.New(serviceConfig)
+	require.NoError(t, err)
+
+	bundleName = GenerateUniqueKey("apptrust-cli-tests-rb")
+	bundleVersion = "1.0.0"
+
+	rbDetails := lifecycleServices.ReleaseBundleDetails{ReleaseBundleName: bundleName, ReleaseBundleVersion: bundleVersion}
+	params := lifecycleServices.CommonOptionalQueryParams{
+		ProjectKey: projectKey,
+	}
+
+	source := lifecycleServices.CreateFromPackagesSource{Packages: []lifecycleServices.PackageSource{
+		{
+			PackageName:    testPackage.PackageName,
+			PackageVersion: testPackage.PackageVersion,
+			PackageType:    testPackage.PackageType,
+			RepositoryKey:  testPackage.RepoKey,
+		},
+	}}
+	err = lifecycleManager.CreateReleaseBundleFromPackages(rbDetails, params, "default-lifecycle-key", source)
+	require.NoError(t, err)
+	cleanup = func() {
+		err = lifecycleManager.DeleteReleaseBundleVersion(rbDetails, params)
+		require.NoError(t, err)
+	}
+	return
+}
+
 func publishBuild(t *testing.T, buildName, buildNumber, sha256 string) {
 	buildInfo := &buildinfo.BuildInfo{
 		Name:    buildName,
@@ -253,7 +290,7 @@ func publishBuild(t *testing.T, buildName, buildNumber, sha256 string) {
 				Id: "build-module",
 				Artifacts: []buildinfo.Artifact{
 					{
-						Name: testPackageRes.packageName,
+						Name: testPackageRes.PackageName,
 						Checksum: buildinfo.Checksum{
 							Sha256: sha256,
 						},
@@ -274,13 +311,13 @@ func deleteBuild() {
 		return
 	}
 
-	err := artifactoryServicesManager.DeleteBuildInfo(&buildinfo.BuildInfo{Name: testPackageRes.buildName, Number: testPackageRes.buildNumber}, "", 1)
+	err := artifactoryServicesManager.DeleteBuildInfo(&buildinfo.BuildInfo{Name: testPackageRes.BuildName, Number: testPackageRes.BuildNumber}, "", 1)
 	if err != nil {
 		log.Error("Failed to delete build-info", err)
 	}
 }
 
-type packagesResponse struct {
+type PackagesResponse struct {
 	Packages []packageBinding `json:"packages"`
 }
 
@@ -291,7 +328,7 @@ type packageBinding struct {
 	LatestVersion string `json:"latest_version"`
 }
 
-func getPackageBindings(appKey string) (*packagesResponse, int, error) {
+func GetPackageBindings(appKey string) (*PackagesResponse, int, error) {
 	statusCode := 0
 	ctx, err := service.NewContext(*serverDetails)
 	if err != nil {
@@ -307,7 +344,7 @@ func getPackageBindings(appKey string) (*packagesResponse, int, error) {
 		return nil, statusCode, err
 	}
 
-	var packagesRes *packagesResponse
+	var packagesRes *PackagesResponse
 	err = json.Unmarshal(responseBody, &packagesRes)
 	if err != nil {
 		return nil, statusCode, errorutils.CheckError(err)
@@ -316,7 +353,7 @@ func getPackageBindings(appKey string) (*packagesResponse, int, error) {
 	return packagesRes, statusCode, nil
 }
 
-type versionContentResponse struct {
+type VersionContentResponse struct {
 	ApplicationKey string       `json:"application_key"`
 	Version        string       `json:"version"`
 	Status         string       `json:"status"`
@@ -336,7 +373,7 @@ type artifact struct {
 	Path string `json:"path"`
 }
 
-func getApplicationVersion(appKey, version string) (*versionContentResponse, int, error) {
+func GetApplicationVersion(appKey, version string) (*VersionContentResponse, int, error) {
 	statusCode := 0
 	ctx, err := service.NewContext(*serverDetails)
 	if err != nil {
@@ -352,7 +389,7 @@ func getApplicationVersion(appKey, version string) (*versionContentResponse, int
 		return nil, statusCode, err
 	}
 
-	var versionRes *versionContentResponse
+	var versionRes *VersionContentResponse
 	err = json.Unmarshal(responseBody, &versionRes)
 	if err != nil {
 		return nil, statusCode, errorutils.CheckError(err)

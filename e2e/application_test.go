@@ -6,12 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jfrog/jfrog-cli-application/e2e/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateApp(t *testing.T) {
-	projectKey := GetTestProjectKey(t)
-	appKey := generateUniqueKey("app-create")
+	projectKey := utils.GetTestProjectKey(t)
+	appKey := utils.GenerateUniqueKey("app-create")
 	appName := "Full Test Application"
 	description := "Application with all fields populated"
 	businessCriticality := "critical"
@@ -19,7 +20,7 @@ func TestCreateApp(t *testing.T) {
 	userOwners := []string{"admin", "developer"}
 	groupOwners := []string{"devops-team", "security-team"}
 
-	err := AppTrustCli.Exec("app-create", appKey,
+	err := utils.AppTrustCli.Exec("app-create", appKey,
 		"--project="+projectKey,
 		"--application-name="+appName,
 		"--desc="+description,
@@ -31,7 +32,7 @@ func TestCreateApp(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was created correctly
-	app, _, err := getApplication(appKey)
+	app, _, err := utils.GetApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 	assert.Equal(t, appName, app.ApplicationName)
@@ -43,16 +44,15 @@ func TestCreateApp(t *testing.T) {
 	assert.Equal(t, userOwners, *app.UserOwners)
 	assert.Equal(t, groupOwners, *app.GroupOwners)
 
-	deleteApplication(t, appKey)
+	utils.DeleteApplication(t, appKey)
 }
 
 func TestUpdateApp(t *testing.T) {
-	projectKey := GetTestProjectKey(t)
-	appKey := generateUniqueKey("app-update")
+	projectKey := utils.GetTestProjectKey(t)
+	appKey := utils.GenerateUniqueKey("app-update")
 
-	createBasicApplication(t, appKey)
+	utils.CreateBasicApplication(t, appKey)
 
-	// Update the application with new values
 	updatedAppName := "Updated Test Application"
 	updatedDescription := "Updated description"
 	updatedBusinessCriticality := "high"
@@ -60,7 +60,7 @@ func TestUpdateApp(t *testing.T) {
 	updatedUserOwners := []string{"app-admin", "frog"}
 	updatedGroupOwners := []string{"dev-team", "security-team"}
 
-	err := AppTrustCli.Exec("app-update", appKey,
+	err := utils.AppTrustCli.Exec("app-update", appKey,
 		"--application-name="+updatedAppName,
 		"--desc="+updatedDescription,
 		"--business-criticality="+updatedBusinessCriticality,
@@ -71,7 +71,7 @@ func TestUpdateApp(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was updated correctly
-	app, _, err := getApplication(appKey)
+	app, _, err := utils.GetApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 	assert.Equal(t, updatedAppName, app.ApplicationName)
@@ -83,24 +83,24 @@ func TestUpdateApp(t *testing.T) {
 	assert.Equal(t, updatedUserOwners, *app.UserOwners)
 	assert.Equal(t, updatedGroupOwners, *app.GroupOwners)
 
-	deleteApplication(t, appKey)
+	utils.DeleteApplication(t, appKey)
 }
 
 func TestDeleteApp(t *testing.T) {
-	appKey := generateUniqueKey("app-delete")
-	createBasicApplication(t, appKey)
+	appKey := utils.GenerateUniqueKey("app-delete")
+	utils.CreateBasicApplication(t, appKey)
 
 	// Verify the application exists
-	app, _, err := getApplication(appKey)
+	app, _, err := utils.GetApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, appKey, app.ApplicationKey)
 
 	// Delete the application
-	err = AppTrustCli.Exec("app-delete", appKey)
+	err = utils.AppTrustCli.Exec("app-delete", appKey)
 	assert.NoError(t, err)
 
 	// Verify the application no longer exists
-	_, statusCode, err := getApplication(appKey)
+	_, statusCode, err := utils.GetApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, statusCode)
 }

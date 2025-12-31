@@ -5,10 +5,11 @@ package e2e
 import (
 	"testing"
 
+	"github.com/jfrog/jfrog-cli-application/e2e/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPing(t *testing.T) {
-	output := AppTrustCli.RunCliCmdWithOutput(t, "ping")
+	output := utils.AppTrustCli.RunCliCmdWithOutput(t, "ping")
 	assert.Contains(t, output, "OK")
 }

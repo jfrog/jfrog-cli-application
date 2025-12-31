@@ -1,6 +1,6 @@
 //go:build e2e
 
-package e2e
+package utils
 
 import (
 	"flag"
@@ -19,29 +19,28 @@ const (
 	testJfrogTokenEnvVar = "JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN"
 )
 
-type testPackageResources struct {
-	packageType    string
-	packageName    string
-	packageVersion string
-	packagePath    string
-	buildName      string
-	buildNumber    string
+type TestPackageResources struct {
+	PackageType    string
+	PackageName    string
+	PackageVersion string
+	PackagePath    string
+	RepoKey        string
+	BuildName      string
+	BuildNumber    string
 }
 
 var (
 	serverDetails              *coreConfig.ServerDetails
 	artifactoryServicesManager artifactory.ArtifactoryServicesManager
 
-	credentials string
 	AppTrustCli *coreTests.JfrogCli
 
 	testProjectKey string
-	testRepoKey    string
-	testPackageRes *testPackageResources
+	testPackageRes *TestPackageResources
 )
 
-func loadCredentials() {
-	platformUrlFlag := flag.String("jfrog.url", getTestUrlDefaultValue(), "JFrog Platform URL")
+func LoadCredentials() string {
+	platformUrlFlag := flag.String("jfrog.url", getTestPlatformUrlFromEnvVar(), "JFrog Platform URL")
 	accessTokenFlag := flag.String("jfrog.adminToken", os.Getenv(testJfrogTokenEnvVar), "JFrog Platform admin token")
 	platformUrl := clientUtils.AddTrailingSlashIfNeeded(*platformUrlFlag)
 
@@ -51,10 +50,10 @@ func loadCredentials() {
 		LifecycleUrl:   platformUrl + "lifecycle/",
 		AccessToken:    *accessTokenFlag,
 	}
-	credentials = fmt.Sprintf("--url=%s --access-token=%s", *platformUrlFlag, *accessTokenFlag)
+	return fmt.Sprintf("--url=%s --access-token=%s", *platformUrlFlag, *accessTokenFlag)
 }
 
-func getTestUrlDefaultValue() string {
+func getTestPlatformUrlFromEnvVar() string {
 	if os.Getenv(testJfrogUrlEnvVar) != "" {
 		return os.Getenv(testJfrogUrlEnvVar)
 	}
@@ -68,7 +67,7 @@ func GetTestProjectKey(t *testing.T) string {
 	return testProjectKey
 }
 
-func getTestPackage(t *testing.T) *testPackageResources {
+func GetTestPackage(t *testing.T) *TestPackageResources {
 	// Upload the test package to Artifactory if not already done
 	if testPackageRes == nil {
 		uploadPackageToArtifactory(t)
