@@ -9,6 +9,6 @@ import (
 )
 
 func TestPing(t *testing.T) {
-	output := AppTrustCli.RunCliCmdWithOutput(t, "p")
+	output := AppTrustCli.RunCliCmdWithOutput(t, "ping")
 	assert.Contains(t, output, "OK")
 }

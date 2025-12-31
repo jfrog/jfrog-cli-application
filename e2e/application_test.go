@@ -19,7 +19,7 @@ func TestCreateApp(t *testing.T) {
 	userOwners := []string{"admin", "developer"}
 	groupOwners := []string{"devops-team", "security-team"}
 
-	err := AppTrustCli.Exec("ac", appKey,
+	err := AppTrustCli.Exec("app-create", appKey,
 		"--project="+projectKey,
 		"--application-name="+appName,
 		"--desc="+description,
@@ -60,7 +60,7 @@ func TestUpdateApp(t *testing.T) {
 	updatedUserOwners := []string{"app-admin", "frog"}
 	updatedGroupOwners := []string{"dev-team", "security-team"}
 
-	err := AppTrustCli.Exec("au", appKey,
+	err := AppTrustCli.Exec("app-update", appKey,
 		"--application-name="+updatedAppName,
 		"--desc="+updatedDescription,
 		"--business-criticality="+updatedBusinessCriticality,
@@ -96,7 +96,7 @@ func TestDeleteApp(t *testing.T) {
 	assert.Equal(t, appKey, app.ApplicationKey)
 
 	// Delete the application
-	err = AppTrustCli.Exec("ad", appKey)
+	err = AppTrustCli.Exec("app-delete", appKey)
 	assert.NoError(t, err)
 
 	// Verify the application no longer exists

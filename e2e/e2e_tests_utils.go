@@ -62,17 +62,17 @@ func deleteTestProject() {
 
 func createBasicApplication(t *testing.T, appKey string) {
 	projectKey := GetTestProjectKey(t)
-	err := AppTrustCli.Exec("ac", appKey, "--project="+projectKey, "--application-name="+appKey)
+	err := AppTrustCli.Exec("app-create", appKey, "--project="+projectKey, "--application-name="+appKey)
 	assert.NoError(t, err)
 }
 
 func deleteApplication(t *testing.T, appKey string) {
-	err := AppTrustCli.Exec("ad", appKey)
+	err := AppTrustCli.Exec("app-delete", appKey)
 	assert.NoError(t, err)
 }
 
 func deleteVersion(t *testing.T, appKey, version string) {
-	err := AppTrustCli.Exec("vd", appKey, version)
+	err := AppTrustCli.Exec("version-delete", appKey, version)
 	assert.NoError(t, err)
 }
 

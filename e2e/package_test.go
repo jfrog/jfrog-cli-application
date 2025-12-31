@@ -18,7 +18,7 @@ func TestBindPackage(t *testing.T) {
 	testPackage := getTestPackage(t)
 
 	// Execute
-	err := AppTrustCli.Exec("pb", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
+	err := AppTrustCli.Exec("package-bind", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
 	require.NoError(t, err)
 
 	// Assert
@@ -41,7 +41,7 @@ func TestUnbindPackage(t *testing.T) {
 	testPackage := getTestPackage(t)
 
 	// First bind the package
-	err := AppTrustCli.Exec("pb", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
+	err := AppTrustCli.Exec("package-bind", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
 	require.NoError(t, err)
 
 	// Verify it's bound
@@ -52,7 +52,7 @@ func TestUnbindPackage(t *testing.T) {
 	assert.Len(t, bindings.Packages, 1)
 
 	// Unbind the package
-	err = AppTrustCli.Exec("pu", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
+	err = AppTrustCli.Exec("package-unbind", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
 	require.NoError(t, err)
 
 	// Verify the package is no longer bound
