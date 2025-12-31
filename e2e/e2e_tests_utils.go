@@ -137,15 +137,22 @@ func uploadPackageToArtifactory(t *testing.T) {
 	err = summary.ArtifactsDetailsReader.NextRecord(artifactDetails)
 	require.NoError(t, err)
 
-	testPackageType = "npm"
-	testPackageName = "@gpizza/pizza-frontend"
-	testPackageVersion = "1.0.0"
-	testPackagePath = targetPath
+	packageName := "@gpizza/pizza-frontend"
+	packageVersion := "1.0.0"
 
 	// Wait for the package to be indexed in Artifactory
-	waitForPackageIndexing(t, testPackageName, testPackageVersion)
+	waitForPackageIndexing(t, packageName, packageVersion)
 
-	createBuild(t, buildName, buildNumber, artifactDetails.Checksums.Sha256)
+	testPackageRes = &testPackageResources{
+		packageType:    "npm",
+		packageName:    packageName,
+		packageVersion: packageVersion,
+		packagePath:    targetPath,
+		buildName:      buildName,
+		buildNumber:    buildNumber,
+	}
+
+	publishBuild(t, buildName, buildNumber, artifactDetails.Checksums.Sha256)
 }
 
 func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
@@ -236,7 +243,7 @@ func getArtifactoryServicesManager(t *testing.T) artifactory.ArtifactoryServices
 	return artifactoryServicesManager
 }
 
-func createBuild(t *testing.T, buildName, buildNumber, sha256 string) {
+func publishBuild(t *testing.T, buildName, buildNumber, sha256 string) {
 	buildInfo := &buildinfo.BuildInfo{
 		Name:    buildName,
 		Number:  buildNumber,
@@ -246,7 +253,7 @@ func createBuild(t *testing.T, buildName, buildNumber, sha256 string) {
 				Id: "build-module",
 				Artifacts: []buildinfo.Artifact{
 					{
-						Name: testPackageName,
+						Name: testPackageRes.packageName,
 						Checksum: buildinfo.Checksum{
 							Sha256: sha256,
 						},
@@ -260,17 +267,14 @@ func createBuild(t *testing.T, buildName, buildNumber, sha256 string) {
 	require.NoError(t, err)
 	require.NotNil(t, summary)
 	require.True(t, summary.IsSucceeded())
-
-	testBuildName = buildName
-	testBuildNumber = buildNumber
 }
 
 func deleteBuild() {
-	if testBuildName == "" {
+	if testPackageRes == nil {
 		return
 	}
 
-	err := artifactoryServicesManager.DeleteBuildInfo(&buildinfo.BuildInfo{Name: testBuildName, Number: testBuildNumber}, "", 1)
+	err := artifactoryServicesManager.DeleteBuildInfo(&buildinfo.BuildInfo{Name: testPackageRes.buildName, Number: testPackageRes.buildNumber}, "", 1)
 	if err != nil {
 		log.Error("Failed to delete build-info", err)
 	}

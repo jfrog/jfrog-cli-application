@@ -20,11 +20,12 @@ func TestCreateVersion_Package(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	version := "1.0.0"
 
 	// Execute
-	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.packageType, testPackage.packageName, testPackage.packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
 	require.NoError(t, err)
 	defer deleteVersion(t, appKey, version)
@@ -41,11 +42,11 @@ func TestCreateVersion_Artifact(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	_, _, _, packagePath := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	version := "1.0.1"
 
 	// Execute
-	artifactFlag := fmt.Sprintf("--source-type-artifacts=path=%s", packagePath)
+	artifactFlag := fmt.Sprintf("--source-type-artifacts=path=%s", testPackage.packagePath)
 	err := AppTrustCli.Exec("vc", appKey, version, artifactFlag)
 	require.NoError(t, err)
 	defer deleteVersion(t, appKey, version)
@@ -62,9 +63,10 @@ func TestCreateVersion_ApplicationVersion(t *testing.T) {
 	createBasicApplication(t, sourceAppKey)
 	defer deleteApplication(t, sourceAppKey)
 
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	sourceVersion := "1.0.2"
-	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.packageType, testPackage.packageName, testPackage.packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", sourceAppKey, sourceVersion, packageFlag)
 	require.NoError(t, err)
 	defer deleteVersion(t, sourceAppKey, sourceVersion)
@@ -102,7 +104,7 @@ func TestCreateVersion_ReleaseBundle(t *testing.T) {
 	require.NoError(t, err)
 
 	projectKey := GetTestProjectKey(t)
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	bundleName := generateUniqueKey("apptrust-cli-tests-rb")
 	bundleVersion := "1.0.0"
 
@@ -113,9 +115,9 @@ func TestCreateVersion_ReleaseBundle(t *testing.T) {
 
 	source := services.CreateFromPackagesSource{Packages: []services.PackageSource{
 		{
-			PackageName:    packageName,
-			PackageVersion: packageVersion,
-			PackageType:    packageType,
+			PackageName:    testPackage.packageName,
+			PackageVersion: testPackage.packageVersion,
+			PackageType:    testPackage.packageType,
 			RepositoryKey:  testRepoKey,
 		},
 	}}
@@ -141,6 +143,29 @@ func TestCreateVersion_ReleaseBundle(t *testing.T) {
 	assertVersionContent(t, versionContent, statusCode, appKey, version)
 }
 
+func TestCreateVersion_Build(t *testing.T) {
+	// Prepare
+	appKey := generateUniqueKey("app-version-create-build")
+	createBasicApplication(t, appKey)
+	defer deleteApplication(t, appKey)
+
+	// Make sure to upload a package associated with a build
+	testPackage := getTestPackage(t)
+
+	version := "1.0.10"
+
+	// Execute
+	buildInfoFlag := fmt.Sprintf("--source-type-builds=name=%s, id=%s", testPackage.buildName, testPackage.buildNumber)
+	err := AppTrustCli.Exec("vc", appKey, version, buildInfoFlag)
+	require.NoError(t, err)
+	defer deleteVersion(t, appKey, version)
+
+	// Assert
+	versionContent, statusCode, err := getApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assertVersionContent(t, versionContent, statusCode, appKey, version)
+}
+
 func assertVersionContent(t *testing.T, versionContent *versionContentResponse, statusCode int, appKey, version string) {
 	assert.Equal(t, http.StatusOK, statusCode)
 	require.NotNil(t, versionContent)
@@ -148,11 +173,11 @@ func assertVersionContent(t *testing.T, versionContent *versionContentResponse, 
 	assert.Equal(t, version, versionContent.Version)
 	assert.Equal(t, "COMPLETED", versionContent.Status)
 	assert.Len(t, versionContent.Releasables, 1)
-	assert.Equal(t, testPackageType, versionContent.Releasables[0].PackageType)
-	assert.Equal(t, testPackageName, versionContent.Releasables[0].Name)
-	assert.Equal(t, testPackageVersion, versionContent.Releasables[0].Version)
+	assert.Equal(t, testPackageRes.packageType, versionContent.Releasables[0].PackageType)
+	assert.Equal(t, testPackageRes.packageName, versionContent.Releasables[0].Name)
+	assert.Equal(t, testPackageRes.packageVersion, versionContent.Releasables[0].Version)
 	assert.Len(t, versionContent.Releasables[0].Artifacts, 1)
-	assert.Contains(t, testPackagePath, versionContent.Releasables[0].Artifacts[0].Path)
+	assert.Contains(t, testPackageRes.packagePath, versionContent.Releasables[0].Artifacts[0].Path)
 }
 
 func TestUpdateVersion(t *testing.T) {
@@ -161,11 +186,12 @@ func TestUpdateVersion(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	version := "1.0.4"
 
 	// Create a version first
-	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.packageType, testPackage.packageName, testPackage.packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
 	require.NoError(t, err)
 	defer deleteVersion(t, appKey, version)
@@ -191,11 +217,12 @@ func TestDeleteVersion(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	version := "1.0.5"
 
 	// Create a version first
-	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.packageType, testPackage.packageName, testPackage.packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
 	require.NoError(t, err)
 
@@ -221,11 +248,12 @@ func TestPromoteVersion(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	version := "1.0.6"
 
 	// Create a version first
-	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.packageType, testPackage.packageName, testPackage.packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
 	require.NoError(t, err)
 	defer deleteVersion(t, appKey, version)
@@ -251,11 +279,12 @@ func TestReleaseVersion(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	version := "1.0.7"
 
 	// Create a version first
-	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.packageType, testPackage.packageName, testPackage.packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
 	require.NoError(t, err)
 	defer deleteVersion(t, appKey, version)
@@ -280,11 +309,12 @@ func TestRollbackVersion(t *testing.T) {
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
 
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 	version := "1.0.8"
 
 	// Create a version first
-	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s", packageType, packageName, packageVersion, testRepoKey)
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.packageType, testPackage.packageName, testPackage.packageVersion, testRepoKey)
 	err := AppTrustCli.Exec("vc", appKey, version, packageFlag)
 	require.NoError(t, err)
 	defer deleteVersion(t, appKey, version)

@@ -19,6 +19,15 @@ const (
 	testJfrogTokenEnvVar = "JFROG_APPTRUST_CLI_TESTS_JFROG_ACCESS_TOKEN"
 )
 
+type testPackageResources struct {
+	packageType    string
+	packageName    string
+	packageVersion string
+	packagePath    string
+	buildName      string
+	buildNumber    string
+}
+
 var (
 	serverDetails              *coreConfig.ServerDetails
 	artifactoryServicesManager artifactory.ArtifactoryServicesManager
@@ -28,13 +37,7 @@ var (
 
 	testProjectKey string
 	testRepoKey    string
-
-	testPackageType    string
-	testPackageName    string
-	testPackageVersion string
-	testPackagePath    string
-	testBuildName      string
-	testBuildNumber    string
+	testPackageRes *testPackageResources
 )
 
 func loadCredentials() {
@@ -65,10 +68,10 @@ func GetTestProjectKey(t *testing.T) string {
 	return testProjectKey
 }
 
-func getTestPackage(t *testing.T) (pkgType, pkgName, pkgVersion, pkgPath string) {
+func getTestPackage(t *testing.T) *testPackageResources {
 	// Upload the test package to Artifactory if not already done
-	if testPackageName == "" {
+	if testPackageRes.packageName == "" {
 		uploadPackageToArtifactory(t)
 	}
-	return testPackageType, testPackageName, testPackageVersion, testPackagePath
+	return testPackageRes
 }
