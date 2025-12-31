@@ -6,7 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	coreTests "github.com/jfrog/jfrog-cli-core/v2/utils/tests"
@@ -68,9 +70,17 @@ func GetTestProjectKey(t *testing.T) string {
 }
 
 func GetTestPackage(t *testing.T) *TestPackageResources {
-	// Upload the test package to Artifactory if not already done
 	if testPackageRes == nil {
-		uploadPackageToArtifactory(t)
+		buildName := GenerateUniqueKey("apptrust-cli-tests-build")
+		buildNumber := "1"
+		repoKey := createNpmRepo(t)
+		sha256 := uploadPackageToArtifactory(t, repoKey, buildName, buildNumber)
+		publishBuild(t, buildName, buildNumber, sha256)
 	}
 	return testPackageRes
+}
+
+func GenerateUniqueKey(prefix string) string {
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	return fmt.Sprintf("%s-%s", prefix, timestamp)
 }

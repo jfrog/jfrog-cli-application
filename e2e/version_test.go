@@ -26,7 +26,7 @@ func TestCreateVersion_Package(t *testing.T) {
 		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Assert
 	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
@@ -47,7 +47,7 @@ func TestCreateVersion_Artifact(t *testing.T) {
 	artifactFlag := fmt.Sprintf("--source-type-artifacts=path=%s", testPackage.PackagePath)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, artifactFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Assert
 	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
@@ -67,7 +67,7 @@ func TestCreateVersion_ApplicationVersion(t *testing.T) {
 		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
 	err := utils.AppTrustCli.Exec("version-create", sourceAppKey, sourceVersion, packageFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, sourceAppKey, sourceVersion)
+	defer utils.DeleteApplicationVersion(t, sourceAppKey, sourceVersion)
 
 	// Prepare - create target application
 	targetAppKey := utils.GenerateUniqueKey("app-target-version")
@@ -80,7 +80,7 @@ func TestCreateVersion_ApplicationVersion(t *testing.T) {
 	appVersionFlag := fmt.Sprintf("--source-type-application-versions=application-key=%s, version=%s", sourceAppKey, sourceVersion)
 	err = utils.AppTrustCli.Exec("version-create", targetAppKey, targetVersion, appVersionFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, targetAppKey, targetVersion)
+	defer utils.DeleteApplicationVersion(t, targetAppKey, targetVersion)
 
 	// Assert
 	versionContent, statusCode, err := utils.GetApplicationVersion(targetAppKey, targetVersion)
@@ -106,7 +106,7 @@ func TestCreateVersion_ReleaseBundle(t *testing.T) {
 	releaseBundleFlag := fmt.Sprintf("--source-type-release-bundles=name=%s, version=%s, project-key=%s", bundleName, bundleVersion, projectKey)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, releaseBundleFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Assert
 	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
@@ -129,7 +129,7 @@ func TestCreateVersion_Build(t *testing.T) {
 	buildInfoFlag := fmt.Sprintf("--source-type-builds=name=%s, id=%s", testPackage.BuildName, testPackage.BuildNumber)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, buildInfoFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Assert
 	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
@@ -165,7 +165,7 @@ func TestUpdateVersion(t *testing.T) {
 		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Execute
 	tag := "release-candidate"
@@ -228,7 +228,7 @@ func TestPromoteVersion(t *testing.T) {
 		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Execute
 	targetStage := "DEV"
@@ -259,7 +259,7 @@ func TestReleaseVersion(t *testing.T) {
 		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Execute
 	err = utils.AppTrustCli.Exec("version-release", appKey, version)
@@ -289,7 +289,7 @@ func TestRollbackVersion(t *testing.T) {
 		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
 	require.NoError(t, err)
-	defer utils.DeleteVersion(t, appKey, version)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
 
 	// Promote to DEV
 	targetStage := "DEV"
