@@ -33,6 +33,8 @@ var (
 	testPackageName    string
 	testPackageVersion string
 	testPackagePath    string
+	testBuildName      string
+	testBuildNumber    string
 )
 
 func loadCredentials() {

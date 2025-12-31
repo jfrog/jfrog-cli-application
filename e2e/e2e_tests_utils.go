@@ -14,12 +14,15 @@ import (
 	"testing"
 	"time"
 
+	buildinfo "github.com/jfrog/build-info-go/entities"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
 	"github.com/jfrog/jfrog-cli-core/v2/artifactory/utils"
+	"github.com/jfrog/jfrog-cli-core/v2/common/build"
 	accessServices "github.com/jfrog/jfrog-client-go/access/services"
 	"github.com/jfrog/jfrog-client-go/artifactory"
 	"github.com/jfrog/jfrog-client-go/artifactory/services"
+	artClientUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 	"github.com/stretchr/testify/assert"
@@ -45,6 +48,7 @@ func deleteTestProject() {
 	if testProjectKey == "" {
 		return
 	}
+	deleteBuild()
 	deleteNpmRepo()
 	accessManager, err := utils.CreateAccessServiceManager(serverDetails, false)
 	if err != nil {
@@ -110,15 +114,28 @@ func uploadPackageToArtifactory(t *testing.T) {
 	npmPackageFilePath := filepath.Join(filepath.Dir(testFilePath), "testdata", "pizza-frontend.tgz")
 
 	targetPath := testRepoKey + "/pizza-frontend.tgz"
+	buildName := generateUniqueKey("apptrust-cli-tests-build")
+	buildNumber := "1"
+	buildProps, _ := build.CreateBuildProperties(buildName, buildNumber, "")
+
 	servicesManager := getArtifactoryServicesManager(t)
 	uploadParams := services.NewUploadParams()
 	uploadParams.Pattern = npmPackageFilePath
 	uploadParams.Target = targetPath
 	uploadParams.Flat = true
-	uploaded, failed, err := servicesManager.UploadFiles(artifactory.UploadServiceOptions{FailFast: false}, uploadParams)
+	uploadParams.BuildProps = buildProps
+	summary, err := servicesManager.UploadFilesWithSummary(artifactory.UploadServiceOptions{FailFast: false}, uploadParams)
 	require.NoError(t, err)
-	require.Equal(t, 1, uploaded, "Expected exactly one uploaded file")
-	require.Equal(t, 0, failed, "Expected zero failed uploads")
+	require.Equal(t, 1, summary.TotalSucceeded, "Expected exactly one uploaded file")
+	require.Equal(t, 0, summary.TotalFailed, "Expected zero failed uploads")
+	defer func() {
+		err = summary.Close()
+		require.NoError(t, err)
+	}()
+
+	artifactDetails := new(artClientUtils.ArtifactDetails)
+	err = summary.ArtifactsDetailsReader.NextRecord(artifactDetails)
+	require.NoError(t, err)
 
 	testPackageType = "npm"
 	testPackageName = "@gpizza/pizza-frontend"
@@ -127,6 +144,8 @@ func uploadPackageToArtifactory(t *testing.T) {
 
 	// Wait for the package to be indexed in Artifactory
 	waitForPackageIndexing(t, testPackageName, testPackageVersion)
+
+	createBuild(t, buildName, buildNumber, artifactDetails.Checksums.Sha256)
 }
 
 func waitForPackageIndexing(t *testing.T, packageName, packageVersion string) {
@@ -215,6 +234,46 @@ func getArtifactoryServicesManager(t *testing.T) artifactory.ArtifactoryServices
 	}
 
 	return artifactoryServicesManager
+}
+
+func createBuild(t *testing.T, buildName, buildNumber, sha256 string) {
+	buildInfo := &buildinfo.BuildInfo{
+		Name:    buildName,
+		Number:  buildNumber,
+		Started: "2024-01-01T12:00:00.000Z",
+		Modules: []buildinfo.Module{
+			{
+				Id: "build-module",
+				Artifacts: []buildinfo.Artifact{
+					{
+						Name: testPackageName,
+						Checksum: buildinfo.Checksum{
+							Sha256: sha256,
+						},
+					},
+				},
+			},
+		},
+	}
+	servicesManager := getArtifactoryServicesManager(t)
+	summary, err := servicesManager.PublishBuildInfo(buildInfo, "")
+	require.NoError(t, err)
+	require.NotNil(t, summary)
+	require.True(t, summary.IsSucceeded())
+
+	testBuildName = buildName
+	testBuildNumber = buildNumber
+}
+
+func deleteBuild() {
+	if testBuildName == "" {
+		return
+	}
+
+	err := artifactoryServicesManager.DeleteBuildInfo(&buildinfo.BuildInfo{Name: testBuildName, Number: testBuildNumber}, "", 1)
+	if err != nil {
+		log.Error("Failed to delete build-info", err)
+	}
 }
 
 type packagesResponse struct {
