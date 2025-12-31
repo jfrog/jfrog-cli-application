@@ -15,10 +15,10 @@ func TestBindPackage(t *testing.T) {
 	appKey := generateUniqueKey("package-bind")
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 
 	// Execute
-	err := AppTrustCli.Exec("pb", appKey, packageType, packageName, packageVersion)
+	err := AppTrustCli.Exec("pb", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
 	require.NoError(t, err)
 
 	// Assert
@@ -27,10 +27,10 @@ func TestBindPackage(t *testing.T) {
 	assert.Equal(t, http.StatusOK, statusCode)
 	require.NotNil(t, response)
 	assert.Len(t, response.Packages, 1)
-	assert.Equal(t, packageType, response.Packages[0].Type)
-	assert.Equal(t, packageName, response.Packages[0].Name)
+	assert.Equal(t, testPackage.packageType, response.Packages[0].Type)
+	assert.Equal(t, testPackage.packageName, response.Packages[0].Name)
 	assert.Equal(t, 1, response.Packages[0].NumVersions)
-	assert.Equal(t, packageVersion, response.Packages[0].LatestVersion)
+	assert.Equal(t, testPackage.packageVersion, response.Packages[0].LatestVersion)
 }
 
 func TestUnbindPackage(t *testing.T) {
@@ -38,10 +38,10 @@ func TestUnbindPackage(t *testing.T) {
 	appKey := generateUniqueKey("package-unbind")
 	createBasicApplication(t, appKey)
 	defer deleteApplication(t, appKey)
-	packageType, packageName, packageVersion, _ := getTestPackage(t)
+	testPackage := getTestPackage(t)
 
 	// First bind the package
-	err := AppTrustCli.Exec("pb", appKey, packageType, packageName, packageVersion)
+	err := AppTrustCli.Exec("pb", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
 	require.NoError(t, err)
 
 	// Verify it's bound
@@ -52,7 +52,7 @@ func TestUnbindPackage(t *testing.T) {
 	assert.Len(t, bindings.Packages, 1)
 
 	// Unbind the package
-	err = AppTrustCli.Exec("pu", appKey, packageType, packageName, packageVersion)
+	err = AppTrustCli.Exec("pu", appKey, testPackage.packageType, testPackage.packageName, testPackage.packageVersion)
 	require.NoError(t, err)
 
 	// Verify the package is no longer bound
