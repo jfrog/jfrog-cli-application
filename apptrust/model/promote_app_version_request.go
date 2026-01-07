@@ -3,6 +3,7 @@ package model
 const (
 	PromotionTypeCopy = "copy"
 	PromotionTypeMove = "move"
+	PromotionTypeKeep = "keep"
 
 	// This value cannot be set via the --promotion-type flag in the CLI.
 	// It is sent to the promotion_type field in the REST API only when the --dry-run flag is used.
@@ -12,6 +13,7 @@ const (
 var PromotionTypeValues = []string{
 	PromotionTypeCopy,
 	PromotionTypeMove,
+	PromotionTypeKeep,
 }
 
 type CommonPromoteAppVersion struct {
