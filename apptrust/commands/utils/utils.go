@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	commonCliUtils "github.com/jfrog/jfrog-cli-core/v2/common/cliutils"
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
@@ -164,5 +165,29 @@ func ParseListPropertiesFlag(propertiesStr string) (map[string][]string, error) 
 		result[key] = values
 	}
 
+	return result, nil
+}
+
+func ParseLabelKeyValuePairs(flagValue string) ([]model.LabelKeyValue, error) {
+	if flagValue == "" {
+		return []model.LabelKeyValue{}, nil
+	}
+
+	var result []model.LabelKeyValue
+	pairs := strings.Split(flagValue, ";")
+	for _, pair := range pairs {
+		trimmedPair := strings.TrimSpace(pair)
+		if trimmedPair == "" {
+			continue
+		}
+		keyValue := strings.SplitN(trimmedPair, "=", 2)
+		if len(keyValue) != 2 {
+			return nil, errorutils.CheckErrorf("invalid key-value pair: '%s' (expected format key=value)", pair)
+		}
+		result = append(result, model.LabelKeyValue{
+			Key:   strings.TrimSpace(keyValue[0]),
+			Value: strings.TrimSpace(keyValue[1]),
+		})
+	}
 	return result, nil
 }

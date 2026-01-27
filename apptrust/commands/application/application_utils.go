@@ -1,6 +1,8 @@
 package application
 
 import (
+	"fmt"
+
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
@@ -44,9 +46,32 @@ func populateApplicationFromFlags(ctx *components.Context, descriptor *model.App
 	if ctx.IsFlagSet(commands.LabelsFlag) {
 		labelsMap, err := utils.ParseMapFlag(ctx.GetStringFlagValue(commands.LabelsFlag))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to parse --%s: %w", commands.LabelsFlag, err)
 		}
 		descriptor.Labels = &labelsMap
+	}
+
+	// Only set LabelUpdates if at least one of add-labels or remove-labels flags is set
+	if ctx.IsFlagSet(commands.AddLabelsFlag) || ctx.IsFlagSet(commands.RemoveLabelsFlag) {
+		labelUpdates := &model.LabelUpdates{}
+
+		if ctx.IsFlagSet(commands.AddLabelsFlag) {
+			addLabels, err := utils.ParseLabelKeyValuePairs(ctx.GetStringFlagValue(commands.AddLabelsFlag))
+			if err != nil {
+				return fmt.Errorf("failed to parse --%s: %w", commands.AddLabelsFlag, err)
+			}
+			labelUpdates.Add = addLabels
+		}
+
+		if ctx.IsFlagSet(commands.RemoveLabelsFlag) {
+			removeLabels, err := utils.ParseLabelKeyValuePairs(ctx.GetStringFlagValue(commands.RemoveLabelsFlag))
+			if err != nil {
+				return fmt.Errorf("failed to parse --%s: %w", commands.RemoveLabelsFlag, err)
+			}
+			labelUpdates.Remove = removeLabels
+		}
+
+		descriptor.LabelUpdates = labelUpdates
 	}
 
 	if ctx.IsFlagSet(commands.UserOwnersFlag) {
