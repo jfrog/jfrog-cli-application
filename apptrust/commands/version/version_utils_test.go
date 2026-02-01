@@ -17,20 +17,20 @@ func TestParseOverwriteStrategy(t *testing.T) {
 		expectedValue string
 	}{
 		{
-			name:          "valid value - DISABLED",
-			flagValue:     "DISABLED",
+			name:          "valid value - disabled",
+			flagValue:     "disabled",
 			expectError:   false,
 			expectedValue: "DISABLED",
 		},
 		{
-			name:          "valid value - LATEST",
-			flagValue:     "LATEST",
+			name:          "valid value - latest",
+			flagValue:     "latest",
 			expectError:   false,
 			expectedValue: "LATEST",
 		},
 		{
-			name:          "valid value - ALL",
-			flagValue:     "ALL",
+			name:          "valid value - all",
+			flagValue:     "all",
 			expectError:   false,
 			expectedValue: "ALL",
 		},
@@ -46,8 +46,8 @@ func TestParseOverwriteStrategy(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:        "lowercase value",
-			flagValue:   "disabled",
+			name:        "uppercase value",
+			flagValue:   "DISABLED",
 			expectError: true,
 		},
 	}

@@ -17,9 +17,9 @@ var PromotionTypeValues = []string{
 }
 
 const (
-	OverwriteStrategyDisabled = "DISABLED"
-	OverwriteStrategyLatest   = "LATEST"
-	OverwriteStrategyAll      = "ALL"
+	OverwriteStrategyDisabled = "disabled"
+	OverwriteStrategyLatest   = "latest"
+	OverwriteStrategyAll      = "all"
 )
 
 var OverwriteStrategyValues = []string{

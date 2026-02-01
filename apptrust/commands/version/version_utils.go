@@ -1,6 +1,8 @@
 package version
 
 import (
+	"strings"
+
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
@@ -70,5 +72,6 @@ func ParseOverwriteStrategy(ctx *components.Context) (string, error) {
 		return "", err
 	}
 
-	return validatedStrategy, nil
+	// Convert to uppercase for API request
+	return strings.ToUpper(validatedStrategy), nil
 }

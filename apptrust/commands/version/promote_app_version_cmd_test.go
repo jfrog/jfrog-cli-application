@@ -27,17 +27,17 @@ func TestPromoteAppVersionCommand_Run(t *testing.T) {
 			sync: false,
 		},
 		{
-			name:              "with overwrite strategy DISABLED",
+			name:              "with overwrite strategy disabled (sent as DISABLED)",
 			sync:              true,
 			overwriteStrategy: "DISABLED",
 		},
 		{
-			name:              "with overwrite strategy LATEST",
+			name:              "with overwrite strategy latest (sent as LATEST)",
 			sync:              true,
 			overwriteStrategy: "LATEST",
 		},
 		{
-			name:              "with overwrite strategy ALL",
+			name:              "with overwrite strategy all (sent as ALL)",
 			sync:              true,
 			overwriteStrategy: "ALL",
 		},
