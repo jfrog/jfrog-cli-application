@@ -180,6 +180,7 @@ func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.Create
 		idField         = "id"
 		includeDepField = "include-deps"
 		repoKeyField    = "repo-key"
+		startedField    = "started"
 	)
 
 	var builds []model.CreateVersionBuild
@@ -197,6 +198,7 @@ func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.Create
 			Name:          buildEntryMap[nameField],
 			Number:        buildEntryMap[idField],
 			RepositoryKey: buildEntryMap[repoKeyField],
+			Started:       buildEntryMap[startedField],
 		}
 		if _, ok := buildEntryMap[includeDepField]; ok {
 			includeDep, err := strconv.ParseBool(buildEntryMap[includeDepField])
