@@ -116,7 +116,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
 				ctx.AddStringFlag(commands.TagFlag, "release-tag")
-				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0,include_deps=true;name=build2,id=2.0.0,include_deps=false")
+				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0,include-deps=true,repo-key=build-info-repo;name=build2,id=2.0.0,include-deps=false")
 				ctx.AddStringFlag(commands.SourceTypeReleaseBundlesFlag, "name=rb1,version=1.0.0;name=rb2,version=2.0.0")
 				ctx.AddStringFlag(commands.SourceTypeApplicationVersionsFlag, "application-key=source-app,version=3.2.1")
 				ctx.AddStringFlag(commands.SourceTypePackagesFlag, "type=npm,name=pkg1,version=1.0.0,repo-key=repo1;type=docker,name=pkg2,version=2.0.0,repo-key=repo2")
@@ -128,7 +128,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 				Tag:            "release-tag",
 				Sources: &model.CreateVersionSources{
 					Builds: []model.CreateVersionBuild{
-						{Name: "build1", Number: "1.0.0", IncludeDependencies: true},
+						{Name: "build1", Number: "1.0.0", IncludeDependencies: true, RepositoryKey: "build-info-repo"},
 						{Name: "build2", Number: "2.0.0", IncludeDependencies: false},
 					},
 					ReleaseBundles: []model.CreateVersionReleaseBundle{
@@ -229,12 +229,12 @@ func TestParseBuilds(t *testing.T) {
 	}{
 		{
 			name:        "multiple builds",
-			input:       "name=build1,id=1.0.0,include_deps=true;name=build2,id=2.0.0,include_deps=false;name=build3,id=3.0.0",
+			input:       "name=build1,id=1.0.0,include-deps=true;name=build2,id=2.0.0,include-deps=false;name=build3,id=3.0.0,repo-key=custom-build-repo",
 			expectError: false,
 			expectedBuilds: []model.CreateVersionBuild{
 				{Name: "build1", Number: "1.0.0", IncludeDependencies: true},
 				{Name: "build2", Number: "2.0.0", IncludeDependencies: false},
-				{Name: "build3", Number: "3.0.0", IncludeDependencies: false},
+				{Name: "build3", Number: "3.0.0", IncludeDependencies: false, RepositoryKey: "custom-build-repo"},
 			},
 		},
 		{
@@ -262,8 +262,8 @@ func TestParseBuilds(t *testing.T) {
 			errorContains: "invalid build format",
 		},
 		{
-			name:          "invalid include_deps value",
-			input:         "name=build1,id=1.0.0,include_deps=invalid",
+			name:          "invalid include-deps value",
+			input:         "name=build1,id=1.0.0,include-deps=invalid",
 			expectError:   true,
 			errorContains: "invalid build format",
 		},
