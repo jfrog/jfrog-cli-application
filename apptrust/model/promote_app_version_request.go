@@ -16,11 +16,24 @@ var PromotionTypeValues = []string{
 	PromotionTypeKeep,
 }
 
+const (
+	OverwriteStrategyDisabled = "DISABLED"
+	OverwriteStrategyLatest   = "LATEST"
+	OverwriteStrategyAll      = "ALL"
+)
+
+var OverwriteStrategyValues = []string{
+	OverwriteStrategyDisabled,
+	OverwriteStrategyLatest,
+	OverwriteStrategyAll,
+}
+
 type CommonPromoteAppVersion struct {
 	PromotionType                string             `json:"promotion_type,omitempty"`
 	IncludedRepositoryKeys       []string           `json:"included_repository_keys,omitempty"`
 	ExcludedRepositoryKeys       []string           `json:"excluded_repository_keys,omitempty"`
 	ArtifactAdditionalProperties []ArtifactProperty `json:"artifact_additional_properties,omitempty"`
+	OverwriteStrategy            string             `json:"overwrite_strategy,omitempty"`
 }
 
 type ArtifactProperty struct {

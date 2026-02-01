@@ -14,8 +14,9 @@ import (
 
 func TestPromoteAppVersionCommand_Run(t *testing.T) {
 	tests := []struct {
-		name string
-		sync bool
+		name              string
+		sync              bool
+		overwriteStrategy string
 	}{
 		{
 			name: "sync flag true",
@@ -24,6 +25,21 @@ func TestPromoteAppVersionCommand_Run(t *testing.T) {
 		{
 			name: "sync flag false",
 			sync: false,
+		},
+		{
+			name:              "with overwrite strategy DISABLED",
+			sync:              true,
+			overwriteStrategy: "DISABLED",
+		},
+		{
+			name:              "with overwrite strategy LATEST",
+			sync:              true,
+			overwriteStrategy: "LATEST",
+		},
+		{
+			name:              "with overwrite strategy ALL",
+			sync:              true,
+			overwriteStrategy: "ALL",
 		},
 	}
 
@@ -37,6 +53,9 @@ func TestPromoteAppVersionCommand_Run(t *testing.T) {
 			version := "1.0.0"
 			requestPayload := &model.PromoteAppVersionRequest{
 				Stage: "prod",
+				CommonPromoteAppVersion: model.CommonPromoteAppVersion{
+					OverwriteStrategy: tt.overwriteStrategy,
+				},
 			}
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)

@@ -57,3 +57,18 @@ func ParseArtifactProps(ctx *components.Context) ([]model.ArtifactProperty, erro
 	}
 	return nil, nil
 }
+
+// ParseOverwriteStrategy extracts and validates the overwrite strategy from command context
+func ParseOverwriteStrategy(ctx *components.Context) (string, error) {
+	overwriteStrategy := ctx.GetStringFlagValue(commands.OverwriteStrategyFlag)
+	if overwriteStrategy == "" {
+		return "", nil
+	}
+
+	validatedStrategy, err := utils.ValidateEnumFlag(commands.OverwriteStrategyFlag, overwriteStrategy, "", model.OverwriteStrategyValues)
+	if err != nil {
+		return "", err
+	}
+
+	return validatedStrategy, nil
+}

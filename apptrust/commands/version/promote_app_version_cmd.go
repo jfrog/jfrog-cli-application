@@ -80,6 +80,11 @@ func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context)
 		return nil, err
 	}
 
+	overwriteStrategy, err := ParseOverwriteStrategy(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &model.PromoteAppVersionRequest{
 		Stage: stage,
 		CommonPromoteAppVersion: model.CommonPromoteAppVersion{
@@ -87,6 +92,7 @@ func (pv *promoteAppVersionCommand) buildRequestPayload(ctx *components.Context)
 			IncludedRepositoryKeys:       includedRepos,
 			ExcludedRepositoryKeys:       excludedRepos,
 			ArtifactAdditionalProperties: artifactProps,
+			OverwriteStrategy:            overwriteStrategy,
 		},
 	}, nil
 }
