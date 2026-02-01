@@ -14,6 +14,7 @@ func NewReleaseAppVersionRequest(
 	includedRepositoryKeys []string,
 	excludedRepositoryKeys []string,
 	artifactProperties []ArtifactProperty,
+	overwriteStrategy string,
 ) *ReleaseAppVersionRequest {
 	return &ReleaseAppVersionRequest{
 		CommonPromoteAppVersion: CommonPromoteAppVersion{
@@ -21,6 +22,7 @@ func NewReleaseAppVersionRequest(
 			IncludedRepositoryKeys:       includedRepositoryKeys,
 			ExcludedRepositoryKeys:       excludedRepositoryKeys,
 			ArtifactAdditionalProperties: artifactProperties,
+			OverwriteStrategy:            overwriteStrategy,
 		},
 	}
 }

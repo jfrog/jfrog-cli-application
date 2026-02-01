@@ -140,6 +140,7 @@ var commandFlags = map[string][]string{
 		ExcludeReposFlag,
 		IncludeReposFlag,
 		PropsFlag,
+		OverwriteStrategyFlag,
 	},
 	VersionDelete: {
 		url,

@@ -78,11 +78,17 @@ func (rv *releaseAppVersionCommand) buildRequestPayload(ctx *components.Context)
 		return nil, err
 	}
 
+	overwriteStrategy, err := ParseOverwriteStrategy(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return model.NewReleaseAppVersionRequest(
 		promotionType,
 		includedRepos,
 		excludedRepos,
 		artifactProps,
+		overwriteStrategy,
 	), nil
 }
 

@@ -14,8 +14,9 @@ import (
 
 func TestReleaseAppVersionCommand_Run(t *testing.T) {
 	tests := []struct {
-		name string
-		sync bool
+		name              string
+		sync              bool
+		overwriteStrategy string
 	}{
 		{
 			name: "sync flag true",
@@ -24,6 +25,21 @@ func TestReleaseAppVersionCommand_Run(t *testing.T) {
 		{
 			name: "sync flag false",
 			sync: false,
+		},
+		{
+			name:              "with overwrite strategy DISABLED",
+			sync:              true,
+			overwriteStrategy: "DISABLED",
+		},
+		{
+			name:              "with overwrite strategy LATEST",
+			sync:              true,
+			overwriteStrategy: "LATEST",
+		},
+		{
+			name:              "with overwrite strategy ALL",
+			sync:              true,
+			overwriteStrategy: "ALL",
 		},
 	}
 
@@ -40,6 +56,7 @@ func TestReleaseAppVersionCommand_Run(t *testing.T) {
 				nil, // includedRepos
 				nil, // excludedRepos
 				nil, // artifactProps
+				tt.overwriteStrategy,
 			)
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
@@ -73,6 +90,7 @@ func TestReleaseAppVersionCommand_Run_Error(t *testing.T) {
 		nil, // includedRepos
 		nil, // excludedRepos
 		nil, // artifactProps
+		"",  // overwriteStrategy
 	)
 	expectedError := errors.New("service error occurred")
 
