@@ -178,7 +178,9 @@ func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.Create
 	const (
 		nameField       = "name"
 		idField         = "id"
-		includeDepField = "include_deps"
+		includeDepField = "include-deps"
+		repoKeyField    = "repo-key"
+		startedField    = "started"
 	)
 
 	var builds []model.CreateVersionBuild
@@ -193,8 +195,10 @@ func (cv *createAppVersionCommand) parseBuilds(buildsStr string) ([]model.Create
 			return nil, errorutils.CheckErrorf("invalid build format: %v", err)
 		}
 		build := model.CreateVersionBuild{
-			Name:   buildEntryMap[nameField],
-			Number: buildEntryMap[idField],
+			Name:          buildEntryMap[nameField],
+			Number:        buildEntryMap[idField],
+			RepositoryKey: buildEntryMap[repoKeyField],
+			Started:       buildEntryMap[startedField],
 		}
 		if _, ok := buildEntryMap[includeDepField]; ok {
 			includeDep, err := strconv.ParseBool(buildEntryMap[includeDepField])
