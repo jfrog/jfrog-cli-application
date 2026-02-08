@@ -14,7 +14,7 @@ import (
 )
 
 type VersionService interface {
-	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error
+	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, dryRun bool) error
 	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
 	ReleaseAppVersion(ctx service.Context, applicationKey string, version string, request *model.ReleaseAppVersionRequest, sync bool) error
 	RollbackAppVersion(ctx service.Context, applicationKey string, version string, request *model.RollbackAppVersionRequest, sync bool) error
@@ -28,19 +28,26 @@ func NewVersionService() VersionService {
 	return &versionService{}
 }
 
-func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest) error {
+func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, dryRun bool) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/versions/", request.ApplicationKey)
-	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{"async": "false"})
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{
+		"async":   "false",
+		"dry_run": strconv.FormatBool(dryRun),
+	})
 	if err != nil {
 		return err
 	}
-
-	if response.StatusCode != http.StatusCreated {
+	// Dry run returns http.StatusOK
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated {
 		return fmt.Errorf("failed to create app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
 
-	log.Info("Application version created successfully.")
+	if dryRun {
+		log.Info(fmt.Sprintf("Dry run successful for application version: %s:%s", request.ApplicationKey, request.Version))
+	} else {
+		log.Info(fmt.Sprintf("Application version created successfully: %s:%s", request.ApplicationKey, request.Version))
+	}
 	log.Output(string(responseBody))
 	return nil
 }

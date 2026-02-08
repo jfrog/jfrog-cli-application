@@ -116,6 +116,7 @@ var commandFlags = map[string][]string{
 		IncludeFilterFlag,
 		ExcludeFilterFlag,
 		SpecVarsFlag,
+		DryRunFlag,
 	},
 	VersionPromote: {
 		url,
