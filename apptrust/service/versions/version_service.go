@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	apphttp "github.com/jfrog/jfrog-cli-application/apptrust/http"
 	"github.com/jfrog/jfrog-cli-application/apptrust/service"
 	"github.com/jfrog/jfrog-client-go/utils/log"
 
@@ -14,7 +15,7 @@ import (
 )
 
 type VersionService interface {
-	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, sync bool) error
+	CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, sync, dryRun bool) error
 	PromoteAppVersion(ctx service.Context, applicationKey string, version string, payload *model.PromoteAppVersionRequest, sync bool) error
 	ReleaseAppVersion(ctx service.Context, applicationKey string, version string, request *model.ReleaseAppVersionRequest, sync bool) error
 	RollbackAppVersion(ctx service.Context, applicationKey string, version string, request *model.RollbackAppVersionRequest, sync bool) error
@@ -29,24 +30,20 @@ func NewVersionService() VersionService {
 	return &versionService{}
 }
 
-func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, sync bool) error {
+func (vs *versionService) CreateAppVersion(ctx service.Context, request *model.CreateAppVersionRequest, sync, dryRun bool) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/versions/", request.ApplicationKey)
-	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, map[string]string{"async": strconv.FormatBool(!sync)})
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request,
+		map[string]string{"async": strconv.FormatBool(!sync), "dry_run": strconv.FormatBool(dryRun)})
 	if err != nil {
 		return err
 	}
 
-	expectedStatusCode := http.StatusCreated
-	if !sync {
-		expectedStatusCode = http.StatusAccepted
-	}
-
-	if response.StatusCode != expectedStatusCode {
+	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
 		return fmt.Errorf("failed to create app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
 
-	log.Info("Application version created successfully.")
+	logSuccessMessage(sync, request, dryRun)
 	log.Output(string(responseBody))
 	return nil
 }
@@ -58,7 +55,7 @@ func (vs *versionService) PromoteAppVersion(ctx service.Context, applicationKey,
 		return err
 	}
 
-	if response.StatusCode >= http.StatusBadRequest {
+	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
 		return fmt.Errorf("failed to promote app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
@@ -74,7 +71,7 @@ func (vs *versionService) ReleaseAppVersion(ctx service.Context, applicationKey,
 		return err
 	}
 
-	if response.StatusCode >= http.StatusBadRequest {
+	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
 		return fmt.Errorf("failed to release app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
@@ -90,13 +87,7 @@ func (vs *versionService) RollbackAppVersion(ctx service.Context, applicationKey
 		return err
 	}
 
-	// Validate status code based on sync mode
-	expectedStatusCode := http.StatusAccepted
-	if sync {
-		expectedStatusCode = http.StatusOK
-	}
-
-	if response.StatusCode != expectedStatusCode {
+	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
 		return fmt.Errorf("failed to rollback app version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
@@ -164,4 +155,14 @@ func (vs *versionService) UpdateAppVersionSources(ctx service.Context, applicati
 	log.Info("Application version sources updated successfully.")
 	log.Output(string(responseBody))
 	return nil
+}
+
+func logSuccessMessage(sync bool, request *model.CreateAppVersionRequest, dryRun bool) {
+	if !sync {
+		log.Info(fmt.Sprintf("Application version creation initiated: %s:%s", request.ApplicationKey, request.Version))
+	} else if dryRun {
+		log.Info(fmt.Sprintf("Dry run successful for application version: %s:%s", request.ApplicationKey, request.Version))
+	} else {
+		log.Info(fmt.Sprintf("Application version created successfully: %s:%s", request.ApplicationKey, request.Version))
+	}
 }

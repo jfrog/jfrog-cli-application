@@ -24,6 +24,7 @@ func TestCreateAppVersion(t *testing.T) {
 		name             string
 		request          *model.CreateAppVersionRequest
 		sync             bool
+		dryRun           bool
 		mockResponse     *http.Response
 		mockResponseBody string
 		mockError        error
@@ -33,8 +34,19 @@ func TestCreateAppVersion(t *testing.T) {
 			name:             "success",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
 			sync:             true,
+			dryRun:           false,
 			mockResponse:     &http.Response{StatusCode: 201},
 			mockResponseBody: "{}",
+			mockError:        nil,
+			expectedError:    "",
+		},
+		{
+			name:             "success with dry-run (200 OK)",
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			sync:             true,
+			dryRun:           true,
+			mockResponse:     &http.Response{StatusCode: 200},
+			mockResponseBody: "{\"validation\": \"passed\"}",
 			mockError:        nil,
 			expectedError:    "",
 		},
@@ -42,6 +54,17 @@ func TestCreateAppVersion(t *testing.T) {
 			name:             "success with sync=false",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
 			sync:             false,
+			dryRun:           false,
+			mockResponse:     &http.Response{StatusCode: 202},
+			mockResponseBody: "{}",
+			mockError:        nil,
+			expectedError:    "",
+		},
+		{
+			name:             "success with sync=false & dryRun=true",
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			sync:             false,
+			dryRun:           true,
 			mockResponse:     &http.Response{StatusCode: 202},
 			mockResponseBody: "{}",
 			mockError:        nil,
@@ -51,6 +74,7 @@ func TestCreateAppVersion(t *testing.T) {
 			name:             "failure",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
 			sync:             true,
+			dryRun:           false,
 			mockResponse:     &http.Response{StatusCode: 400},
 			mockResponseBody: "error",
 			mockError:        nil,
@@ -60,6 +84,7 @@ func TestCreateAppVersion(t *testing.T) {
 			name:             "http client error",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
 			sync:             true,
+			dryRun:           false,
 			mockResponse:     nil,
 			mockResponseBody: "",
 			mockError:        errors.New("http client error"),
@@ -70,13 +95,13 @@ func TestCreateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications/test-app/versions/", tt.request, map[string]string{"async": strconv.FormatBool(!tt.sync)}).
+			mockHttpClient.EXPECT().Post("/v1/applications/test-app/versions/", tt.request, map[string]string{"async": strconv.FormatBool(!tt.sync), "dry_run": strconv.FormatBool(tt.dryRun)}).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			err := service.CreateAppVersion(mockCtx, tt.request, tt.sync)
+			err := service.CreateAppVersion(mockCtx, tt.request, tt.sync, tt.dryRun)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
@@ -474,28 +499,6 @@ func TestRollbackAppVersion(t *testing.T) {
 			},
 			sync:           true,
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  true,
-		},
-		{
-			name:           "failed rollback - sync=true but got 202",
-			applicationKey: "video-encoder",
-			version:        "1.5.0",
-			payload: &model.RollbackAppVersionRequest{
-				FromStage: "qa",
-			},
-			sync:           true,
-			expectedStatus: http.StatusAccepted,
-			expectedError:  true,
-		},
-		{
-			name:           "failed rollback - sync=false but got 200",
-			applicationKey: "video-encoder",
-			version:        "1.5.0",
-			payload: &model.RollbackAppVersionRequest{
-				FromStage: "prod",
-			},
-			sync:           false,
-			expectedStatus: http.StatusOK,
 			expectedError:  true,
 		},
 	}

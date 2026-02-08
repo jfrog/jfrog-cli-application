@@ -21,6 +21,7 @@ type createAppVersionCommand struct {
 	serverDetails  *coreConfig.ServerDetails
 	requestPayload *model.CreateAppVersionRequest
 	sync           bool
+	dryRun         bool
 }
 
 func (cv *createAppVersionCommand) Run() error {
@@ -29,7 +30,7 @@ func (cv *createAppVersionCommand) Run() error {
 		return err
 	}
 
-	return cv.versionService.CreateAppVersion(ctx, cv.requestPayload, cv.sync)
+	return cv.versionService.CreateAppVersion(ctx, cv.requestPayload, cv.sync, cv.dryRun)
 }
 
 func (cv *createAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
@@ -54,6 +55,7 @@ func (cv *createAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 	if errorutils.CheckError(err) != nil {
 		return err
 	}
+	cv.dryRun = ctx.GetBoolFlagValue(commands.DryRunFlag)
 	return commonCLiCommands.Exec(cv)
 }
 

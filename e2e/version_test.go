@@ -91,6 +91,38 @@ func TestCreateVersion_ApplicationVersion(t *testing.T) {
 	assertVersionContent(t, testPackage, versionContent, statusCode, targetAppKey, targetVersion)
 }
 
+func TestCreateVersion_ApplicationVersion_DryRun(t *testing.T) {
+	// Prepare - create source application with a version
+	sourceAppKey := utils.GenerateUniqueKey("app-version-create-app-version-dryrun")
+	utils.CreateBasicApplication(t, sourceAppKey)
+	defer utils.DeleteApplication(t, sourceAppKey)
+
+	testPackage := utils.GetTestPackage(t)
+	sourceVersion := "1.0.2"
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+	err := utils.AppTrustCli.Exec("version-create", sourceAppKey, sourceVersion, packageFlag)
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, sourceAppKey, sourceVersion)
+
+	// Prepare - create target application
+	targetAppKey := utils.GenerateUniqueKey("app-target-version-dryrun")
+	utils.CreateBasicApplication(t, targetAppKey)
+	defer utils.DeleteApplication(t, targetAppKey)
+
+	targetVersion := "1.0.3"
+
+	// Execute with dry-run flag
+	appVersionFlag := fmt.Sprintf("--source-type-application-versions=application-key=%s, version=%s", sourceAppKey, sourceVersion)
+	err = utils.AppTrustCli.Exec("version-create", targetAppKey, targetVersion, appVersionFlag, "--dry-run")
+	require.NoError(t, err)
+
+	// Assert - version should not exist since it was a dry run
+	_, statusCode, err := utils.GetApplicationVersion(targetAppKey, targetVersion)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, statusCode)
+}
+
 func TestCreateVersion_ReleaseBundle(t *testing.T) {
 	// Prepare
 	appKey := utils.GenerateUniqueKey("app-version-create-release-bundle")
