@@ -5,6 +5,7 @@ type CreateAppVersionRequest struct {
 	Version        string                `json:"version"`
 	Sources        *CreateVersionSources `json:"sources,omitempty"`
 	Tag            string                `json:"tag,omitempty"`
+	Draft          bool                  `json:"draft,omitempty"`
 	Filters        *CreateVersionFilters `json:"filters,omitempty"`
 }
 

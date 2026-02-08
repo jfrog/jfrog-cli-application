@@ -26,6 +26,7 @@ func TestCreateAppVersionCommand(t *testing.T) {
 			request: &model.CreateAppVersionRequest{
 				ApplicationKey: "app-key",
 				Version:        "1.0.0",
+				Draft:          false,
 				Sources: &model.CreateVersionSources{
 					Packages: []model.CreateVersionPackage{{
 						Type:       "type",
@@ -38,7 +39,7 @@ func TestCreateAppVersionCommand(t *testing.T) {
 		},
 		{
 			name:         "context error",
-			request:      &model.CreateAppVersionRequest{ApplicationKey: "app-key", Version: "1.0.0", Sources: &model.CreateVersionSources{Packages: []model.CreateVersionPackage{{Type: "type", Name: "name", Version: "1.0.0", Repository: "repo"}}}},
+			request:      &model.CreateAppVersionRequest{ApplicationKey: "app-key", Version: "1.0.0", Draft: false, Sources: &model.CreateVersionSources{Packages: []model.CreateVersionPackage{{Type: "type", Name: "name", Version: "1.0.0", Repository: "repo"}}}},
 			shouldError:  true,
 			errorMessage: "context error",
 		},
@@ -56,10 +57,10 @@ func TestCreateAppVersionCommand(t *testing.T) {
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if tt.shouldError {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request).
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request, true).
 					Return(errors.New(tt.errorMessage)).Times(1)
 			} else {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request).
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request, true).
 					Return(nil).Times(1)
 			}
 
@@ -67,6 +68,7 @@ func TestCreateAppVersionCommand(t *testing.T) {
 				versionService: mockVersionService,
 				serverDetails:  &config.ServerDetails{Url: "https://example.com"},
 				requestPayload: tt.request,
+				sync:           true,
 			}
 
 			err := cmd.Run()
@@ -116,6 +118,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
 				ctx.AddStringFlag(commands.TagFlag, "release-tag")
+				ctx.AddBoolFlag(commands.DraftFlag, true)
 				ctx.AddStringFlag(commands.SourceTypeBuildsFlag, "name=build1,id=1.0.0,include-deps=true,repo-key=build-info-repo,started=2024-01-15T10:30:00Z;name=build2,id=2.0.0,include-deps=false")
 				ctx.AddStringFlag(commands.SourceTypeReleaseBundlesFlag, "name=rb1,version=1.0.0;name=rb2,version=2.0.0")
 				ctx.AddStringFlag(commands.SourceTypeApplicationVersionsFlag, "application-key=source-app,version=3.2.1")
@@ -126,6 +129,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 				ApplicationKey: "app-key",
 				Version:        "1.0.0",
 				Tag:            "release-tag",
+				Draft:          true,
 				Sources: &model.CreateVersionSources{
 					Builds: []model.CreateVersionBuild{
 						{Name: "build1", Number: "1.0.0", IncludeDependencies: true, RepositoryKey: "build-info-repo", Started: "2024-01-15T10:30:00Z"},
@@ -192,8 +196,8 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			var actualPayload *model.CreateAppVersionRequest
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if !tt.expectsError {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest) error {
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, _ bool) error {
 						actualPayload = req
 						return nil
 					}).Times(1)
@@ -548,9 +552,11 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 		name           string
 		specPath       string
 		args           []string
+		ctxSetup       func(*components.Context)
 		expectsError   bool
 		errorContains  string
 		expectsPayload *model.CreateAppVersionRequest
+		expectsSync    *bool
 	}{
 		{
 			name:     "minimal spec file",
@@ -559,6 +565,7 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			expectsPayload: &model.CreateAppVersionRequest{
 				ApplicationKey: "app-min",
 				Version:        "0.1.0",
+				Draft:          false,
 				Sources: &model.CreateVersionSources{
 					Packages: []model.CreateVersionPackage{{
 						Type:       "npm",
@@ -583,6 +590,7 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			expectsPayload: &model.CreateAppVersionRequest{
 				ApplicationKey: "app-unknown",
 				Version:        "0.2.0",
+				Draft:          false,
 				Sources: &model.CreateVersionSources{
 					Packages: []model.CreateVersionPackage{{
 						Type:       "npm",
@@ -607,6 +615,7 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			expectsPayload: &model.CreateAppVersionRequest{
 				ApplicationKey: "app-artifacts",
 				Version:        "1.0.0",
+				Draft:          false,
 				Sources: &model.CreateVersionSources{
 					Artifacts: []model.CreateVersionArtifact{
 						{
@@ -627,6 +636,105 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			expectsPayload: &model.CreateAppVersionRequest{
 				ApplicationKey: "app-all-sources",
 				Version:        "5.0.0",
+				Draft:          false,
+				Sources: &model.CreateVersionSources{
+					Artifacts: []model.CreateVersionArtifact{
+						{
+							Path:   "repo/path/to/app.jar",
+							SHA256: "abc123def456789",
+						},
+						{
+							Path: "repo/path/to/lib.war",
+						},
+					},
+					Packages: []model.CreateVersionPackage{
+						{
+							Type:       "npm",
+							Name:       "my-package",
+							Version:    "1.2.3",
+							Repository: "npm-local",
+						},
+						{
+							Type:       "docker",
+							Name:       "my-docker-image",
+							Version:    "2.0.0",
+							Repository: "docker-local",
+						},
+					},
+					Builds: []model.CreateVersionBuild{
+						{
+							Name:                "my-build",
+							Number:              "123",
+							IncludeDependencies: true,
+						},
+						{
+							Name:                "another-build",
+							Number:              "456",
+							RepositoryKey:       "build-info",
+							IncludeDependencies: false,
+						},
+					},
+					ReleaseBundles: []model.CreateVersionReleaseBundle{
+						{
+							Name:          "my-release-bundle",
+							Version:       "1.0.0",
+							ProjectKey:    "my-project",
+							RepositoryKey: "rb-repo",
+						},
+						{
+							Name:    "another-bundle",
+							Version: "2.0.0",
+						},
+					},
+					Versions: []model.CreateVersionReference{
+						{
+							ApplicationKey: "dependency-app-1",
+							Version:        "3.0.0",
+						},
+						{
+							ApplicationKey: "dependency-app-2",
+							Version:        "4.5.6",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:     "spec file with draft flag",
+			specPath: "./testfiles/minimal-spec.json",
+			args:     []string{"app-draft-spec", "2.0.0"},
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddBoolFlag(commands.DraftFlag, true)
+			},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-draft-spec",
+				Version:        "2.0.0",
+				Draft:          true,
+				Sources: &model.CreateVersionSources{
+					Packages: []model.CreateVersionPackage{{
+						Type:       "npm",
+						Name:       "pkg-min",
+						Version:    "0.1.0",
+						Repository: "repo-min",
+					}},
+				},
+			},
+		},
+		{
+			name:     "spec file with all flags",
+			specPath: "./testfiles/all-sources-spec.json",
+			args:     []string{"app-all-flags", "7.0.0"},
+			ctxSetup: func(ctx *components.Context) {
+				ctx.AddStringFlag(commands.TagFlag, "v7-release")
+				ctx.AddBoolFlag(commands.DraftFlag, true)
+				ctx.AddBoolFlag(commands.SyncFlag, false)
+			},
+			expectsSync: boolPtr(false),
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-all-flags",
+				Version:        "7.0.0",
+				Tag:            "v7-release",
+				Draft:          true,
 				Sources: &model.CreateVersionSources{
 					Artifacts: []model.CreateVersionArtifact{
 						{
@@ -701,13 +809,18 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			}
 			ctx.AddStringFlag(commands.SpecFlag, tt.specPath)
 			ctx.AddStringFlag("url", "https://example.com")
+			if tt.ctxSetup != nil {
+				tt.ctxSetup(ctx)
+			}
 
 			var actualPayload *model.CreateAppVersionRequest
+			var capturedSync bool
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if !tt.expectsError {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest) error {
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, sync bool) error {
 						actualPayload = req
+						capturedSync = sync
 						return nil
 					}).Times(1)
 			}
@@ -726,9 +839,73 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectsPayload, actualPayload)
+				if tt.expectsSync != nil {
+					assert.Equal(t, *tt.expectsSync, capturedSync)
+				}
 			}
 		})
 	}
+}
+
+func TestCreateAppVersionCommand_SyncFlagSuite(t *testing.T) {
+	tests := []struct {
+		name        string
+		setSync     *bool
+		expectsSync bool
+	}{
+		{
+			name:        "defaults to true when not set",
+			setSync:     nil,
+			expectsSync: true,
+		},
+		{
+			name:        "explicit true",
+			setSync:     boolPtr(true),
+			expectsSync: true,
+		},
+		{
+			name:        "explicit false",
+			setSync:     boolPtr(false),
+			expectsSync: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			ctx := &components.Context{
+				Arguments: []string{"app-sync-test", "1.0.0"},
+			}
+			ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+			ctx.AddStringFlag("url", "https://example.com")
+			if tt.setSync != nil {
+				ctx.AddBoolFlag(commands.SyncFlag, *tt.setSync)
+			}
+
+			var capturedSync bool
+			mockVersionService := mockversions.NewMockVersionService(ctrl)
+			mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, sync bool) error {
+					capturedSync = sync
+					return nil
+				}).Times(1)
+
+			cmd := &createAppVersionCommand{
+				versionService: mockVersionService,
+				serverDetails:  &config.ServerDetails{Url: "https://example.com"},
+			}
+
+			err := cmd.prepareAndRunCommand(ctx)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectsSync, capturedSync)
+		})
+	}
+}
+
+func boolPtr(b bool) *bool {
+	return &b
 }
 
 func TestValidateCreateAppVersionContext(t *testing.T) {
