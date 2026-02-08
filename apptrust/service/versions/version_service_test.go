@@ -23,6 +23,7 @@ func TestCreateAppVersion(t *testing.T) {
 	tests := []struct {
 		name             string
 		request          *model.CreateAppVersionRequest
+		sync             bool
 		mockResponse     *http.Response
 		mockResponseBody string
 		mockError        error
@@ -31,7 +32,17 @@ func TestCreateAppVersion(t *testing.T) {
 		{
 			name:             "success",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			sync:             true,
 			mockResponse:     &http.Response{StatusCode: 201},
+			mockResponseBody: "{}",
+			mockError:        nil,
+			expectedError:    "",
+		},
+		{
+			name:             "success with sync=false",
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			sync:             false,
+			mockResponse:     &http.Response{StatusCode: 202},
 			mockResponseBody: "{}",
 			mockError:        nil,
 			expectedError:    "",
@@ -39,6 +50,7 @@ func TestCreateAppVersion(t *testing.T) {
 		{
 			name:             "failure",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			sync:             true,
 			mockResponse:     &http.Response{StatusCode: 400},
 			mockResponseBody: "error",
 			mockError:        nil,
@@ -47,6 +59,7 @@ func TestCreateAppVersion(t *testing.T) {
 		{
 			name:             "http client error",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			sync:             true,
 			mockResponse:     nil,
 			mockResponseBody: "",
 			mockError:        errors.New("http client error"),
@@ -57,13 +70,13 @@ func TestCreateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications/test-app/versions/", tt.request, map[string]string{"async": "false"}).
+			mockHttpClient.EXPECT().Post("/v1/applications/test-app/versions/", tt.request, map[string]string{"async": strconv.FormatBool(!tt.sync)}).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			err := service.CreateAppVersion(mockCtx, tt.request)
+			err := service.CreateAppVersion(mockCtx, tt.request, tt.sync)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
