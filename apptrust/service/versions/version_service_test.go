@@ -23,6 +23,7 @@ func TestCreateAppVersion(t *testing.T) {
 	tests := []struct {
 		name             string
 		request          *model.CreateAppVersionRequest
+		dryRun           bool
 		mockResponse     *http.Response
 		mockResponseBody string
 		mockError        error
@@ -31,6 +32,25 @@ func TestCreateAppVersion(t *testing.T) {
 		{
 			name:             "success",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			dryRun:           false,
+			mockResponse:     &http.Response{StatusCode: 201},
+			mockResponseBody: "{}",
+			mockError:        nil,
+			expectedError:    "",
+		},
+		{
+			name:             "success with dry-run (200 OK)",
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			dryRun:           true,
+			mockResponse:     &http.Response{StatusCode: 200},
+			mockResponseBody: "{\"validation\": \"passed\"}",
+			mockError:        nil,
+			expectedError:    "",
+		},
+		{
+			name:             "success with dry-run (201 Created)",
+			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			dryRun:           true,
 			mockResponse:     &http.Response{StatusCode: 201},
 			mockResponseBody: "{}",
 			mockError:        nil,
@@ -39,6 +59,7 @@ func TestCreateAppVersion(t *testing.T) {
 		{
 			name:             "failure",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			dryRun:           false,
 			mockResponse:     &http.Response{StatusCode: 400},
 			mockResponseBody: "error",
 			mockError:        nil,
@@ -47,6 +68,7 @@ func TestCreateAppVersion(t *testing.T) {
 		{
 			name:             "http client error",
 			request:          &model.CreateAppVersionRequest{ApplicationKey: "test-app", Version: "1.0.0"},
+			dryRun:           false,
 			mockResponse:     nil,
 			mockResponseBody: "",
 			mockError:        errors.New("http client error"),
@@ -57,13 +79,15 @@ func TestCreateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Post("/v1/applications/test-app/versions/", tt.request, map[string]string{"async": "false"}).
-				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+			mockHttpClient.EXPECT().Post("/v1/applications/test-app/versions/", tt.request, map[string]string{
+				"async":   "false",
+				"dry_run": strconv.FormatBool(tt.dryRun),
+			}).Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			err := service.CreateAppVersion(mockCtx, tt.request)
+			err := service.CreateAppVersion(mockCtx, tt.request, tt.dryRun)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
