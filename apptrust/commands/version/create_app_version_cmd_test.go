@@ -18,6 +18,7 @@ func TestCreateAppVersionCommand(t *testing.T) {
 	tests := []struct {
 		name         string
 		request      *model.CreateAppVersionRequest
+		dryRun       bool
 		shouldError  bool
 		errorMessage string
 	}{
@@ -36,10 +37,28 @@ func TestCreateAppVersionCommand(t *testing.T) {
 					}},
 				},
 			},
+			dryRun: false,
+		},
+		{
+			name: "success with dry-run",
+			request: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-key",
+				Version:        "1.0.0",
+				Sources: &model.CreateVersionSources{
+					Packages: []model.CreateVersionPackage{{
+						Type:       "type",
+						Name:       "name",
+						Version:    "1.0.0",
+						Repository: "repo",
+					}},
+				},
+			},
+			dryRun: true,
 		},
 		{
 			name:         "context error",
 			request:      &model.CreateAppVersionRequest{ApplicationKey: "app-key", Version: "1.0.0", Draft: false, Sources: &model.CreateVersionSources{Packages: []model.CreateVersionPackage{{Type: "type", Name: "name", Version: "1.0.0", Repository: "repo"}}}},
+			dryRun:       false,
 			shouldError:  true,
 			errorMessage: "context error",
 		},
@@ -57,10 +76,10 @@ func TestCreateAppVersionCommand(t *testing.T) {
 
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if tt.shouldError {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request, true).
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request, true, tt.dryRun).
 					Return(errors.New(tt.errorMessage)).Times(1)
 			} else {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request, true).
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), tt.request, true, tt.dryRun).
 					Return(nil).Times(1)
 			}
 
@@ -69,6 +88,7 @@ func TestCreateAppVersionCommand(t *testing.T) {
 				serverDetails:  &config.ServerDetails{Url: "https://example.com"},
 				requestPayload: tt.request,
 				sync:           true,
+				dryRun:         tt.dryRun,
 			}
 
 			err := cmd.Run()
@@ -196,8 +216,8 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			var actualPayload *model.CreateAppVersionRequest
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if !tt.expectsError {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, _ bool) error {
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, _ bool, _ bool) error {
 						actualPayload = req
 						return nil
 					}).Times(1)
@@ -807,8 +827,8 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 			var capturedSync bool
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
 			if !tt.expectsError {
-				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any()).
-					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, sync bool) error {
+				mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, sync, dryRun bool) error {
 						actualPayload = req
 						capturedSync = sync
 						return nil
@@ -876,8 +896,8 @@ func TestCreateAppVersionCommand_SyncFlagSuite(t *testing.T) {
 
 			var capturedSync bool
 			mockVersionService := mockversions.NewMockVersionService(ctrl)
-			mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any()).
-				DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, sync bool) error {
+			mockVersionService.EXPECT().CreateAppVersion(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				DoAndReturn(func(_ interface{}, req *model.CreateAppVersionRequest, sync, dryRun bool) error {
 					capturedSync = sync
 					return nil
 				}).Times(1)
