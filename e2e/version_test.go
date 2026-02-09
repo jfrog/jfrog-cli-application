@@ -3,9 +3,11 @@
 package e2e
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/jfrog/jfrog-cli-application/e2e/utils"
 	"github.com/stretchr/testify/assert"
@@ -137,12 +139,62 @@ func TestCreateVersion_Build(t *testing.T) {
 	assertVersionContent(t, testPackage, versionContent, statusCode, appKey, version)
 }
 
+func TestCreateVersion_Draft(t *testing.T) {
+	t.Skip("Skipping draft version creation test")
+	appKey := utils.GenerateUniqueKey("app-version-create-draft")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	testPackage := utils.GetTestPackage(t)
+	version := utils.GenerateUniqueKey("draft")
+
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag, "--draft")
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+
+	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Equal(t, utils.StatusDraft, versionContent.Status)
+}
+
+func TestCreateVersion_Async(t *testing.T) {
+	appKey := utils.GenerateUniqueKey("app-version-create-async")
+	utils.CreateBasicApplication(t, appKey)
+
+	testPackage := utils.GetTestPackage(t)
+	version := utils.GenerateUniqueKey("async")
+	defer utils.DeleteApplication(t, appKey)
+
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+
+	output := utils.AppTrustCli.RunCliCmdWithOutput(t, "version-create", appKey, version, packageFlag, "--sync=false")
+	assert.NotEmpty(t, output)
+	defer func() {
+		utils.WaitForVersionCreation(t, appKey, version, 3*time.Second, 500*time.Millisecond)
+		utils.DeleteApplicationVersion(t, appKey, version)
+	}()
+
+	var response struct {
+		Status string `json:"status"`
+	}
+	err := json.Unmarshal([]byte(output), &response)
+	require.NoError(t, err, "failed to parse CLI output as JSON: %s", output)
+	assert.Contains(t, []string{utils.StatusInProgress, utils.StatusStarted}, response.Status)
+}
+
 func assertVersionContent(t *testing.T, expectedPackage *utils.TestPackageResources, versionContent *utils.VersionContentResponse, statusCode int, appKey, appVersion string) {
 	assert.Equal(t, http.StatusOK, statusCode)
 	require.NotNil(t, versionContent)
 	assert.Equal(t, appKey, versionContent.ApplicationKey)
 	assert.Equal(t, appVersion, versionContent.Version)
-	assert.Equal(t, "COMPLETED", versionContent.Status)
+	assert.Equal(t, utils.StatusCompleted, versionContent.Status)
 	assert.Len(t, versionContent.Releasables, 1)
 	assert.Equal(t, expectedPackage.PackageType, versionContent.Releasables[0].PackageType)
 	assert.Equal(t, expectedPackage.PackageName, versionContent.Releasables[0].Name)

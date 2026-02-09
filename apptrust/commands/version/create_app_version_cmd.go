@@ -26,6 +26,7 @@ type createAppVersionCommand struct {
 	versionService versions.VersionService
 	serverDetails  *coreConfig.ServerDetails
 	requestPayload *model.CreateAppVersionRequest
+	sync           bool
 }
 
 type createVersionSpec struct {
@@ -43,7 +44,7 @@ func (cv *createAppVersionCommand) Run() error {
 		return err
 	}
 
-	return cv.versionService.CreateAppVersion(ctx, cv.requestPayload)
+	return cv.versionService.CreateAppVersion(ctx, cv.requestPayload, cv.sync)
 }
 
 func (cv *createAppVersionCommand) ServerDetails() (*coreConfig.ServerDetails, error) {
@@ -63,6 +64,7 @@ func (cv *createAppVersionCommand) prepareAndRunCommand(ctx *components.Context)
 		return err
 	}
 	cv.serverDetails = serverDetails
+	cv.sync = ctx.GetBoolTFlagValue(commands.SyncFlag)
 	cv.requestPayload, err = cv.buildRequestPayload(ctx)
 	if errorutils.CheckError(err) != nil {
 		return err
@@ -96,6 +98,7 @@ func (cv *createAppVersionCommand) buildRequestPayload(ctx *components.Context) 
 		Version:        ctx.Arguments[1],
 		Sources:        sources,
 		Tag:            ctx.GetStringFlagValue(commands.TagFlag),
+		Draft:          ctx.GetBoolFlagValue(commands.DraftFlag),
 		Filters:        filters,
 	}, nil
 }
