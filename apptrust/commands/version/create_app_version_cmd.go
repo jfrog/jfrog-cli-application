@@ -1,8 +1,6 @@
 package version
 
 import (
-	"strings"
-
 	"github.com/jfrog/jfrog-cli-application/apptrust/service/versions"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/app"
@@ -82,14 +80,7 @@ func validateCreateAppVersionContext(ctx *components.Context) error {
 	if len(ctx.Arguments) != 2 {
 		return pluginsCommon.WrongNumberOfArgumentsHandler(ctx)
 	}
-
-	if !hasSourceFlags(ctx) {
-		return errorutils.CheckErrorf(
-			"At least one source flag is required to create an application version. Please provide --%s or at least one of the following: --%s, --%s, --%s, --%s, --%s.",
-			commands.SpecFlag, commands.SourceTypeBuildsFlag, commands.SourceTypeReleaseBundlesFlag, commands.SourceTypeApplicationVersionsFlag, commands.SourceTypePackagesFlag, commands.SourceTypeArtifactsFlag)
-	}
-
-	return nil
+	return validateAtLeastOneSourceFlag(ctx)
 }
 
 func GetCreateAppVersionCommand(appContext app.Context) components.Command {
@@ -116,39 +107,3 @@ func GetCreateAppVersionCommand(appContext app.Context) components.Command {
 	}
 }
 
-// Returns error if both --spec and any other source flag or filter flag are set
-func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
-	if ctx.IsFlagSet(commands.SpecFlag) {
-		otherSourceFlags := []string{
-			commands.SourceTypeBuildsFlag,
-			commands.SourceTypeReleaseBundlesFlag,
-			commands.SourceTypeApplicationVersionsFlag,
-			commands.SourceTypePackagesFlag,
-			commands.SourceTypeArtifactsFlag,
-		}
-		for _, flag := range otherSourceFlags {
-			if ctx.IsFlagSet(flag) {
-				return errorutils.CheckErrorf("--spec provided: all other source flags (e.g., --%s) are not allowed.", flag)
-			}
-		}
-		if ctx.IsFlagSet(commands.IncludeFilterFlag) {
-			return errorutils.CheckErrorf("--spec provided: filter flags (e.g., --%s) are not allowed.", commands.IncludeFilterFlag)
-		}
-		if ctx.IsFlagSet(commands.ExcludeFilterFlag) {
-			return errorutils.CheckErrorf("--spec provided: filter flags (e.g., --%s) are not allowed.", commands.ExcludeFilterFlag)
-		}
-	}
-	return nil
-}
-
-func validateRequiredFieldsInMap(m map[string]string, requiredFields ...string) error {
-	if m == nil {
-		return errorutils.CheckErrorf("missing required fields: %v", strings.Join(requiredFields, ", "))
-	}
-	for _, field := range requiredFields {
-		if _, exists := m[field]; !exists {
-			return errorutils.CheckErrorf("missing required field: %s", field)
-		}
-	}
-	return nil
-}

@@ -414,7 +414,7 @@ func TestUpdateAppVersion(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
-			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0", tt.request).
+			mockHttpClient.EXPECT().Patch("/v1/applications/test-app/versions/1.0.0", tt.request, nil).
 				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
 
 			mockCtx := mockservice.NewMockContext(ctrl)
@@ -519,6 +519,139 @@ func TestRollbackAppVersion(t *testing.T) {
 			if tt.expectedError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "failed to rollback app version")
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateAppVersionSources(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewVersionService()
+
+	tests := []struct {
+		name             string
+		request          *model.UpdateVersionSourcesRequest
+		sync             bool
+		dryRun           bool
+		failFast         bool
+		mockResponse     *http.Response
+		mockResponseBody string
+		mockError        error
+		expectError      bool
+		errorMsg         string
+		expectedParams   map[string]string
+	}{
+		{
+			name: "success - sync with packages",
+			request: &model.UpdateVersionSourcesRequest{
+				AddSources: &model.CreateVersionSources{
+					Packages: []model.CreateVersionPackage{
+						{Type: "npm", Name: "pkg", Version: "1.0.0", Repository: "npm-local"},
+					},
+				},
+			},
+			sync:             true,
+			dryRun:           false,
+			failFast:         true,
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
+			mockResponseBody: "{}",
+			expectError:      false,
+			expectedParams:   map[string]string{"async": "false", "dry_run": "false", "fail_fast": "true"},
+		},
+		{
+			name: "success - async with builds",
+			request: &model.UpdateVersionSourcesRequest{
+				AddSources: &model.CreateVersionSources{
+					Builds: []model.CreateVersionBuild{
+						{Name: "build1", Number: "100"},
+					},
+				},
+			},
+			sync:             false,
+			dryRun:           false,
+			failFast:         true,
+			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponseBody: `{"operation_id":"op-123"}`,
+			expectError:      false,
+			expectedParams:   map[string]string{"async": "true", "dry_run": "false", "fail_fast": "true"},
+		},
+		{
+			name: "success - dry run",
+			request: &model.UpdateVersionSourcesRequest{
+				AddSources: &model.CreateVersionSources{
+					Packages: []model.CreateVersionPackage{
+						{Type: "npm", Name: "pkg", Version: "1.0.0", Repository: "npm-local"},
+					},
+				},
+			},
+			sync:             true,
+			dryRun:           true,
+			failFast:         false,
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
+			mockResponseBody: "{}",
+			expectError:      false,
+			expectedParams:   map[string]string{"async": "false", "dry_run": "true", "fail_fast": "false"},
+		},
+		{
+			name: "failure - 400",
+			request: &model.UpdateVersionSourcesRequest{
+				AddSources: &model.CreateVersionSources{
+					Packages: []model.CreateVersionPackage{
+						{Type: "npm", Name: "pkg", Version: "1.0.0", Repository: "npm-local"},
+					},
+				},
+			},
+			sync:             true,
+			dryRun:           false,
+			failFast:         true,
+			mockResponse:     &http.Response{StatusCode: http.StatusBadRequest},
+			mockResponseBody: "bad request",
+			expectError:      true,
+			errorMsg:         "failed to update app version sources",
+			expectedParams:   map[string]string{"async": "false", "dry_run": "false", "fail_fast": "true"},
+		},
+		{
+			name: "http client error",
+			request: &model.UpdateVersionSourcesRequest{
+				AddSources: &model.CreateVersionSources{
+					Packages: []model.CreateVersionPackage{
+						{Type: "npm", Name: "pkg", Version: "1.0.0", Repository: "npm-local"},
+					},
+				},
+			},
+			sync:           true,
+			dryRun:         false,
+			failFast:       true,
+			mockResponse:   nil,
+			mockError:      errors.New("http client error"),
+			expectError:    true,
+			errorMsg:       "http client error",
+			expectedParams: map[string]string{"async": "false", "dry_run": "false", "fail_fast": "true"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
+			mockHttpClient.EXPECT().Patch(
+				"/v1/applications/test-app/versions/1.0.0",
+				tt.request,
+				tt.expectedParams,
+			).Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+
+			mockCtx := mockservice.NewMockContext(ctrl)
+			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).AnyTimes()
+
+			err := service.UpdateAppVersionSources(mockCtx, "test-app", "1.0.0", tt.request, tt.sync, tt.dryRun, tt.failFast)
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
 			} else {
 				assert.NoError(t, err)
 			}

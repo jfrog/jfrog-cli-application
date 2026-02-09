@@ -27,6 +27,7 @@ func GetJfrogCliApptrustApp() components.App {
 				version.GetReleaseAppVersionCommand(appContext),
 				version.GetDeleteAppVersionCommand(appContext),
 				version.GetUpdateAppVersionCommand(appContext),
+				version.GetUpdateAppVersionSourcesCommand(appContext),
 				packagecmds.GetBindPackageCommand(appContext),
 				packagecmds.GetUnbindPackageCommand(appContext),
 				application.GetCreateAppCommand(appContext),

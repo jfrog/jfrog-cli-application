@@ -20,6 +20,7 @@ type VersionService interface {
 	RollbackAppVersion(ctx service.Context, applicationKey string, version string, request *model.RollbackAppVersionRequest, sync bool) error
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
 	UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error
+	UpdateAppVersionSources(ctx service.Context, applicationKey string, version string, request *model.UpdateVersionSourcesRequest, sync bool, dryRun bool, failFast bool) error
 }
 
 type versionService struct{}
@@ -122,7 +123,7 @@ func (vs *versionService) DeleteAppVersion(ctx service.Context, applicationKey, 
 
 func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
-	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request)
+	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request, nil)
 	if err != nil {
 		return err
 	}
@@ -133,5 +134,34 @@ func (vs *versionService) UpdateAppVersion(ctx service.Context, applicationKey s
 	}
 
 	log.Info("Application version updated successfully.")
+	return nil
+}
+
+func (vs *versionService) UpdateAppVersionSources(ctx service.Context, applicationKey string, version string, request *model.UpdateVersionSourcesRequest, sync bool, dryRun bool, failFast bool) error {
+	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s", applicationKey, version)
+
+	params := map[string]string{
+		"async":     strconv.FormatBool(!sync),
+		"dry_run":   strconv.FormatBool(dryRun),
+		"fail_fast": strconv.FormatBool(failFast),
+	}
+
+	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, request, params)
+	if err != nil {
+		return err
+	}
+
+	expectedStatusCode := http.StatusOK
+	if !sync {
+		expectedStatusCode = http.StatusAccepted
+	}
+
+	if response.StatusCode != expectedStatusCode {
+		return fmt.Errorf("failed to update app version sources. Status code: %d. \n%s",
+			response.StatusCode, responseBody)
+	}
+
+	log.Info("Application version sources updated successfully.")
+	log.Output(string(responseBody))
 	return nil
 }

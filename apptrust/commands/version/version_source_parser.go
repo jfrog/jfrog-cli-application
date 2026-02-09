@@ -3,6 +3,7 @@ package version
 import (
 	"encoding/json"
 	"strconv"
+	"strings"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
@@ -20,6 +21,53 @@ type versionSpec struct {
 	ReleaseBundles []model.CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
 	Versions       []model.CreateVersionReference     `json:"versions,omitempty"`
 	Filters        *model.CreateVersionFilters        `json:"filters,omitempty"`
+}
+
+// validateNoSpecAndFlagsTogether returns error if both --spec and any other source flag or filter flag are set.
+func validateNoSpecAndFlagsTogether(ctx *components.Context) error {
+	if ctx.IsFlagSet(commands.SpecFlag) {
+		otherSourceFlags := []string{
+			commands.SourceTypeBuildsFlag,
+			commands.SourceTypeReleaseBundlesFlag,
+			commands.SourceTypeApplicationVersionsFlag,
+			commands.SourceTypePackagesFlag,
+			commands.SourceTypeArtifactsFlag,
+		}
+		for _, flag := range otherSourceFlags {
+			if ctx.IsFlagSet(flag) {
+				return errorutils.CheckErrorf("--spec provided: all other source flags (e.g., --%s) are not allowed.", flag)
+			}
+		}
+		if ctx.IsFlagSet(commands.IncludeFilterFlag) {
+			return errorutils.CheckErrorf("--spec provided: filter flags (e.g., --%s) are not allowed.", commands.IncludeFilterFlag)
+		}
+		if ctx.IsFlagSet(commands.ExcludeFilterFlag) {
+			return errorutils.CheckErrorf("--spec provided: filter flags (e.g., --%s) are not allowed.", commands.ExcludeFilterFlag)
+		}
+	}
+	return nil
+}
+
+// validateAtLeastOneSourceFlag returns error if no source flags or --spec is set.
+func validateAtLeastOneSourceFlag(ctx *components.Context) error {
+	if !hasSourceFlags(ctx) {
+		return errorutils.CheckErrorf(
+			"At least one source flag is required. Please provide --%s or at least one of the following: --%s, --%s, --%s, --%s, --%s.",
+			commands.SpecFlag, commands.SourceTypeBuildsFlag, commands.SourceTypeReleaseBundlesFlag, commands.SourceTypeApplicationVersionsFlag, commands.SourceTypePackagesFlag, commands.SourceTypeArtifactsFlag)
+	}
+	return nil
+}
+
+func validateRequiredFieldsInMap(m map[string]string, requiredFields ...string) error {
+	if m == nil {
+		return errorutils.CheckErrorf("missing required fields: %v", strings.Join(requiredFields, ", "))
+	}
+	for _, field := range requiredFields {
+		if _, exists := m[field]; !exists {
+			return errorutils.CheckErrorf("missing required field: %s", field)
+		}
+	}
+	return nil
 }
 
 // hasSourceFlags returns true if any source flag or --spec is set in the context.
