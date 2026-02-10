@@ -3,6 +3,7 @@ module github.com/jfrog/jfrog-cli-application
 go 1.24.6
 
 require (
+	github.com/jfrog/build-info-go v1.10.16
 	github.com/jfrog/jfrog-cli-core/v2 v2.59.5
 	github.com/jfrog/jfrog-client-go v1.54.5
 	github.com/stretchr/testify v1.10.0
@@ -30,7 +31,7 @@ require (
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.2 // indirect
-	github.com/go-git/go-git/v5 v5.14.0 // indirect
+	github.com/go-git/go-git/v5 v5.16.5 // indirect
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
@@ -41,7 +42,6 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.6.5 // indirect
 	github.com/jfrog/archiver/v3 v3.6.1 // indirect
-	github.com/jfrog/build-info-go v1.10.16 // indirect
 	github.com/jfrog/gofrog v1.7.6 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
