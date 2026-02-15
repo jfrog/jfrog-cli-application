@@ -88,9 +88,9 @@ func (mr *MockApptrustHttpClientMockRecorder) GetHttpClient() *gomock.Call {
 }
 
 // Patch mocks base method.
-func (m *MockApptrustHttpClient) Patch(path string, requestBody any) (*http.Response, []byte, error) {
+func (m *MockApptrustHttpClient) Patch(path string, requestBody any, params map[string]string) (*http.Response, []byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Patch", path, requestBody)
+	ret := m.ctrl.Call(m, "Patch", path, requestBody, params)
 	ret0, _ := ret[0].(*http.Response)
 	ret1, _ := ret[1].([]byte)
 	ret2, _ := ret[2].(error)
@@ -98,9 +98,9 @@ func (m *MockApptrustHttpClient) Patch(path string, requestBody any) (*http.Resp
 }
 
 // Patch indicates an expected call of Patch.
-func (mr *MockApptrustHttpClientMockRecorder) Patch(path, requestBody any) *gomock.Call {
+func (mr *MockApptrustHttpClientMockRecorder) Patch(path, requestBody, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Patch", reflect.TypeOf((*MockApptrustHttpClient)(nil).Patch), path, requestBody)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Patch", reflect.TypeOf((*MockApptrustHttpClient)(nil).Patch), path, requestBody, params)
 }
 
 // Post mocks base method.

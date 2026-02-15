@@ -171,7 +171,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions, --source-type-packages, --source-type-artifacts.",
+			errorContains:  "At least one source flag is required.",
 		},
 		{
 			name: "empty flags",
@@ -180,7 +180,7 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: nil,
 			expectsError:   true,
-			errorContains:  "At least one source flag is required to create an application version. Please provide --spec or at least one of the following: --source-type-builds, --source-type-release-bundles, --source-type-application-versions, --source-type-packages, --source-type-artifacts.",
+			errorContains:  "At least one source flag is required.",
 		},
 	}
 
@@ -222,8 +222,6 @@ func TestCreateAppVersionCommand_FlagsSuite(t *testing.T) {
 }
 
 func TestParseBuilds(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name           string
 		input          string
@@ -275,7 +273,7 @@ func TestParseBuilds(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			builds, err := cmd.parseBuilds(tt.input)
+			builds, err := parseBuilds(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -290,8 +288,6 @@ func TestParseBuilds(t *testing.T) {
 }
 
 func TestParseReleaseBundles(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name                   string
 		input                  string
@@ -344,7 +340,7 @@ func TestParseReleaseBundles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rbs, err := cmd.parseReleaseBundles(tt.input)
+			rbs, err := parseReleaseBundles(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -359,8 +355,6 @@ func TestParseReleaseBundles(t *testing.T) {
 }
 
 func TestParseSourceVersions(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name                   string
 		input                  string
@@ -405,7 +399,7 @@ func TestParseSourceVersions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svs, err := cmd.parseSourceVersions(tt.input)
+			svs, err := parseSourceVersions(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -420,8 +414,6 @@ func TestParseSourceVersions(t *testing.T) {
 }
 
 func TestParsePackages(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name             string
 		input            string
@@ -478,7 +470,7 @@ func TestParsePackages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			packages, err := cmd.parsePackages(tt.input)
+			packages, err := parsePackages(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -493,8 +485,6 @@ func TestParsePackages(t *testing.T) {
 }
 
 func TestParseArtifacts(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name              string
 		input             string
@@ -533,7 +523,7 @@ func TestParseArtifacts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			artifacts, err := cmd.parseArtifacts(tt.input)
+			artifacts, err := parseArtifacts(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -1182,8 +1172,6 @@ func TestValidateRequiredFieldsInMap(t *testing.T) {
 }
 
 func TestParseFilters(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name            string
 		input           []string
@@ -1309,7 +1297,7 @@ func TestParseFilters(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			filters, err := cmd.parseFilters(tt.input)
+			filters, err := parseFilters(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -1331,8 +1319,6 @@ func TestParseFilters(t *testing.T) {
 }
 
 func TestBuildFiltersFromFlags(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name            string
 		ctxSetup        func(*components.Context)
@@ -1423,7 +1409,7 @@ func TestBuildFiltersFromFlags(t *testing.T) {
 			ctx := &components.Context{}
 			tt.ctxSetup(ctx)
 
-			filters, err := cmd.buildFiltersFromFlags(ctx)
+			filters, err := buildFiltersFromFlags(ctx)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {
@@ -1462,8 +1448,6 @@ func TestBuildFiltersFromFlags(t *testing.T) {
 }
 
 func TestLoadFromSpec_WithFilters(t *testing.T) {
-	cmd := &createAppVersionCommand{}
-
 	tests := []struct {
 		name            string
 		specPath        string
@@ -1522,7 +1506,7 @@ func TestLoadFromSpec_WithFilters(t *testing.T) {
 			ctx.AddStringFlag(commands.SpecFlag, tt.specPath)
 			ctx.AddStringFlag("url", "https://example.com")
 
-			sources, filters, err := cmd.loadFromSpec(ctx)
+			sources, filters, err := loadSourcesFromSpec(ctx)
 			if tt.expectError {
 				assert.Error(t, err)
 				if tt.errorContains != "" {

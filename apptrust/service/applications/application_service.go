@@ -43,7 +43,7 @@ func (as *applicationService) CreateApplication(ctx service.Context, requestBody
 
 func (as *applicationService) UpdateApplication(ctx service.Context, requestBody *model.AppDescriptor) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s", requestBody.ApplicationKey)
-	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, requestBody)
+	response, responseBody, err := ctx.GetHttpClient().Patch(endpoint, requestBody, nil)
 	if err != nil {
 		return err
 	}

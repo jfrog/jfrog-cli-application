@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -232,6 +233,51 @@ func TestUpdateVersion(t *testing.T) {
 	assert.Equal(t, appKey, versionContent.ApplicationKey)
 	assert.Equal(t, version, versionContent.Version)
 	assert.Equal(t, tag, versionContent.Tag)
+}
+
+func TestUpdateDraftVersionSources(t *testing.T) {
+	appKey := utils.GenerateUniqueKey("app-version-update-sources")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+	testPackage := utils.GetTestPackage(t)
+	version := "1.0.6"
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag, "--draft")
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+	artifactPath := utils.GetTestArtifact(t)
+	artifactFlag := fmt.Sprintf("--source-type-artifacts=path=%s", artifactPath)
+
+	err = utils.AppTrustCli.Exec("version-update-sources", appKey, version, artifactFlag)
+	require.NoError(t, err)
+
+	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Contains(t, utils.StatusDraft, versionContent.Status)
+	var artifactPaths []string
+	for _, r := range versionContent.Releasables {
+		for _, a := range r.Artifacts {
+			artifactPaths = append(artifactPaths, a.Path)
+		}
+	}
+	assert.True(t, containsPath(artifactPaths, testPackage.PackagePath),
+		"expected package path %q in version releasables (got %v)", testPackage.PackagePath, artifactPaths)
+	assert.True(t, containsPath(artifactPaths, artifactPath),
+		"expected artifact path %q in version releasables (got %v)", artifactPath, artifactPaths)
+}
+
+func containsPath(paths []string, target string) bool {
+	for _, path := range paths {
+		if strings.Contains(target, path) {
+			return true
+		}
+	}
+	return false
 }
 
 func TestDeleteVersion(t *testing.T) {

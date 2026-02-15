@@ -5,6 +5,7 @@ package utils
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -31,6 +32,30 @@ func createNpmRepo(t *testing.T) string {
 	err := servicesManager.CreateLocalRepository().Npm(localRepoConfig)
 	require.NoError(t, err)
 	return repoKey
+}
+
+var genericRepoKey string
+
+func createGenericRepo(t *testing.T) string {
+	servicesManager := getArtifactoryServicesManager(t)
+	genericRepoKey = GetTestProjectKey(t) + "-generic-local"
+	localRepoConfig := services.NewGenericLocalRepositoryParams()
+	localRepoConfig.ProjectKey = GetTestProjectKey(t)
+	localRepoConfig.Key = genericRepoKey
+	err := servicesManager.CreateLocalRepository().Generic(localRepoConfig)
+	require.NoError(t, err)
+	return genericRepoKey
+}
+
+func deleteGenericRepo() {
+	if genericRepoKey == "" || artifactoryServicesManager == nil {
+		return
+	}
+
+	err := artifactoryServicesManager.DeleteRepository(genericRepoKey)
+	if err != nil {
+		log.Error("Failed to delete generic repo", err)
+	}
 }
 
 func deleteNpmRepo() {
@@ -98,6 +123,31 @@ func uploadPackageToArtifactory(t *testing.T, repoKey, buildName, buildNumber st
 	reindexRepo(t, repoKey)
 
 	return artifactDetails.Checksums.Sha256
+}
+
+func uploadSimpleFileToArtifactory(t *testing.T, repoKey, targetFileName string) string {
+	tmpFile, err := os.CreateTemp("", "e2e-artifact-*.txt")
+	require.NoError(t, err)
+	_, err = tmpFile.WriteString("test-artifact-content")
+	require.NoError(t, err)
+	err = tmpFile.Close()
+	require.NoError(t, err)
+	defer os.Remove(tmpFile.Name())
+
+	targetPath := repoKey + "/" + targetFileName
+	servicesManager := getArtifactoryServicesManager(t)
+	uploadParams := services.NewUploadParams()
+	uploadParams.Pattern = tmpFile.Name()
+	uploadParams.Target = targetPath
+	uploadParams.Flat = true
+	summary, err := servicesManager.UploadFilesWithSummary(artifactory.UploadServiceOptions{FailFast: false}, uploadParams)
+	require.NoError(t, err)
+	require.Equal(t, 1, summary.TotalSucceeded, "Expected exactly one uploaded file")
+	require.Equal(t, 0, summary.TotalFailed, "Expected zero failed uploads")
+	err = summary.Close()
+	require.NoError(t, err)
+
+	return targetPath
 }
 
 func reindexRepo(t *testing.T, repoKey string) {

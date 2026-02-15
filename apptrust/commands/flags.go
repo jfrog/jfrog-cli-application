@@ -8,18 +8,19 @@ import (
 )
 
 const (
-	Ping            = "ping"
-	VersionCreate   = "version-create"
-	VersionPromote  = "version-promote"
-	VersionRollback = "version-rollback"
-	VersionDelete   = "version-delete"
-	VersionRelease  = "version-release"
-	VersionUpdate   = "version-update"
-	PackageBind     = "package-bind"
-	PackageUnbind   = "package-unbind"
-	AppCreate       = "app-create"
-	AppUpdate       = "app-update"
-	AppDelete       = "app-delete"
+	Ping                 = "ping"
+	VersionCreate        = "version-create"
+	VersionPromote       = "version-promote"
+	VersionRollback      = "version-rollback"
+	VersionDelete        = "version-delete"
+	VersionRelease       = "version-release"
+	VersionUpdate        = "version-update"
+	VersionUpdateSources = "version-update-sources"
+	PackageBind          = "package-bind"
+	PackageUnbind        = "package-unbind"
+	AppCreate            = "app-create"
+	AppUpdate            = "app-update"
+	AppDelete            = "app-delete"
 )
 
 const (
@@ -44,6 +45,7 @@ const (
 	SyncFlag                          = "sync"
 	PromotionTypeFlag                 = "promotion-type"
 	DryRunFlag                        = "dry-run"
+	FailFastFlag                      = "fail-fast"
 	ExcludeReposFlag                  = "exclude-repos"
 	IncludeReposFlag                  = "include-repos"
 	PropsFlag                         = "props"
@@ -85,6 +87,7 @@ var flagsMap = map[string]components.Flag{
 	SyncFlag:                          components.NewBoolFlag(SyncFlag, "Whether to synchronize the operation.", components.WithBoolDefaultValueTrue()),
 	PromotionTypeFlag:                 components.NewStringFlag(PromotionTypeFlag, "The promotion type. The following values are supported: "+coreutils.ListToText(model.PromotionTypeValues), func(f *components.StringFlag) { f.Mandatory = false; f.DefaultValue = model.PromotionTypeCopy }),
 	DryRunFlag:                        components.NewBoolFlag(DryRunFlag, "Perform a simulation of the operation.", components.WithBoolDefaultValueFalse()),
+	FailFastFlag:                      components.NewBoolFlag(FailFastFlag, "Stop the operation on the first error. Only relevant when sources are provided.", components.WithBoolDefaultValueTrue()),
 	ExcludeReposFlag:                  components.NewStringFlag(ExcludeReposFlag, "Semicolon-separated list of repositories to exclude.", func(f *components.StringFlag) { f.Mandatory = false }),
 	IncludeReposFlag:                  components.NewStringFlag(IncludeReposFlag, "Semicolon-separated list of repositories to include.", func(f *components.StringFlag) { f.Mandatory = false }),
 	PropsFlag:                         components.NewStringFlag(PropsFlag, "Semicolon-separated list of properties in the form of 'key1=value1;key2=value2;...' to be added to each artifact.", func(f *components.StringFlag) { f.Mandatory = false }),
@@ -167,6 +170,24 @@ var commandFlags = map[string][]string{
 		TagFlag,
 		PropertiesFlag,
 		DeletePropertiesFlag,
+	},
+	VersionUpdateSources: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		SyncFlag,
+		DryRunFlag,
+		FailFastFlag,
+		SourceTypeBuildsFlag,
+		SourceTypeReleaseBundlesFlag,
+		SourceTypeApplicationVersionsFlag,
+		SourceTypePackagesFlag,
+		SourceTypeArtifactsFlag,
+		SpecFlag,
+		SpecVarsFlag,
+		IncludeFilterFlag,
+		ExcludeFilterFlag,
 	},
 
 	PackageBind: {

@@ -124,3 +124,17 @@ func (mr *MockVersionServiceMockRecorder) UpdateAppVersion(ctx, applicationKey, 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAppVersion", reflect.TypeOf((*MockVersionService)(nil).UpdateAppVersion), ctx, applicationKey, version, request)
 }
+
+// UpdateAppVersionSources mocks base method.
+func (m *MockVersionService) UpdateAppVersionSources(ctx service.Context, applicationKey, version string, request *model.UpdateVersionSourcesRequest, sync, dryRun, failFast bool) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAppVersionSources", ctx, applicationKey, version, request, sync, dryRun, failFast)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAppVersionSources indicates an expected call of UpdateAppVersionSources.
+func (mr *MockVersionServiceMockRecorder) UpdateAppVersionSources(ctx, applicationKey, version, request, sync, dryRun, failFast any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAppVersionSources", reflect.TypeOf((*MockVersionService)(nil).UpdateAppVersionSources), ctx, applicationKey, version, request, sync, dryRun, failFast)
+}

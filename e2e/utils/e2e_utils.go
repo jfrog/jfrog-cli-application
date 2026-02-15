@@ -37,8 +37,9 @@ var (
 
 	AppTrustCli *coreTests.JfrogCli
 
-	testProjectKey string
-	testPackageRes *TestPackageResources
+	testProjectKey  string
+	testPackageRes  *TestPackageResources
+	testArtifactPath string
 )
 
 func LoadCredentials() string {
@@ -78,6 +79,14 @@ func GetTestPackage(t *testing.T) *TestPackageResources {
 		publishBuild(t, buildName, buildNumber, sha256)
 	}
 	return testPackageRes
+}
+
+func GetTestArtifact(t *testing.T) string {
+	if testArtifactPath == "" {
+		repoKey := createGenericRepo(t)
+		testArtifactPath = uploadSimpleFileToArtifactory(t, repoKey, "test-artifact.txt")
+	}
+	return testArtifactPath
 }
 
 func GenerateUniqueKey(prefix string) string {

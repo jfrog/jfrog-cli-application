@@ -32,6 +32,7 @@ func DeleteTestProject() {
 	}
 	deleteBuild()
 	deleteNpmRepo()
+	deleteGenericRepo()
 	accessManager, err := utils.CreateAccessServiceManager(serverDetails, false)
 	if err != nil {
 		log.Error("Failed to create Access service manager", err)
