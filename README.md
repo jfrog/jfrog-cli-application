@@ -7,7 +7,7 @@
 
 ##  General
 
-**jfrog-cli-application** is a Go module that encompasses the JFrog AppTrust commands of [JFrog CLI](https://docs.jfrog-applications.jfrog.io/jfrog-applications/jfrog-cli). This module is an Embedded JFrog CLI Plugin and is referenced as a Go module within the [JFrog CLI codebase](https://github.com/jfrog/jfrog-cli).
+**jfrog-cli-application** is a Go module that encompasses the JFrog AppTrust commands of [JFrog CLI](https://docs.jfrog.com/integrations/docs/jfrog-cli). This module is an Embedded JFrog CLI Plugin and is referenced as a Go module within the [JFrog CLI codebase](https://github.com/jfrog/jfrog-cli).
 
 ## 🫱🏻‍🫲🏼 Contributions
 
