@@ -38,7 +38,9 @@ func PrintTable(data []byte, w io.Writer, orderedKeys []string) error {
 		return fmt.Errorf("failed to parse response: %w", err)
 	}
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "FIELD\tVALUE")
+	if _, err := fmt.Fprintln(tw, "FIELD\tVALUE"); err != nil {
+		return err
+	}
 	for _, key := range orderedKeys {
 		val, ok := fields[key]
 		if !ok || val == nil {
@@ -60,7 +62,9 @@ func PrintTable(data []byte, w io.Writer, orderedKeys []string) error {
 		if strVal == "" {
 			continue
 		}
-		fmt.Fprintf(tw, "%s\t%s\n", key, strVal)
+		if _, err := fmt.Fprintf(tw, "%s\t%s\n", key, strVal); err != nil {
+			return err
+		}
 	}
 	return tw.Flush()
 }

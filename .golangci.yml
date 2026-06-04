@@ -1,19 +1,16 @@
 # Options for analysis running
 # More info could be found at https://golangci-lint.run/usage/configuration/
+version: "2"
+
 run:
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
   modules-download-mode: readonly
 
-# List of useful linters could be found at https://github.com/golangci/awesome-go-linters
 linters:
-  disable-all: true
+  default: none
   enable:
     - errcheck
     - copyloopvar
-    - gofumpt
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - makezero
@@ -27,21 +24,20 @@ linters:
     - unused
     - wastedassign
     - gosec
+  settings:
+    staticcheck:
+      checks: [ "all", "-SA1019", "-SA1029", "-ST1000", "-ST1003" ]
+    gosec:
+      excludes: [ "G204", "G301", "G302", "G304", "G306", "G601", "G101" ]
+      config:
+        global:
+          nosec: true
 
-linters-settings:
-  staticcheck:
-    # https://staticcheck.io/docs/options#checks
-    checks: [ "all","-SA1019","-SA1029" ]
-  gosec:
-    excludes: [ "G204", "G301", "G302", "G304", "G306", "G601", "G101" ]
-    exclude-generated: true
-    config:
-      global:
-        nosec: true
+formatters:
+  enable:
+    - gofumpt
+    - goimports
 
 issues:
-  exclude-use-default: false
-  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
   max-issues-per-linter: 0
-  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
   max-same-issues: 0
