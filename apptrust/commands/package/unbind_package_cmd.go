@@ -72,7 +72,7 @@ func GetUnbindPackageCommand(appContext app.Context) components.Command {
 			},
 			{
 				Name:        "package-type",
-				Description: "Package type (e.g., npm, docker, maven, generic).",
+				Description: "Package type (e.g., npm, docker, maven).",
 			},
 			{
 				Name:        "package-name",
