@@ -29,7 +29,6 @@ linters:
       checks: [ "all", "-SA1019", "-SA1029", "-ST1000", "-ST1003" ]
     gosec:
       excludes: [ "G204", "G301", "G302", "G304", "G306", "G601", "G101" ]
-      exclude-generated: true
       config:
         global:
           nosec: true
