@@ -314,3 +314,196 @@ func TestParsePathMappings(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateDistributionFlags(t *testing.T) {
+	tests := []struct {
+		name        string
+		distRules   bool
+		site        bool
+		city        bool
+		country     bool
+		maxWait     bool
+		sync        bool
+		expectError bool
+	}{
+		{
+			name: "no flags",
+		},
+		{
+			name:      "dist-rules only",
+			distRules: true,
+		},
+		{
+			name:    "site/city/country only",
+			site:    true,
+			city:    true,
+			country: true,
+		},
+		{
+			name:        "dist-rules with site",
+			distRules:   true,
+			site:        true,
+			expectError: true,
+		},
+		{
+			name:        "dist-rules with city",
+			distRules:   true,
+			city:        true,
+			expectError: true,
+		},
+		{
+			name:        "dist-rules with country-codes",
+			distRules:   true,
+			country:     true,
+			expectError: true,
+		},
+		{
+			name:        "max-wait-minutes without sync",
+			maxWait:     true,
+			expectError: true,
+		},
+		{
+			name:    "max-wait-minutes with sync",
+			maxWait: true,
+			sync:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			if tt.distRules {
+				ctx.AddStringFlag(commands.DistRulesFlag, "rules.json")
+			}
+			if tt.site {
+				ctx.AddStringFlag(commands.SiteFlag, "edge-*")
+			}
+			if tt.city {
+				ctx.AddStringFlag(commands.CityFlag, "NYC")
+			}
+			if tt.country {
+				ctx.AddStringFlag(commands.CountryCodesFlag, "US")
+			}
+			if tt.maxWait {
+				ctx.AddStringFlag(commands.MaxWaitMinutesFlag, "60")
+			}
+			if tt.sync {
+				ctx.AddBoolFlag(commands.SyncFlag, true)
+			}
+
+			err := ValidateDistributionFlags(ctx)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestBuildDistributionRules(t *testing.T) {
+	t.Run("from site/city/country flags", func(t *testing.T) {
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.SiteFlag, "edge-*")
+		ctx.AddStringFlag(commands.CityFlag, "NYC")
+		ctx.AddStringFlag(commands.CountryCodesFlag, "US;CA")
+
+		rules, err := BuildDistributionRules(ctx)
+		require.NoError(t, err)
+		require.Len(t, rules, 1)
+		assert.Equal(t, "edge-*", rules[0].SiteName)
+		assert.Equal(t, "NYC", rules[0].CityName)
+		assert.Equal(t, []string{"US", "CA"}, rules[0].CountryCodes)
+	})
+
+	t.Run("no flags returns a single empty rule", func(t *testing.T) {
+		ctx := &components.Context{}
+
+		rules, err := BuildDistributionRules(ctx)
+		require.NoError(t, err)
+		require.Len(t, rules, 1)
+		assert.Equal(t, "", rules[0].SiteName)
+		assert.Equal(t, "", rules[0].CityName)
+		assert.Empty(t, rules[0].CountryCodes)
+	})
+
+	t.Run("from dist-rules file", func(t *testing.T) {
+		content := `{"distribution_rules":[{"site_name":"site-1","city_name":"city-1","country_codes":["US"]},{"site_name":"site-2"}]}`
+		filePath := filepath.Join(t.TempDir(), "dist-rules.json")
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0600))
+
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.DistRulesFlag, filePath)
+
+		rules, err := BuildDistributionRules(ctx)
+		require.NoError(t, err)
+		require.Len(t, rules, 2)
+		assert.Equal(t, "site-1", rules[0].SiteName)
+		assert.Equal(t, "city-1", rules[0].CityName)
+		assert.Equal(t, []string{"US"}, rules[0].CountryCodes)
+		assert.Equal(t, "site-2", rules[1].SiteName)
+	})
+
+	t.Run("missing dist-rules file returns error", func(t *testing.T) {
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.DistRulesFlag, filepath.Join(t.TempDir(), "does-not-exist.json"))
+
+		_, err := BuildDistributionRules(ctx)
+		assert.Error(t, err)
+	})
+}
+
+func TestParseDistributeModifications(t *testing.T) {
+	tests := []struct {
+		name        string
+		pattern     string
+		target      string
+		expected    []artUtils.PathMapping
+		expectError bool
+	}{
+		{
+			name:     "no mapping flags",
+			expected: nil,
+		},
+		{
+			name:    "pattern and target provided",
+			pattern: "my-repo/(*)",
+			target:  "edge/{1}",
+			expected: []artUtils.PathMapping{
+				{Input: "^my-repo/(.*)$", Output: "edge/$1"},
+			},
+		},
+		{
+			name:        "only pattern provided",
+			pattern:     "my-repo/(*)",
+			expectError: true,
+		},
+		{
+			name:        "only target provided",
+			target:      "edge/{1}",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &components.Context{}
+			if tt.pattern != "" {
+				ctx.AddStringFlag(commands.MappingPatternFlag, tt.pattern)
+			}
+			if tt.target != "" {
+				ctx.AddStringFlag(commands.MappingTargetFlag, tt.target)
+			}
+
+			result, err := ParseDistributeModifications(ctx)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, result.PathMappings)
+		})
+	}
+}
