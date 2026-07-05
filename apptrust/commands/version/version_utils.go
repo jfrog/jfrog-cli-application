@@ -8,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-core/v2/common/spec"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
+	lifecycleServices "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -180,10 +181,6 @@ func BuildDistributionRules(ctx *components.Context) ([]*distribution.Distributi
 	return commonParams, nil
 }
 
-// ParseDistributeModifications builds the path-mapping modifications for the
-// version-distribute command from the --mapping-pattern/--mapping-target flags.
-// Both flags must be provided together; if neither is provided, empty
-// modifications are returned.
 func ParseDistributeModifications(ctx *components.Context) (lifecycleServices.Modifications, error) {
 	pattern := ctx.GetStringFlagValue(commands.MappingPatternFlag)
 	target := ctx.GetStringFlagValue(commands.MappingTargetFlag)

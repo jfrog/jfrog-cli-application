@@ -8,6 +8,7 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
+	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
