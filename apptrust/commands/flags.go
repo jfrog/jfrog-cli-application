@@ -16,6 +16,8 @@ const (
 	VersionRelease       = "version-release"
 	VersionUpdate        = "version-update"
 	VersionUpdateSources = "version-update-sources"
+	VersionDistribute    = "version-distribute"
+	VersionRemoteDelete  = "version-delete-remote"
 	PackageBind          = "package-bind"
 	PackageUnbind        = "package-unbind"
 	AppCreate            = "app-create"
@@ -64,6 +66,15 @@ const (
 	ExcludeFilterFlag                 = "exclude-filter"
 	ConflictResolutionFlag            = "conflict-resolution"
 	PathMappingFlag                   = "path-mapping"
+	DistRulesFlag                     = "dist-rules"
+	SiteFlag                          = "site"
+	CityFlag                          = "city"
+	CountryCodesFlag                  = "country-codes"
+	CreateRepoFlag                    = "create-repo"
+	MappingPatternFlag                = "mapping-pattern"
+	MappingTargetFlag                 = "mapping-target"
+	MaxWaitMinutesFlag                = "max-wait-minutes"
+	QuietFlag                         = "quiet"
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -109,6 +120,15 @@ var flagsMap = map[string]components.Flag{
 	DeletePropertiesFlag:              components.NewStringFlag(DeletePropertiesFlag, "Remove a property key and all its values", func(f *components.StringFlag) { f.Mandatory = false }),
 	ConflictResolutionFlag:            components.NewStringFlag(ConflictResolutionFlag, "How to resolve source conflicts when the same artifact path appears in multiple sources. Supported values: "+coreutils.ListToText(model.ConflictResolutionValues)+".", func(f *components.StringFlag) { f.Mandatory = false }),
 	PathMappingFlag:                   components.NewStringFlag(PathMappingFlag, "List of semicolon-separated (;) path mapping rules in the form of 'input=(.*), output=stable-release/$1[, package-type=.*]; input=(.*\\.jar), output=jars/$1, package-type=maven'. Note: quote the value to prevent shell expansion of $1.", func(f *components.StringFlag) { f.Mandatory = false }),
+	DistRulesFlag:                     components.NewStringFlag(DistRulesFlag, "Path to distribution rules.", func(f *components.StringFlag) { f.Mandatory = false }),
+	SiteFlag:                          components.NewStringFlag(SiteFlag, "Wildcard filter for site name.", func(f *components.StringFlag) { f.Mandatory = false }),
+	CityFlag:                          components.NewStringFlag(CityFlag, "Wildcard filter for site city name.", func(f *components.StringFlag) { f.Mandatory = false }),
+	CountryCodesFlag:                  components.NewStringFlag(CountryCodesFlag, "List of semicolon-separated (;) wildcard filters for site country codes.", func(f *components.StringFlag) { f.Mandatory = false }),
+	CreateRepoFlag:                    components.NewBoolFlag(CreateRepoFlag, "Set to true to create the repository on the edge if it does not exist.", components.WithBoolDefaultValueFalse()),
+	MappingPatternFlag:                components.NewStringFlag(MappingPatternFlag, "Specify along with "+MappingTargetFlag+" to distribute artifacts to a different path on the edge node. You can use wildcards to specify multiple artifacts.", func(f *components.StringFlag) { f.Mandatory = false }),
+	MappingTargetFlag:                 components.NewStringFlag(MappingTargetFlag, "The target path for distributed artifacts on the edge node. If not specified, the artifacts will have the same path and name on the edge node, as on the source Artifactory server. For flexibility in specifying the distribution path, you can include placeholders in the form of {1}, {2} which are replaced by corresponding tokens in the pattern path that are enclosed in parenthesis.", func(f *components.StringFlag) { f.Mandatory = false }),
+	MaxWaitMinutesFlag:                components.NewStringFlag(MaxWaitMinutesFlag, "Max minutes to wait for sync distribution.", func(f *components.StringFlag) { f.Mandatory = false }),
+	QuietFlag:                         components.NewBoolFlag(QuietFlag, "Set to true to skip the confirmation message.", components.WithBoolDefaultValueFalse()),
 }
 
 var commandFlags = map[string][]string{
@@ -199,6 +219,37 @@ var commandFlags = map[string][]string{
 		SpecVarsFlag,
 		IncludeFilterFlag,
 		ExcludeFilterFlag,
+	},
+
+	VersionDistribute: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		DistRulesFlag,
+		SiteFlag,
+		CityFlag,
+		CountryCodesFlag,
+		DryRunFlag,
+		CreateRepoFlag,
+		MappingPatternFlag,
+		MappingTargetFlag,
+		SyncFlag,
+		MaxWaitMinutesFlag,
+	},
+	VersionRemoteDelete: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		QuietFlag,
+		DryRunFlag,
+		DistRulesFlag,
+		SiteFlag,
+		CityFlag,
+		CountryCodesFlag,
+		SyncFlag,
+		MaxWaitMinutesFlag,
 	},
 
 	PackageBind: {
