@@ -1,11 +1,14 @@
 package version
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -411,10 +414,10 @@ func TestBuildDistributionRules(t *testing.T) {
 
 		rules, err := BuildDistributionRules(ctx)
 		require.NoError(t, err)
-		require.Len(t, rules, 1)
-		assert.Equal(t, "edge-*", rules[0].SiteName)
-		assert.Equal(t, "NYC", rules[0].CityName)
-		assert.Equal(t, []string{"US", "CA"}, rules[0].CountryCodes)
+		expected := []*distribution.DistributionCommonParams{
+			{SiteName: "edge-*", CityName: "NYC", CountryCodes: []string{"US", "CA"}},
+		}
+		assert.Equal(t, expected, rules)
 	})
 
 	t.Run("no flags returns a single empty rule", func(t *testing.T) {
@@ -422,10 +425,10 @@ func TestBuildDistributionRules(t *testing.T) {
 
 		rules, err := BuildDistributionRules(ctx)
 		require.NoError(t, err)
-		require.Len(t, rules, 1)
-		assert.Equal(t, "", rules[0].SiteName)
-		assert.Equal(t, "", rules[0].CityName)
-		assert.Empty(t, rules[0].CountryCodes)
+		expected := []*distribution.DistributionCommonParams{
+			{},
+		}
+		assert.Equal(t, expected, rules)
 	})
 
 	t.Run("from dist-rules file", func(t *testing.T) {
@@ -438,11 +441,11 @@ func TestBuildDistributionRules(t *testing.T) {
 
 		rules, err := BuildDistributionRules(ctx)
 		require.NoError(t, err)
-		require.Len(t, rules, 2)
-		assert.Equal(t, "site-1", rules[0].SiteName)
-		assert.Equal(t, "city-1", rules[0].CityName)
-		assert.Equal(t, []string{"US"}, rules[0].CountryCodes)
-		assert.Equal(t, "site-2", rules[1].SiteName)
+		expected := []*distribution.DistributionCommonParams{
+			{SiteName: "site-1", CityName: "city-1", CountryCodes: []string{"US"}},
+			{SiteName: "site-2"},
+		}
+		assert.Equal(t, expected, rules)
 	})
 
 	t.Run("missing dist-rules file returns error", func(t *testing.T) {

@@ -6,7 +6,9 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands/utils"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
+	"github.com/jfrog/jfrog-cli-core/v2/common/spec"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
+	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
 
@@ -153,9 +155,6 @@ func ValidateDistributionFlags(ctx *components.Context) error {
 	return nil
 }
 
-// BuildDistributionRules builds the distribution rules for a distribution operation.
-// When --dist-rules is provided, the rules are read from the given file. Otherwise a
-// single rule is built from the --site/--city/--country-codes flags.
 func BuildDistributionRules(ctx *components.Context) ([]*distribution.DistributionCommonParams, error) {
 	var distributionRules *spec.DistributionRules
 	if ctx.IsFlagSet(commands.DistRulesFlag) {
