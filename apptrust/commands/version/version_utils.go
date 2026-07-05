@@ -137,3 +137,68 @@ func ParsePathMappings(ctx *components.Context) (*model.PromotionModifications, 
 
 	return &model.PromotionModifications{Mappings: mappings}, nil
 }
+
+func ValidateDistributionFlags(ctx *components.Context) error {
+	if ctx.IsFlagSet(commands.DistRulesFlag) &&
+		(ctx.IsFlagSet(commands.SiteFlag) || ctx.IsFlagSet(commands.CityFlag) || ctx.IsFlagSet(commands.CountryCodesFlag)) {
+		return errorutils.CheckErrorf("the --%s option can't be used with --%s, --%s or --%s",
+			commands.DistRulesFlag, commands.SiteFlag, commands.CityFlag, commands.CountryCodesFlag)
+	}
+
+	if ctx.IsFlagSet(commands.MaxWaitMinutesFlag) && !ctx.IsFlagSet(commands.SyncFlag) {
+		return errorutils.CheckErrorf("the --%s option can't be used without --%s",
+			commands.MaxWaitMinutesFlag, commands.SyncFlag)
+	}
+
+	return nil
+}
+
+// BuildDistributionRules builds the distribution rules for a distribution operation.
+// When --dist-rules is provided, the rules are read from the given file. Otherwise a
+// single rule is built from the --site/--city/--country-codes flags.
+func BuildDistributionRules(ctx *components.Context) ([]*distribution.DistributionCommonParams, error) {
+	var distributionRules *spec.DistributionRules
+	if ctx.IsFlagSet(commands.DistRulesFlag) {
+		var err error
+		distributionRules, err = spec.CreateDistributionRulesFromFile(ctx.GetStringFlagValue(commands.DistRulesFlag))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		distributionRules = &spec.DistributionRules{
+			DistributionRules: []spec.DistributionRule{{
+				SiteName:     ctx.GetStringFlagValue(commands.SiteFlag),
+				CityName:     ctx.GetStringFlagValue(commands.CityFlag),
+				CountryCodes: ctx.GetStringsArrFlagValue(commands.CountryCodesFlag),
+			}},
+		}
+	}
+
+	commonParams := make([]*distribution.DistributionCommonParams, 0, len(distributionRules.DistributionRules))
+	for i := range distributionRules.DistributionRules {
+		commonParams = append(commonParams, distributionRules.DistributionRules[i].ToDistributionCommonParams())
+	}
+	return commonParams, nil
+}
+
+// ParseDistributeModifications builds the path-mapping modifications for the
+// version-distribute command from the --mapping-pattern/--mapping-target flags.
+// Both flags must be provided together; if neither is provided, empty
+// modifications are returned.
+func ParseDistributeModifications(ctx *components.Context) (lifecycleServices.Modifications, error) {
+	pattern := ctx.GetStringFlagValue(commands.MappingPatternFlag)
+	target := ctx.GetStringFlagValue(commands.MappingTargetFlag)
+
+	if pattern == "" && target == "" {
+		return lifecycleServices.Modifications{}, nil
+	}
+	if pattern == "" || target == "" {
+		return lifecycleServices.Modifications{}, errorutils.CheckErrorf(
+			"the --%s and --%s options must be provided together",
+			commands.MappingPatternFlag, commands.MappingTargetFlag)
+	}
+
+	return lifecycleServices.Modifications{
+		PathMappings: distribution.CreatePathMappingsFromPatternAndTarget(pattern, target),
+	}, nil
+}
