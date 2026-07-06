@@ -559,6 +559,54 @@ func TestReleaseVersion(t *testing.T) {
 	assert.Equal(t, "PROD", versionContent.CurrentStage)
 }
 
+func TestDistributeVersion(t *testing.T) {
+	t.Skip("Skipping: requires Distribution service not yet available in the test environment")
+
+	// Prepare
+	appKey := utils.GenerateUniqueKey("app-version-distribute")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	testPackage := utils.GetTestPackage(t)
+	version := "1.0.11"
+
+	// Create a version first
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+
+	// Execute
+	err = utils.AppTrustCli.Exec("version-distribute", appKey, version)
+	require.NoError(t, err)
+}
+
+func TestDeleteRemoteVersion(t *testing.T) {
+	t.Skip("Skipping: requires Distribution service not yet available in the test environment")
+
+	// Prepare
+	appKey := utils.GenerateUniqueKey("app-version-delete-remote")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	testPackage := utils.GetTestPackage(t)
+	version := "1.0.12"
+
+	// Create a version first and distribute it
+	packageFlag := fmt.Sprintf("--source-type-packages=type=%s, name=%s, version=%s, repo-key=%s",
+		testPackage.PackageType, testPackage.PackageName, testPackage.PackageVersion, testPackage.RepoKey)
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag)
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+	err = utils.AppTrustCli.Exec("version-distribute", appKey, version)
+	require.NoError(t, err)
+
+	// Execute
+	err = utils.AppTrustCli.Exec("version-delete-remote", appKey, version, "--dry-run", "--quiet")
+	require.NoError(t, err)
+}
+
 func TestRollbackVersion(t *testing.T) {
 	// Prepare
 	appKey := utils.GenerateUniqueKey("app-version-rollback")
