@@ -401,13 +401,13 @@ func TestParseDistributionRules(t *testing.T) {
 		assert.Equal(t, expected, rules)
 	})
 
-	t.Run("no flags returns a single empty rule", func(t *testing.T) {
+	t.Run("no flags defaults to distributing to all targets", func(t *testing.T) {
 		ctx := &components.Context{}
 
 		rules, err := ParseDistributionRules(ctx)
 		require.NoError(t, err)
 		expected := []model.DistributionRule{
-			{},
+			{SiteName: "*"},
 		}
 		assert.Equal(t, expected, rules)
 	})
@@ -427,6 +427,19 @@ func TestParseDistributionRules(t *testing.T) {
 			{SiteName: "site-2"},
 		}
 		assert.Equal(t, expected, rules)
+	})
+
+	t.Run("empty dist-rules file returns no rules", func(t *testing.T) {
+		content := `{"distribution_rules":[]}`
+		filePath := filepath.Join(t.TempDir(), "dist-rules.json")
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0600))
+
+		ctx := &components.Context{}
+		ctx.AddStringFlag(commands.DistRulesFlag, filePath)
+
+		rules, err := ParseDistributionRules(ctx)
+		require.NoError(t, err)
+		assert.Empty(t, rules)
 	})
 
 	t.Run("missing dist-rules file returns error", func(t *testing.T) {
@@ -487,6 +500,11 @@ func TestParseDistributionModifications(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+			if tt.expected == nil {
+				assert.Nil(t, result)
+				return
+			}
+			require.NotNil(t, result)
 			assert.Equal(t, tt.expected, result.PathMappings)
 		})
 	}

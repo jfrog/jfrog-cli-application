@@ -150,13 +150,21 @@ func ValidateDistributionFlags(ctx *components.Context) error {
 	return nil
 }
 
+const allSiteName = "*"
+
 func ParseDistributionRules(ctx *components.Context) ([]model.DistributionRule, error) {
 	if !ctx.IsFlagSet(commands.DistRulesFlag) {
-		return []model.DistributionRule{{
+		rule := model.DistributionRule{
 			SiteName:     ctx.GetStringFlagValue(commands.SiteFlag),
 			CityName:     ctx.GetStringFlagValue(commands.CityFlag),
 			CountryCodes: ctx.GetStringsArrFlagValue(commands.CountryCodesFlag),
-		}}, nil
+		}
+
+		// If no site, city or country codes were provided, default to distributing to all targets.
+		if rule.SiteName == "" && rule.CityName == "" && len(rule.CountryCodes) == 0 {
+			rule.SiteName = allSiteName
+		}
+		return []model.DistributionRule{rule}, nil
 	}
 
 	distributionRules, err := spec.CreateDistributionRulesFromFile(ctx.GetStringFlagValue(commands.DistRulesFlag))
@@ -175,15 +183,15 @@ func ParseDistributionRules(ctx *components.Context) ([]model.DistributionRule, 
 	return modelRules, nil
 }
 
-func ParseDistributionModifications(ctx *components.Context) (model.DistributionModifications, error) {
+func ParseDistributionModifications(ctx *components.Context) (*model.DistributionModifications, error) {
 	pattern := ctx.GetStringFlagValue(commands.MappingPatternFlag)
 	target := ctx.GetStringFlagValue(commands.MappingTargetFlag)
 
 	if pattern == "" && target == "" {
-		return model.DistributionModifications{}, nil
+		return nil, nil
 	}
 	if pattern == "" || target == "" {
-		return model.DistributionModifications{}, errorutils.CheckErrorf(
+		return nil, errorutils.CheckErrorf(
 			"the --%s and --%s options must be provided together",
 			commands.MappingPatternFlag, commands.MappingTargetFlag)
 	}
@@ -196,5 +204,5 @@ func ParseDistributionModifications(ctx *components.Context) (model.Distribution
 			Output: mapping.Output,
 		})
 	}
-	return model.DistributionModifications{PathMappings: modelMappings}, nil
+	return &model.DistributionModifications{PathMappings: modelMappings}, nil
 }

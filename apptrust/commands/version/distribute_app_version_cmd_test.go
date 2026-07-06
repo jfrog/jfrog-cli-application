@@ -105,7 +105,7 @@ func TestDistributeAppVersionCommand_FlagsSuite(t *testing.T) {
 				ctx.AddStringFlag(commands.MappingTargetFlag, "edge/{1}")
 			},
 			expectsPayload: &model.DistributeAppVersionRequest{
-				DistributionRules: []model.DistributionRule{{}},
+				DistributionRules: []model.DistributionRule{{SiteName: "*"}},
 				Modifications: &model.DistributionModifications{
 					PathMappings: []model.DistributionPathMapping{
 						{Input: "^my-repo/(.*)$", Output: "edge/$1"},
@@ -114,12 +114,12 @@ func TestDistributeAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 		},
 		{
-			name: "no distribution flags produces a single empty rule",
+			name: "no distribution flags defaults to distributing to all targets",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}
 			},
 			expectsPayload: &model.DistributeAppVersionRequest{
-				DistributionRules: []model.DistributionRule{{}},
+				DistributionRules: []model.DistributionRule{{SiteName: "*"}},
 			},
 		},
 		{

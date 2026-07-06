@@ -35,6 +35,7 @@ Common patterns:
   $ jf apptrust app-create my-app --project=default
   $ jf apptrust version-create my-app 1.0.0 --source-type-builds="name=my-build, id=1"
   $ jf apptrust version-promote my-app 1.0.0 PROD
+  $ jf apptrust version-distribute my-app 1.0.0
 
 Related: jf rt, jf release-bundle commands.`,
 			Category: "Command Namespaces",
