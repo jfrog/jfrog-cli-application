@@ -721,7 +721,7 @@ func TestDistributeAppVersion(t *testing.T) {
 	request := &model.DistributeAppVersionRequest{
 		AutoCreateRepo:    true,
 		DistributionRules: rules,
-		Modifications: model.DistributionModifications{
+		Modifications: &model.DistributionModifications{
 			PathMappings: mappings,
 		},
 	}

@@ -95,7 +95,6 @@ func TestDistributeAppVersionCommand_FlagsSuite(t *testing.T) {
 					{SiteName: "edge-*", CityName: "NYC", CountryCodes: []string{"US", "CA"}},
 				},
 				AutoCreateRepo: true,
-				Modifications:  model.DistributionModifications{},
 			},
 		},
 		{
@@ -107,7 +106,7 @@ func TestDistributeAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: &model.DistributeAppVersionRequest{
 				DistributionRules: []model.DistributionRule{{}},
-				Modifications: model.DistributionModifications{
+				Modifications: &model.DistributionModifications{
 					PathMappings: []model.DistributionPathMapping{
 						{Input: "^my-repo/(.*)$", Output: "edge/$1"},
 					},
@@ -121,7 +120,6 @@ func TestDistributeAppVersionCommand_FlagsSuite(t *testing.T) {
 			},
 			expectsPayload: &model.DistributeAppVersionRequest{
 				DistributionRules: []model.DistributionRule{{}},
-				Modifications:     model.DistributionModifications{},
 			},
 		},
 		{
@@ -237,7 +235,6 @@ func TestDistributeAppVersionCommand_SpecFileSuite(t *testing.T) {
 				{SiteName: "site-1", CityName: "city-1", CountryCodes: []string{"US"}},
 				{SiteName: "site-2"},
 			},
-			Modifications: model.DistributionModifications{},
 		}, actualPayload)
 	})
 
