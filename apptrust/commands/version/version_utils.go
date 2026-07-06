@@ -155,7 +155,7 @@ func ValidateDistributionFlags(ctx *components.Context) error {
 	return nil
 }
 
-func BuildDistributionRules(ctx *components.Context) ([]model.DistributionRule, error) {
+func ParseDistributionRules(ctx *components.Context) ([]model.DistributionRule, error) {
 	if !ctx.IsFlagSet(commands.DistRulesFlag) {
 		return []model.DistributionRule{{
 			SiteName:     ctx.GetStringFlagValue(commands.SiteFlag),
@@ -180,7 +180,7 @@ func BuildDistributionRules(ctx *components.Context) ([]model.DistributionRule, 
 	return modelRules, nil
 }
 
-func ParseDistributeModifications(ctx *components.Context) (model.DistributionModifications, error) {
+func ParseDistributionModifications(ctx *components.Context) (model.DistributionModifications, error) {
 	pattern := ctx.GetStringFlagValue(commands.MappingPatternFlag)
 	target := ctx.GetStringFlagValue(commands.MappingTargetFlag)
 

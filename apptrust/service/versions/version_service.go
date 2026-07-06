@@ -172,6 +172,7 @@ func (vs *versionService) DistributeAppVersion(ctx service.Context, applicationK
 			response.StatusCode, responseBody)
 	}
 
+	log.Info(fmt.Sprintf("Distribution of application version '%s/%s' triggered successfully.", applicationKey, version))
 	return nil
 }
 

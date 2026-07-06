@@ -404,14 +404,14 @@ func TestValidateDistributionFlags(t *testing.T) {
 	}
 }
 
-func TestBuildDistributionRules(t *testing.T) {
+func TestParseDistributionRules(t *testing.T) {
 	t.Run("from site/city/country flags", func(t *testing.T) {
 		ctx := &components.Context{}
 		ctx.AddStringFlag(commands.SiteFlag, "edge-*")
 		ctx.AddStringFlag(commands.CityFlag, "NYC")
 		ctx.AddStringFlag(commands.CountryCodesFlag, "US;CA")
 
-		rules, err := BuildDistributionRules(ctx)
+		rules, err := ParseDistributionRules(ctx)
 		require.NoError(t, err)
 		expected := []model.DistributionRule{
 			{SiteName: "edge-*", CityName: "NYC", CountryCodes: []string{"US", "CA"}},
@@ -422,7 +422,7 @@ func TestBuildDistributionRules(t *testing.T) {
 	t.Run("no flags returns a single empty rule", func(t *testing.T) {
 		ctx := &components.Context{}
 
-		rules, err := BuildDistributionRules(ctx)
+		rules, err := ParseDistributionRules(ctx)
 		require.NoError(t, err)
 		expected := []model.DistributionRule{
 			{},
@@ -438,7 +438,7 @@ func TestBuildDistributionRules(t *testing.T) {
 		ctx := &components.Context{}
 		ctx.AddStringFlag(commands.DistRulesFlag, filePath)
 
-		rules, err := BuildDistributionRules(ctx)
+		rules, err := ParseDistributionRules(ctx)
 		require.NoError(t, err)
 		expected := []model.DistributionRule{
 			{SiteName: "site-1", CityName: "city-1", CountryCodes: []string{"US"}},
@@ -451,12 +451,12 @@ func TestBuildDistributionRules(t *testing.T) {
 		ctx := &components.Context{}
 		ctx.AddStringFlag(commands.DistRulesFlag, filepath.Join(t.TempDir(), "does-not-exist.json"))
 
-		_, err := BuildDistributionRules(ctx)
+		_, err := ParseDistributionRules(ctx)
 		assert.Error(t, err)
 	})
 }
 
-func TestParseDistributeModifications(t *testing.T) {
+func TestParseDistributionModifications(t *testing.T) {
 	tests := []struct {
 		name        string
 		pattern     string
@@ -498,7 +498,7 @@ func TestParseDistributeModifications(t *testing.T) {
 				ctx.AddStringFlag(commands.MappingTargetFlag, tt.target)
 			}
 
-			result, err := ParseDistributeModifications(ctx)
+			result, err := ParseDistributionModifications(ctx)
 
 			if tt.expectError {
 				assert.Error(t, err)
