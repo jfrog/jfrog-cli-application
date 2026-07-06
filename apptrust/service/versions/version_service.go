@@ -22,7 +22,7 @@ type VersionService interface {
 	DeleteAppVersion(ctx service.Context, applicationKey string, version string) error
 	UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) ([]byte, error)
 	UpdateAppVersionSources(ctx service.Context, applicationKey string, version string, request *model.UpdateVersionSourcesRequest, sync bool, dryRun bool, failFast bool) ([]byte, error)
-	DistributeAppVersion(ctx service.Context, applicationKey string, version string, request *model.DistributeAppVersionRequest) ([]byte, error)
+	DistributeAppVersion(ctx service.Context, applicationKey string, version string, request *model.DistributeAppVersionRequest) error
 	RemoteDeleteAppVersion(ctx service.Context, applicationKey string, version string, request *model.RemoteDeleteAppVersionRequest) ([]byte, error)
 }
 
@@ -160,19 +160,19 @@ func (vs *versionService) UpdateAppVersionSources(ctx service.Context, applicati
 	return responseBody, nil
 }
 
-func (vs *versionService) DistributeAppVersion(ctx service.Context, applicationKey, version string, request *model.DistributeAppVersionRequest) ([]byte, error) {
+func (vs *versionService) DistributeAppVersion(ctx service.Context, applicationKey, version string, request *model.DistributeAppVersionRequest) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/distribute", applicationKey, version)
 	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
-		return nil, fmt.Errorf("failed to distribute application version. Status code: %d. \n%s",
+		return fmt.Errorf("failed to distribute application version. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
 
-	return responseBody, nil
+	return nil
 }
 
 func (vs *versionService) RemoteDeleteAppVersion(ctx service.Context, applicationKey, version string, request *model.RemoteDeleteAppVersionRequest) ([]byte, error) {

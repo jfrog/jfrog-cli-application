@@ -71,12 +71,11 @@ func (mr *MockVersionServiceMockRecorder) DeleteAppVersion(ctx, applicationKey, 
 }
 
 // DistributeAppVersion mocks base method.
-func (m *MockVersionService) DistributeAppVersion(ctx service.Context, applicationKey, version string, request *model.DistributeAppVersionRequest) ([]byte, error) {
+func (m *MockVersionService) DistributeAppVersion(ctx service.Context, applicationKey, version string, request *model.DistributeAppVersionRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DistributeAppVersion", ctx, applicationKey, version, request)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // DistributeAppVersion indicates an expected call of DistributeAppVersion.

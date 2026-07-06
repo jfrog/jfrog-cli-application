@@ -771,7 +771,7 @@ func TestDistributeAppVersion(t *testing.T) {
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			_, err := service.DistributeAppVersion(mockCtx, tt.applicationKey, tt.version, request)
+			err := service.DistributeAppVersion(mockCtx, tt.applicationKey, tt.version, request)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
