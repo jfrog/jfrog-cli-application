@@ -1,6 +1,7 @@
 package version
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/jfrog/jfrog-cli-application/apptrust/app"
@@ -15,7 +16,9 @@ import (
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	coreConfig "github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
+	clientutils "github.com/jfrog/jfrog-client-go/utils"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
+	"github.com/jfrog/jfrog-client-go/utils/log"
 )
 
 type remoteDeleteAppVersionCommand struct {
@@ -88,7 +91,19 @@ func (rd *remoteDeleteAppVersionCommand) buildRequestPayload(ctx *components.Con
 	}, nil
 }
 
-func (rd *remoteDeleteAppVersionCommand) confirmRemoteDelete() bool {
+func (rd *remoteDeleteAppVersionCommand) distributionRulesEmpty() bool {
+	rules := rd.requestPayload.DistributionRules
+	if len(rules) == 0 {
+		return true
+	}
+	if len(rules) == 1 {
+		rule := rules[0]
+		return rule.SiteName == "" && rule.CityName == "" && len(rule.CountryCodes) == 0
+	}
+	return false
+}
+
+func (rd *remoteDeleteAppVersionCommand) confirmRemoteDelete() (bool, error) {
 	if rd.quiet {
 		return true, nil
 	}
