@@ -70,6 +70,21 @@ func (mr *MockVersionServiceMockRecorder) DeleteAppVersion(ctx, applicationKey, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAppVersion", reflect.TypeOf((*MockVersionService)(nil).DeleteAppVersion), ctx, applicationKey, version)
 }
 
+// DistributeAppVersion mocks base method.
+func (m *MockVersionService) DistributeAppVersion(ctx service.Context, applicationKey, version string, request *model.DistributeAppVersionRequest) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DistributeAppVersion", ctx, applicationKey, version, request)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DistributeAppVersion indicates an expected call of DistributeAppVersion.
+func (mr *MockVersionServiceMockRecorder) DistributeAppVersion(ctx, applicationKey, version, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DistributeAppVersion", reflect.TypeOf((*MockVersionService)(nil).DistributeAppVersion), ctx, applicationKey, version, request)
+}
+
 // PromoteAppVersion mocks base method.
 func (m *MockVersionService) PromoteAppVersion(ctx service.Context, applicationKey, version string, payload *model.PromoteAppVersionRequest, sync bool) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -98,6 +113,21 @@ func (m *MockVersionService) ReleaseAppVersion(ctx service.Context, applicationK
 func (mr *MockVersionServiceMockRecorder) ReleaseAppVersion(ctx, applicationKey, version, request, sync any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseAppVersion", reflect.TypeOf((*MockVersionService)(nil).ReleaseAppVersion), ctx, applicationKey, version, request, sync)
+}
+
+// RemoteDeleteAppVersion mocks base method.
+func (m *MockVersionService) RemoteDeleteAppVersion(ctx service.Context, applicationKey, version string, request *model.RemoteDeleteAppVersionRequest) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoteDeleteAppVersion", ctx, applicationKey, version, request)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoteDeleteAppVersion indicates an expected call of RemoteDeleteAppVersion.
+func (mr *MockVersionServiceMockRecorder) RemoteDeleteAppVersion(ctx, applicationKey, version, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoteDeleteAppVersion", reflect.TypeOf((*MockVersionService)(nil).RemoteDeleteAppVersion), ctx, applicationKey, version, request)
 }
 
 // RollbackAppVersion mocks base method.

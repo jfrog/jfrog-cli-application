@@ -709,3 +709,143 @@ func TestUpdateAppVersionSources(t *testing.T) {
 		})
 	}
 }
+
+func TestDistributeAppVersion(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewVersionService()
+
+	rules := []model.DistributionRule{{SiteName: "site-1", CityName: "city-1", CountryCodes: []string{"US"}}}
+	mappings := []model.DistributionPathMapping{{Input: "source/(.*)", Output: "target/$1"}}
+	request := &model.DistributeAppVersionRequest{
+		AutoCreateRepo:    true,
+		DistributionRules: rules,
+		Modifications: model.DistributionModifications{
+			PathMappings: mappings,
+		},
+	}
+
+	tests := []struct {
+		name             string
+		applicationKey   string
+		version          string
+		mockResponse     *http.Response
+		mockResponseBody string
+		mockError        error
+		expectedError    string
+	}{
+		{
+			name:             "success",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
+			mockResponseBody: "{}",
+			expectedError:    "",
+		},
+		{
+			name:             "failure",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusBadRequest},
+			mockResponseBody: "error",
+			expectedError:    "failed to distribute application version",
+		},
+		{
+			name:           "http client error",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			mockResponse:   nil,
+			mockError:      errors.New("http client error"),
+			expectedError:  "http client error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/distribute"
+			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
+			mockHttpClient.EXPECT().Post(expectedEndpoint, request, nil).
+				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+
+			mockCtx := mockservice.NewMockContext(ctrl)
+			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
+
+			_, err := service.DistributeAppVersion(mockCtx, tt.applicationKey, tt.version, request)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestRemoteDeleteAppVersion(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewVersionService()
+
+	rules := []model.DistributionRule{{SiteName: "site-1", CityName: "city-1", CountryCodes: []string{"US"}}}
+	request := &model.RemoteDeleteAppVersionRequest{
+		AutoCreateRepo:    true,
+		DistributionRules: rules,
+	}
+
+	tests := []struct {
+		name             string
+		applicationKey   string
+		version          string
+		mockResponse     *http.Response
+		mockResponseBody string
+		mockError        error
+		expectedError    string
+	}{
+		{
+			name:             "success",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponseBody: "{}",
+			expectedError:    "",
+		},
+		{
+			name:             "failure",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusBadRequest},
+			mockResponseBody: "error",
+			expectedError:    "failed to delete application version remotely",
+		},
+		{
+			name:           "http client error",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			mockResponse:   nil,
+			mockError:      errors.New("http client error"),
+			expectedError:  "http client error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/remote-delete"
+			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
+			mockHttpClient.EXPECT().Post(expectedEndpoint, request, nil).
+				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+
+			mockCtx := mockservice.NewMockContext(ctrl)
+			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
+
+			_, err := service.RemoteDeleteAppVersion(mockCtx, tt.applicationKey, tt.version, request)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
