@@ -324,8 +324,6 @@ func TestValidateDistributionFlags(t *testing.T) {
 		site        bool
 		city        bool
 		country     bool
-		maxWait     bool
-		sync        bool
 		expectError bool
 	}{
 		{
@@ -359,16 +357,6 @@ func TestValidateDistributionFlags(t *testing.T) {
 			country:     true,
 			expectError: true,
 		},
-		{
-			name:        "max-wait-minutes without sync",
-			maxWait:     true,
-			expectError: true,
-		},
-		{
-			name:    "max-wait-minutes with sync",
-			maxWait: true,
-			sync:    true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -385,12 +373,6 @@ func TestValidateDistributionFlags(t *testing.T) {
 			}
 			if tt.country {
 				ctx.AddStringFlag(commands.CountryCodesFlag, "US")
-			}
-			if tt.maxWait {
-				ctx.AddStringFlag(commands.MaxWaitMinutesFlag, "60")
-			}
-			if tt.sync {
-				ctx.AddBoolFlag(commands.SyncFlag, true)
 			}
 
 			err := ValidateDistributionFlags(ctx)

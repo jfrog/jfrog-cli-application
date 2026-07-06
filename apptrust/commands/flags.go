@@ -73,7 +73,6 @@ const (
 	CreateRepoFlag                    = "create-repo"
 	MappingPatternFlag                = "mapping-pattern"
 	MappingTargetFlag                 = "mapping-target"
-	MaxWaitMinutesFlag                = "max-wait-minutes"
 	QuietFlag                         = "quiet"
 )
 
@@ -127,7 +126,6 @@ var flagsMap = map[string]components.Flag{
 	CreateRepoFlag:                    components.NewBoolFlag(CreateRepoFlag, "Set to true to create the repository on the edge if it does not exist.", components.WithBoolDefaultValueFalse()),
 	MappingPatternFlag:                components.NewStringFlag(MappingPatternFlag, "Specify along with "+MappingTargetFlag+" to distribute artifacts to a different path on the edge node. You can use wildcards to specify multiple artifacts.", func(f *components.StringFlag) { f.Mandatory = false }),
 	MappingTargetFlag:                 components.NewStringFlag(MappingTargetFlag, "The target path for distributed artifacts on the edge node. If not specified, the artifacts will have the same path and name on the edge node, as on the source Artifactory server. For flexibility in specifying the distribution path, you can include placeholders in the form of {1}, {2} which are replaced by corresponding tokens in the pattern path that are enclosed in parenthesis.", func(f *components.StringFlag) { f.Mandatory = false }),
-	MaxWaitMinutesFlag:                components.NewStringFlag(MaxWaitMinutesFlag, "Max minutes to wait for sync distribution.", func(f *components.StringFlag) { f.Mandatory = false }),
 	QuietFlag:                         components.NewBoolFlag(QuietFlag, "Set to true to skip the confirmation message.", components.WithBoolDefaultValueFalse()),
 }
 
@@ -230,12 +228,9 @@ var commandFlags = map[string][]string{
 		SiteFlag,
 		CityFlag,
 		CountryCodesFlag,
-		DryRunFlag,
 		CreateRepoFlag,
 		MappingPatternFlag,
 		MappingTargetFlag,
-		SyncFlag,
-		MaxWaitMinutesFlag,
 	},
 	VersionRemoteDelete: {
 		url,
@@ -248,8 +243,6 @@ var commandFlags = map[string][]string{
 		SiteFlag,
 		CityFlag,
 		CountryCodesFlag,
-		SyncFlag,
-		MaxWaitMinutesFlag,
 	},
 
 	PackageBind: {

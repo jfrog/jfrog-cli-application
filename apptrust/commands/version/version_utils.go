@@ -147,11 +147,6 @@ func ValidateDistributionFlags(ctx *components.Context) error {
 			commands.DistRulesFlag, commands.SiteFlag, commands.CityFlag, commands.CountryCodesFlag)
 	}
 
-	if ctx.IsFlagSet(commands.MaxWaitMinutesFlag) && !ctx.IsFlagSet(commands.SyncFlag) {
-		return errorutils.CheckErrorf("the --%s option can't be used without --%s",
-			commands.MaxWaitMinutesFlag, commands.SyncFlag)
-	}
-
 	return nil
 }
 

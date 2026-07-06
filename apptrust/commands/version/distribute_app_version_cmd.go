@@ -78,7 +78,6 @@ func (dv *distributeAppVersionCommand) buildRequestPayload(ctx *components.Conte
 	}
 
 	return &model.DistributeAppVersionRequest{
-		DryRun:            ctx.GetBoolFlagValue(commands.DryRunFlag),
 		DistributionRules: distributionRules,
 		AutoCreateRepo:    ctx.GetBoolFlagValue(commands.CreateRepoFlag),
 		Modifications:     modifications,
@@ -109,14 +108,11 @@ Common patterns:
   $ jf apptrust version-distribute my-app 1.0.0 --dist-rules=/path/to/dist-rules.json
   $ jf apptrust version-distribute my-app 1.0.0 --mapping-pattern="repo/(*)" --mapping-target="target/{1}"
   $ jf apptrust version-distribute my-app 1.0.0 --create-repo
-  $ jf apptrust version-distribute my-app 1.0.0 --dry-run
 
 Gotchas:
 - Distribution is asynchronous: a successful result means it was triggered, not that it has completed on the distribution targets.
 - --dist-rules can't be combined with --site, --city or --country-codes.
 - --mapping-pattern and --mapping-target must be provided together.
-- --max-wait-minutes requires --sync.
-- Use --dry-run to validate the distribution without transferring any artifacts.
 
 Related: jf apptrust version-delete-remote, jf apptrust version-release`,
 		Category: common.CategoryVersion,
