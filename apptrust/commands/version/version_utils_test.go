@@ -415,7 +415,7 @@ func TestParseDistributionRules(t *testing.T) {
 	t.Run("from dist-rules file", func(t *testing.T) {
 		content := `{"distribution_rules":[{"site_name":"site-1","city_name":"city-1","country_codes":["US"]},{"site_name":"site-2"}]}`
 		filePath := filepath.Join(t.TempDir(), "dist-rules.json")
-		require.NoError(t, os.WriteFile(filePath, []byte(content), 0600))
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0o600))
 
 		ctx := &components.Context{}
 		ctx.AddStringFlag(commands.DistRulesFlag, filePath)
@@ -432,7 +432,7 @@ func TestParseDistributionRules(t *testing.T) {
 	t.Run("empty dist-rules file returns no rules", func(t *testing.T) {
 		content := `{"distribution_rules":[]}`
 		filePath := filepath.Join(t.TempDir(), "dist-rules.json")
-		require.NoError(t, os.WriteFile(filePath, []byte(content), 0600))
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0o600))
 
 		ctx := &components.Context{}
 		ctx.AddStringFlag(commands.DistRulesFlag, filePath)

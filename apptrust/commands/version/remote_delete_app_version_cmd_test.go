@@ -235,7 +235,7 @@ func TestRemoteDeleteAppVersionCommand_SpecFileSuite(t *testing.T) {
 
 		content := `{"distribution_rules":[{"site_name":"site-1","city_name":"city-1","country_codes":["US"]},{"site_name":"site-2"}]}`
 		filePath := filepath.Join(t.TempDir(), "dist-rules.json")
-		require.NoError(t, os.WriteFile(filePath, []byte(content), 0600))
+		require.NoError(t, os.WriteFile(filePath, []byte(content), 0o600))
 
 		ctx := &components.Context{}
 		ctx.Arguments = []string{"app-key", "1.0.0"}
