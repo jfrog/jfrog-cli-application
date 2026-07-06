@@ -8,8 +8,6 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
-	artUtils "github.com/jfrog/jfrog-client-go/artifactory/services/utils"
-	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -415,7 +413,7 @@ func TestBuildDistributionRules(t *testing.T) {
 
 		rules, err := BuildDistributionRules(ctx)
 		require.NoError(t, err)
-		expected := []*distribution.DistributionCommonParams{
+		expected := []model.DistributionRule{
 			{SiteName: "edge-*", CityName: "NYC", CountryCodes: []string{"US", "CA"}},
 		}
 		assert.Equal(t, expected, rules)
@@ -426,7 +424,7 @@ func TestBuildDistributionRules(t *testing.T) {
 
 		rules, err := BuildDistributionRules(ctx)
 		require.NoError(t, err)
-		expected := []*distribution.DistributionCommonParams{
+		expected := []model.DistributionRule{
 			{},
 		}
 		assert.Equal(t, expected, rules)
@@ -442,7 +440,7 @@ func TestBuildDistributionRules(t *testing.T) {
 
 		rules, err := BuildDistributionRules(ctx)
 		require.NoError(t, err)
-		expected := []*distribution.DistributionCommonParams{
+		expected := []model.DistributionRule{
 			{SiteName: "site-1", CityName: "city-1", CountryCodes: []string{"US"}},
 			{SiteName: "site-2"},
 		}
@@ -463,7 +461,7 @@ func TestParseDistributeModifications(t *testing.T) {
 		name        string
 		pattern     string
 		target      string
-		expected    []artUtils.PathMapping
+		expected    []model.DistributionPathMapping
 		expectError bool
 	}{
 		{
@@ -474,7 +472,7 @@ func TestParseDistributeModifications(t *testing.T) {
 			name:    "pattern and target provided",
 			pattern: "my-repo/(*)",
 			target:  "edge/{1}",
-			expected: []artUtils.PathMapping{
+			expected: []model.DistributionPathMapping{
 				{Input: "^my-repo/(.*)$", Output: "edge/$1"},
 			},
 		},

@@ -8,7 +8,6 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-core/v2/common/spec"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
-	lifecycleServices "github.com/jfrog/jfrog-client-go/lifecycle/services"
 	"github.com/jfrog/jfrog-client-go/utils/distribution"
 	"github.com/jfrog/jfrog-client-go/utils/errorutils"
 )
@@ -156,45 +155,51 @@ func ValidateDistributionFlags(ctx *components.Context) error {
 	return nil
 }
 
-func BuildDistributionRules(ctx *components.Context) ([]*distribution.DistributionCommonParams, error) {
-	var distributionRules *spec.DistributionRules
-	if ctx.IsFlagSet(commands.DistRulesFlag) {
-		var err error
-		distributionRules, err = spec.CreateDistributionRulesFromFile(ctx.GetStringFlagValue(commands.DistRulesFlag))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		distributionRules = &spec.DistributionRules{
-			DistributionRules: []spec.DistributionRule{{
-				SiteName:     ctx.GetStringFlagValue(commands.SiteFlag),
-				CityName:     ctx.GetStringFlagValue(commands.CityFlag),
-				CountryCodes: ctx.GetStringsArrFlagValue(commands.CountryCodesFlag),
-			}},
-		}
+func BuildDistributionRules(ctx *components.Context) ([]model.DistributionRule, error) {
+	if !ctx.IsFlagSet(commands.DistRulesFlag) {
+		return []model.DistributionRule{{
+			SiteName:     ctx.GetStringFlagValue(commands.SiteFlag),
+			CityName:     ctx.GetStringFlagValue(commands.CityFlag),
+			CountryCodes: ctx.GetStringsArrFlagValue(commands.CountryCodesFlag),
+		}}, nil
 	}
 
-	commonParams := make([]*distribution.DistributionCommonParams, 0, len(distributionRules.DistributionRules))
-	for i := range distributionRules.DistributionRules {
-		commonParams = append(commonParams, distributionRules.DistributionRules[i].ToDistributionCommonParams())
+	distributionRules, err := spec.CreateDistributionRulesFromFile(ctx.GetStringFlagValue(commands.DistRulesFlag))
+	if err != nil {
+		return nil, err
 	}
-	return commonParams, nil
+
+	modelRules := make([]model.DistributionRule, 0, len(distributionRules.DistributionRules))
+	for i := range distributionRules.DistributionRules {
+		modelRules = append(modelRules, model.DistributionRule{
+			SiteName:     distributionRules.DistributionRules[i].SiteName,
+			CityName:     distributionRules.DistributionRules[i].CityName,
+			CountryCodes: distributionRules.DistributionRules[i].CountryCodes,
+		})
+	}
+	return modelRules, nil
 }
 
-func ParseDistributeModifications(ctx *components.Context) (lifecycleServices.Modifications, error) {
+func ParseDistributeModifications(ctx *components.Context) (model.DistributionModifications, error) {
 	pattern := ctx.GetStringFlagValue(commands.MappingPatternFlag)
 	target := ctx.GetStringFlagValue(commands.MappingTargetFlag)
 
 	if pattern == "" && target == "" {
-		return lifecycleServices.Modifications{}, nil
+		return model.DistributionModifications{}, nil
 	}
 	if pattern == "" || target == "" {
-		return lifecycleServices.Modifications{}, errorutils.CheckErrorf(
+		return model.DistributionModifications{}, errorutils.CheckErrorf(
 			"the --%s and --%s options must be provided together",
 			commands.MappingPatternFlag, commands.MappingTargetFlag)
 	}
 
-	return lifecycleServices.Modifications{
-		PathMappings: distribution.CreatePathMappingsFromPatternAndTarget(pattern, target),
-	}, nil
+	pathMappings := distribution.CreatePathMappingsFromPatternAndTarget(pattern, target)
+	modelMappings := make([]model.DistributionPathMapping, 0, len(pathMappings))
+	for _, mapping := range pathMappings {
+		modelMappings = append(modelMappings, model.DistributionPathMapping{
+			Input:  mapping.Input,
+			Output: mapping.Output,
+		})
+	}
+	return model.DistributionModifications{PathMappings: modelMappings}, nil
 }
