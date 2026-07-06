@@ -839,7 +839,7 @@ func TestRemoteDeleteAppVersion(t *testing.T) {
 			mockCtx := mockservice.NewMockContext(ctrl)
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
-			_, err := service.RemoteDeleteAppVersion(mockCtx, tt.applicationKey, tt.version, request)
+			err := service.RemoteDeleteAppVersion(mockCtx, tt.applicationKey, tt.version, request)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {

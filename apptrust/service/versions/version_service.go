@@ -23,7 +23,7 @@ type VersionService interface {
 	UpdateAppVersion(ctx service.Context, applicationKey string, version string, request *model.UpdateAppVersionRequest) ([]byte, error)
 	UpdateAppVersionSources(ctx service.Context, applicationKey string, version string, request *model.UpdateVersionSourcesRequest, sync bool, dryRun bool, failFast bool) ([]byte, error)
 	DistributeAppVersion(ctx service.Context, applicationKey string, version string, request *model.DistributeAppVersionRequest) error
-	RemoteDeleteAppVersion(ctx service.Context, applicationKey string, version string, request *model.RemoteDeleteAppVersionRequest) ([]byte, error)
+	RemoteDeleteAppVersion(ctx service.Context, applicationKey string, version string, request *model.RemoteDeleteAppVersionRequest) error
 }
 
 type versionService struct{}
@@ -176,19 +176,20 @@ func (vs *versionService) DistributeAppVersion(ctx service.Context, applicationK
 	return nil
 }
 
-func (vs *versionService) RemoteDeleteAppVersion(ctx service.Context, applicationKey, version string, request *model.RemoteDeleteAppVersionRequest) ([]byte, error) {
+func (vs *versionService) RemoteDeleteAppVersion(ctx service.Context, applicationKey, version string, request *model.RemoteDeleteAppVersionRequest) error {
 	endpoint := fmt.Sprintf("/v1/applications/%s/versions/%s/remote-delete", applicationKey, version)
 	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, request, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if !apphttp.IsSuccessStatusCode(response.StatusCode) {
-		return nil, fmt.Errorf("failed to delete application version remotely. Status code: %d. \n%s",
+		return fmt.Errorf("failed to delete application version remotely. Status code: %d. \n%s",
 			response.StatusCode, responseBody)
 	}
 
-	return responseBody, nil
+	log.Info(fmt.Sprintf("Remote deletion of application version '%s/%s' triggered successfully.", applicationKey, version))
+	return nil
 }
 
 func logSuccessMessage(sync bool, request *model.CreateAppVersionRequest, dryRun bool) {

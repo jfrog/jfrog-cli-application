@@ -68,8 +68,9 @@ func (rd *remoteDeleteAppVersionCommand) prepareAndRunCommand(ctx *components.Co
 		return err
 	}
 
-	if !rd.confirmRemoteDelete() {
-		return nil
+	confirmed, err := rd.confirmRemoteDelete()
+	if err != nil || !confirmed {
+		return err
 	}
 
 	return commonCLiCommands.Exec(rd)
@@ -89,12 +90,23 @@ func (rd *remoteDeleteAppVersionCommand) buildRequestPayload(ctx *components.Con
 
 func (rd *remoteDeleteAppVersionCommand) confirmRemoteDelete() bool {
 	if rd.quiet {
-		return true
+		return true, nil
 	}
 
-	message := fmt.Sprintf("Are you sure you want to delete the application version '%s/%s' remotely from the distribution targets?",
-		rd.applicationKey, rd.version)
-	return coreutils.AskYesNo(message, false)
+	message := fmt.Sprintf("Are you sure you want to delete the application version '%s/%s' remotely ", rd.applicationKey, rd.version)
+	if rd.distributionRulesEmpty() {
+		message += "from all distribution targets?"
+	} else {
+		bytes, err := json.Marshal(rd.requestPayload.DistributionRules)
+		if err != nil {
+			return false, errorutils.CheckError(err)
+		}
+
+		log.Output(clientutils.IndentJson(bytes))
+		message += "from all targets with the above distribution rules?"
+	}
+
+	return coreutils.AskYesNo(message, false), nil
 }
 
 func GetRemoteDeleteAppVersionCommand(appContext app.Context) components.Command {
@@ -107,7 +119,7 @@ func GetRemoteDeleteAppVersionCommand(appContext app.Context) components.Command
 		AIDescription: `Delete a previously distributed application version's artifacts from one or more distribution targets according to distribution rules.
 
 When to use:
-- Reclaim space on distribution targets by removing artifacts of a version that is no longer needed there.
+- Remove a version that was distributed to distribution targets and should no longer be available there.
 - Roll back a distribution without deleting the application version itself.
 
 Prerequisites:
