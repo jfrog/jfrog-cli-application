@@ -129,7 +129,6 @@ Gotchas:
 
 Related: jf apptrust version-distribute, jf apptrust version-delete`,
 		Category: common.CategoryVersion,
-		Aliases:  []string{"vdelr"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
