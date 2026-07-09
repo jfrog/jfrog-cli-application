@@ -13,6 +13,7 @@ import (
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
+	"github.com/jfrog/jfrog-cli-core/v2/utils/coreutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -170,6 +171,8 @@ func TestRemoteDeleteAppVersionCommand_QuietSuite(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv(coreutils.CI, "false")
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
