@@ -54,7 +54,7 @@ func (rd *remoteDeleteAppVersionCommand) prepareAndRunCommand(ctx *components.Co
 
 	rd.applicationKey = ctx.Arguments[0]
 	rd.version = ctx.Arguments[1]
-	rd.quiet = ctx.GetBoolFlagValue(commands.QuietFlag)
+	rd.quiet = pluginsCommon.GetQuietValue(ctx)
 
 	if err := ValidateDistributionFlags(ctx); err != nil {
 		return err
