@@ -116,6 +116,7 @@ Gotchas:
 
 Related: jf apptrust version-delete-remote, jf apptrust version-release`,
 		Category: common.CategoryVersion,
+		Aliases:  []string{"vdist"},
 		Arguments: []components.Argument{
 			{
 				Name:        "application-key",
