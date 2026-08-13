@@ -7,10 +7,31 @@ import (
 	mockversions "github.com/jfrog/jfrog-cli-application/apptrust/service/versions/mocks"
 	"go.uber.org/mock/gomock"
 
+	"github.com/jfrog/jfrog-cli-application/apptrust/app"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	"github.com/jfrog/jfrog-cli-core/v2/utils/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestGetRollbackAppVersionCommandArguments(t *testing.T) {
+	cmd := GetRollbackAppVersionCommand(app.NewAppContext())
+
+	require.Len(t, cmd.Arguments, 3, "version-rollback must declare three positional arguments")
+
+	assert.Equal(t, "application-key", cmd.Arguments[0].Name)
+	assert.False(t, cmd.Arguments[0].Optional)
+
+	assert.Equal(t, "version", cmd.Arguments[1].Name)
+	assert.False(t, cmd.Arguments[1].Optional)
+
+	assert.Equal(t, "from-stage", cmd.Arguments[2].Name)
+	assert.False(t, cmd.Arguments[2].Optional)
+	assert.Equal(t,
+		"The name of the stage from which to roll back the application version.",
+		cmd.Arguments[2].Description,
+	)
+}
 
 func TestRollbackAppVersionCommand_Run(t *testing.T) {
 	tests := []struct {
