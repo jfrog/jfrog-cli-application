@@ -1,0 +1,13 @@
+{
+  "aql": {
+    "items.find": {"repo":"my-repo"}
+  },
+  "filters": {
+    "included": [
+      {
+        "package_type": "docker",
+        "package_name": "frontend-*"
+      }
+    ]
+  }
+}

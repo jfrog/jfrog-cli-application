@@ -194,6 +194,21 @@ func TestUpdateAppVersionSourcesCommand_SourceFlagsSuite(t *testing.T) {
 			expectsFailFast: true,
 		},
 		{
+			name: "update with aql spec file",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key", "1.0.0"}
+				ctx.AddStringFlag(commands.SpecFlag, "./testfiles/aql-spec.json")
+			},
+			expectsPayload: &model.UpdateVersionSourcesRequest{
+				AddSources: &model.CreateVersionSources{
+					AQL: `items.find({"repo":"my-repo"})`,
+				},
+			},
+			expectsSync:     true,
+			expectsDryRun:   false,
+			expectsFailFast: true,
+		},
+		{
 			name: "update with spec file and spec-vars",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key", "1.0.0"}

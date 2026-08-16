@@ -2,6 +2,7 @@ package version
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -21,6 +22,11 @@ type versionSpec struct {
 	ReleaseBundles []model.CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
 	Versions       []model.CreateVersionReference     `json:"versions,omitempty"`
 	Filters        *model.CreateVersionFilters        `json:"filters,omitempty"`
+	AQL            *aqlSpec                           `json:"aql,omitempty"`
+}
+
+type aqlSpec struct {
+	ItemsFind json.RawMessage `json:"items.find,omitempty"`
 }
 
 // validateNoSpecAndFlagsTogether returns error if both --spec and any other source flag or filter flag are set.
@@ -154,9 +160,11 @@ func loadSourcesFromSpec(ctx *components.Context) (*model.CreateVersionSources, 
 		return nil, nil, err
 	}
 
+	aql := parseAQL(spec)
+
 	// Validation: if all sources are empty, return error
-	if (len(spec.Packages) == 0) && (len(spec.Builds) == 0) && (len(spec.ReleaseBundles) == 0) && (len(spec.Versions) == 0) && (len(spec.Artifacts) == 0) {
-		return nil, nil, errorutils.CheckErrorf("Spec file is empty: must provide at least one source (artifacts, packages, builds, release_bundles, or versions)")
+	if len(spec.Packages) == 0 && len(spec.Builds) == 0 && len(spec.ReleaseBundles) == 0 && len(spec.Versions) == 0 && len(spec.Artifacts) == 0 && aql == "" {
+		return nil, nil, errorutils.CheckErrorf("Spec file is empty: must provide at least one source (artifacts, packages, builds, release_bundles, versions, or aql)")
 	}
 
 	sources := &model.CreateVersionSources{
@@ -165,9 +173,21 @@ func loadSourcesFromSpec(ctx *components.Context) (*model.CreateVersionSources, 
 		Builds:         spec.Builds,
 		ReleaseBundles: spec.ReleaseBundles,
 		Versions:       spec.Versions,
+		AQL:            aql,
 	}
 
 	return sources, spec.Filters, nil
+}
+
+func parseAQL(spec *versionSpec) string {
+	if spec == nil || spec.AQL == nil {
+		return ""
+	}
+	itemsFind := string(spec.AQL.ItemsFind)
+	if itemsFind == "" || itemsFind == "null" {
+		return ""
+	}
+	return fmt.Sprintf("items.find(%s)", itemsFind)
 }
 
 func parseBuilds(buildsStr string) ([]model.CreateVersionBuild, error) {

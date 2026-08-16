@@ -139,7 +139,8 @@ func TestVersionUpdate_OutputFormat(t *testing.T) {
 
 func TestVersionUpdateSources_OutputFormat(t *testing.T) {
 	testPackage := utils.GetTestPackage(t)
-	artifactPath := utils.GetTestArtifact(t)
+	artifactRepo, artifactFile := utils.GetTestArtifact(t)
+	artifactPath := artifactRepo + "/" + artifactFile
 
 	prepareDraftVersion := func(t *testing.T, suffix string) (appKey, version string, cleanup func()) {
 		appKey = utils.GenerateUniqueKey("version-upd-src-fmt-" + suffix)

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -147,6 +149,86 @@ func TestCreateVersion_ReleaseBundle(t *testing.T) {
 	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
 	require.NoError(t, err)
 	assertVersionContent(t, testPackage, versionContent, statusCode, appKey, version)
+}
+
+func TestCreateVersion_AQL(t *testing.T) {
+	appKey := utils.GenerateUniqueKey("app-version-create-aql")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	repoKey, fileName := utils.GetTestArtifact(t)
+	artifactPath := repoKey + "/" + fileName
+	version := "1.0.13"
+
+	specPath := writeAQLSpec(t, fmt.Sprintf(`{"repo":"%s","name":"%s"}`, repoKey, fileName), "")
+
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, "--spec="+specPath)
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+
+	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Equal(t, utils.StatusCompleted, versionContent.Status)
+	assert.True(t, containsArtifactPath(versionContent, artifactPath),
+		"expected artifact %q resolved by AQL to appear in releasables", artifactPath)
+}
+
+func TestCreateVersion_AQL_WithExcludeFilter(t *testing.T) {
+	appKey := utils.GenerateUniqueKey("app-version-create-aql-filters")
+	utils.CreateBasicApplication(t, appKey)
+	defer utils.DeleteApplication(t, appKey)
+
+	repoKey := utils.CreateGenericRepoWithEnv(t, utils.GenerateUniqueKey("aql-filter"), nil)
+	includedPath := utils.UploadTestArtifact(t, repoKey, "included-artifact.txt")
+	excludedPath := utils.UploadTestArtifact(t, repoKey, "excluded-artifact.txt")
+	version := "1.0.14"
+
+	itemsFindJSON := fmt.Sprintf(`{"repo":"%s"}`, repoKey)
+	filtersJSON := fmt.Sprintf(`"filters":{"excluded":[{"path":"%s"}]}`, excludedPath)
+	specPath := writeAQLSpec(t, itemsFindJSON, filtersJSON)
+
+	err := utils.AppTrustCli.Exec("version-create", appKey, version, "--spec="+specPath)
+	require.NoError(t, err)
+	defer utils.DeleteApplicationVersion(t, appKey, version)
+
+	versionContent, statusCode, err := utils.GetApplicationVersion(appKey, version)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, statusCode)
+	require.NotNil(t, versionContent)
+	assert.Equal(t, appKey, versionContent.ApplicationKey)
+	assert.Equal(t, version, versionContent.Version)
+	assert.Equal(t, utils.StatusCompleted, versionContent.Status)
+	assert.True(t, containsArtifactPath(versionContent, includedPath),
+		"expected included artifact %q to remain after filter", includedPath)
+	assert.False(t, containsArtifactPath(versionContent, excludedPath),
+		"expected excluded artifact %q to be filtered out", excludedPath)
+}
+
+func writeAQLSpec(t *testing.T, itemsFindJSON, extraTopLevelJSON string) string {
+	t.Helper()
+	body := fmt.Sprintf(`{"aql":{"items.find":%s}`, itemsFindJSON)
+	if extraTopLevelJSON != "" {
+		body += "," + extraTopLevelJSON
+	}
+	body += "}"
+	path := filepath.Join(t.TempDir(), "aql-spec.json")
+	require.NoError(t, os.WriteFile(path, []byte(body), 0o600))
+	return path
+}
+
+func containsArtifactPath(vc *utils.VersionContentResponse, target string) bool {
+	for _, r := range vc.Releasables {
+		for _, a := range r.Artifacts {
+			if strings.Contains(target, a.Path) || strings.Contains(a.Path, target) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func TestCreateVersion_Build(t *testing.T) {
@@ -378,7 +460,8 @@ func TestUpdateDraftVersionSources(t *testing.T) {
 	err := utils.AppTrustCli.Exec("version-create", appKey, version, packageFlag, "--draft")
 	require.NoError(t, err)
 	defer utils.DeleteApplicationVersion(t, appKey, version)
-	artifactPath := utils.GetTestArtifact(t)
+	artifactRepo, artifactFile := utils.GetTestArtifact(t)
+	artifactPath := artifactRepo + "/" + artifactFile
 	artifactFlag := fmt.Sprintf("--source-type-artifacts=path=%s", artifactPath)
 
 	err = utils.AppTrustCli.Exec("version-update-sources", appKey, version, artifactFlag)

@@ -37,9 +37,10 @@ var (
 
 	AppTrustCli *coreTests.JfrogCli
 
-	testProjectKey   string
-	testPackageRes   *TestPackageResources
-	testArtifactPath string
+	testProjectKey       string
+	testPackageRes       *TestPackageResources
+	testArtifactRepoKey  string
+	testArtifactFileName string
 )
 
 func LoadCredentials() string {
@@ -81,12 +82,13 @@ func GetTestPackage(t *testing.T) *TestPackageResources {
 	return testPackageRes
 }
 
-func GetTestArtifact(t *testing.T) string {
-	if testArtifactPath == "" {
-		repoKey := createGenericRepo(t)
-		testArtifactPath = UploadTestArtifact(t, repoKey, "test-artifact.txt")
+func GetTestArtifact(t *testing.T) (repoKey, fileName string) {
+	if testArtifactRepoKey == "" {
+		testArtifactRepoKey = createGenericRepo(t)
+		testArtifactFileName = "test-artifact.txt"
+		UploadTestArtifact(t, testArtifactRepoKey, testArtifactFileName)
 	}
-	return testArtifactPath
+	return testArtifactRepoKey, testArtifactFileName
 }
 
 func GenerateUniqueKey(prefix string) string {

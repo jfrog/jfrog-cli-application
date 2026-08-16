@@ -1,6 +1,7 @@
 package version
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
@@ -575,6 +576,59 @@ func TestParseArtifacts(t *testing.T) {
 	}
 }
 
+func TestParseAQL(t *testing.T) {
+	tests := []struct {
+		name     string
+		spec     *versionSpec
+		expected string
+	}{
+		{
+			name: "items_find object",
+			spec: &versionSpec{
+				AQL: &aqlSpec{ItemsFind: json.RawMessage(`{"repo":"my-repo"}`)},
+			},
+			expected: `items.find({"repo":"my-repo"})`,
+		},
+		{
+			name: "nested items_find object",
+			spec: &versionSpec{
+				AQL: &aqlSpec{ItemsFind: json.RawMessage(`{"repo":"my-repo","$or":[{"type":"file"}]}`)},
+			},
+			expected: `items.find({"repo":"my-repo","$or":[{"type":"file"}]})`,
+		},
+		{
+			name:     "aql absent",
+			spec:     &versionSpec{},
+			expected: "",
+		},
+		{
+			name: "aql present with empty items_find",
+			spec: &versionSpec{
+				AQL: &aqlSpec{ItemsFind: json.RawMessage(``)},
+			},
+			expected: "",
+		},
+		{
+			name: "aql present with null items_find",
+			spec: &versionSpec{
+				AQL: &aqlSpec{ItemsFind: json.RawMessage(`null`)},
+			},
+			expected: "",
+		},
+		{
+			name:     "spec nil aql",
+			spec:     &versionSpec{AQL: nil},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, parseAQL(tt.spec))
+		})
+	}
+}
+
 func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -724,6 +778,38 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 							Version:        "4.5.6",
 						},
 					},
+					AQL: `items.find({"repo":"my-repo","type":"file"})`,
+				},
+			},
+		},
+		{
+			name:     "aql spec file",
+			specPath: "./testfiles/aql-spec.json",
+			args:     []string{"app-aql", "1.0.0"},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-aql",
+				Version:        "1.0.0",
+				Draft:          false,
+				Sources: &model.CreateVersionSources{
+					AQL: `items.find({"repo":"my-repo"})`,
+				},
+			},
+		},
+		{
+			name:     "aql with filters spec file",
+			specPath: "./testfiles/aql-with-filters-spec.json",
+			args:     []string{"app-aql-filters", "1.0.0"},
+			expectsPayload: &model.CreateAppVersionRequest{
+				ApplicationKey: "app-aql-filters",
+				Version:        "1.0.0",
+				Draft:          false,
+				Sources: &model.CreateVersionSources{
+					AQL: `items.find({"repo":"my-repo"})`,
+				},
+				Filters: &model.CreateVersionFilters{
+					Included: []*model.CreateVersionSourceFilter{
+						{PackageType: "docker", PackageName: "frontend-*"},
+					},
 				},
 			},
 		},
@@ -822,6 +908,7 @@ func TestCreateAppVersionCommand_SpecFileSuite(t *testing.T) {
 							Version:        "4.5.6",
 						},
 					},
+					AQL: `items.find({"repo":"my-repo","type":"file"})`,
 				},
 			},
 		},

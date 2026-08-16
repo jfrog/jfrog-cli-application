@@ -1,0 +1,5 @@
+{
+  "aql": {
+    "items.find": {"repo":"my-repo"}
+  }
+}

@@ -33,6 +33,7 @@ type CreateVersionSources struct {
 	Builds         []CreateVersionBuild         `json:"builds,omitempty"`
 	ReleaseBundles []CreateVersionReleaseBundle `json:"release_bundles,omitempty"`
 	Versions       []CreateVersionReference     `json:"versions,omitempty"`
+	AQL            string                       `json:"aql,omitempty"`
 }
 
 type CreateVersionSourceFilter struct {
