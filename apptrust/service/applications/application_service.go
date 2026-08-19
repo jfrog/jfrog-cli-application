@@ -3,6 +3,7 @@ package applications
 //go:generate ${PROJECT_DIR}/scripts/mockgen.sh ${GOFILE}
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -17,6 +18,8 @@ type ApplicationService interface {
 	CreateApplication(ctx service.Context, requestBody *model.AppDescriptor) ([]byte, error)
 	UpdateApplication(ctx service.Context, requestBody *model.AppDescriptor) ([]byte, error)
 	DeleteApplication(ctx service.Context, applicationKey string) error
+	ExportApplication(ctx service.Context, applicationKey string) ([]byte, error)
+	ImportApplication(ctx service.Context, envelope []byte) ([]byte, error)
 }
 
 type applicationService struct{}
@@ -70,4 +73,35 @@ func (as *applicationService) DeleteApplication(ctx service.Context, application
 
 	log.Info(fmt.Sprintf("Application \"%s\" deleted successfully.", applicationKey))
 	return nil
+}
+
+func (as *applicationService) ExportApplication(ctx service.Context, applicationKey string) ([]byte, error) {
+	endpoint := fmt.Sprintf("/v1/applications/%s/export", applicationKey)
+	response, responseBody, err := ctx.GetHttpClient().Post(endpoint, map[string]any{}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckErrorf("failed to export application. Status code: %d.\n%s",
+			response.StatusCode, responseBody)
+	}
+
+	log.Info(fmt.Sprintf("Application \"%s\" exported successfully.", applicationKey))
+	return responseBody, nil
+}
+
+func (as *applicationService) ImportApplication(ctx service.Context, envelope []byte) ([]byte, error) {
+	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/import", json.RawMessage(envelope), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return nil, errorutils.CheckErrorf("failed to import application. Status code: %d.\n%s",
+			response.StatusCode, responseBody)
+	}
+
+	log.Info("Application imported successfully.")
+	return responseBody, nil
 }
