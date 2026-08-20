@@ -34,7 +34,7 @@ func (eac *exportAppCommand) Run() error {
 		return err
 	}
 
-	envelope, err := eac.applicationService.ExportApplication(ctx, eac.applicationKey)
+	applicationEnvelope, err := eac.applicationService.ExportApplication(ctx, eac.applicationKey)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (eac *exportAppCommand) Run() error {
 	if err := os.MkdirAll(filepath.Dir(eac.targetPath), 0o755); err != nil {
 		return errorutils.CheckError(err)
 	}
-	if err := os.WriteFile(eac.targetPath, envelope, 0o644); err != nil {
+	if err := os.WriteFile(eac.targetPath, applicationEnvelope, 0o644); err != nil {
 		return errorutils.CheckError(err)
 	}
 
@@ -110,7 +110,7 @@ Common patterns:
   $ jf apptrust app-export my-app
   $ jf apptrust app-export my-app ./exports/
   $ jf apptrust app-export my-app ./my-app.json
-  $ jf at app-export my-app ./exports/ --server-id=my-server
+  $ jf at aexp my-app ./exports/ --server-id=my-server
 
 Gotchas:
 - This exports application metadata only, not versions or artifacts.

@@ -86,18 +86,17 @@ func (mr *MockApplicationServiceMockRecorder) ExportApplication(ctx, application
 }
 
 // ImportApplication mocks base method.
-func (m *MockApplicationService) ImportApplication(ctx service.Context, envelope []byte) ([]byte, error) {
+func (m *MockApplicationService) ImportApplication(ctx service.Context, applicationEnvelope []byte) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ImportApplication", ctx, envelope)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "ImportApplication", ctx, applicationEnvelope)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // ImportApplication indicates an expected call of ImportApplication.
-func (mr *MockApplicationServiceMockRecorder) ImportApplication(ctx, envelope any) *gomock.Call {
+func (mr *MockApplicationServiceMockRecorder) ImportApplication(ctx, applicationEnvelope any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportApplication", reflect.TypeOf((*MockApplicationService)(nil).ImportApplication), ctx, envelope)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportApplication", reflect.TypeOf((*MockApplicationService)(nil).ImportApplication), ctx, applicationEnvelope)
 }
 
 // UpdateApplication mocks base method.

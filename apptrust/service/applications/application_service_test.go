@@ -122,7 +122,7 @@ func TestApplicationService_ExportApplication(t *testing.T) {
 }
 
 func TestApplicationService_ImportApplication(t *testing.T) {
-	envelope := []byte(`{"applicationKey":"app-123","schemaVersion":"1"}`)
+	applicationEnvelope := []byte(`{"applicationKey":"app-123","schemaVersion":"1"}`)
 
 	tests := []struct {
 		name          string
@@ -166,7 +166,7 @@ func TestApplicationService_ImportApplication(t *testing.T) {
 			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
 
 			as := NewApplicationService()
-			_, err := as.ImportApplication(mockCtx, envelope)
+			err := as.ImportApplication(mockCtx, applicationEnvelope)
 
 			if tt.expectedError != "" {
 				assert.EqualError(t, err, tt.expectedError)

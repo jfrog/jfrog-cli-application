@@ -19,7 +19,7 @@ type ApplicationService interface {
 	UpdateApplication(ctx service.Context, requestBody *model.AppDescriptor) ([]byte, error)
 	DeleteApplication(ctx service.Context, applicationKey string) error
 	ExportApplication(ctx service.Context, applicationKey string) ([]byte, error)
-	ImportApplication(ctx service.Context, envelope []byte) ([]byte, error)
+	ImportApplication(ctx service.Context, applicationEnvelope []byte) error
 }
 
 type applicationService struct{}
@@ -91,17 +91,17 @@ func (as *applicationService) ExportApplication(ctx service.Context, application
 	return responseBody, nil
 }
 
-func (as *applicationService) ImportApplication(ctx service.Context, envelope []byte) ([]byte, error) {
-	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/import", json.RawMessage(envelope), nil)
+func (as *applicationService) ImportApplication(ctx service.Context, applicationEnvelope []byte) error {
+	response, responseBody, err := ctx.GetHttpClient().Post("/v1/applications/import", json.RawMessage(applicationEnvelope), nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return nil, errorutils.CheckErrorf("failed to import application. Status code: %d.\n%s",
+		return errorutils.CheckErrorf("failed to import application. Status code: %d.\n%s",
 			response.StatusCode, responseBody)
 	}
 
 	log.Info("Application imported successfully.")
-	return responseBody, nil
+	return nil
 }
