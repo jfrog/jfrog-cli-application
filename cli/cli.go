@@ -55,6 +55,8 @@ Related: jf rt, jf release-bundle commands.`,
 				application.GetCreateAppCommand(appContext),
 				application.GetUpdateAppCommand(appContext),
 				application.GetDeleteAppCommand(appContext),
+				application.GetExportAppCommand(appContext),
+				application.GetImportAppCommand(appContext),
 			},
 		},
 	)

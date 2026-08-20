@@ -23,6 +23,8 @@ const (
 	AppCreate            = "app-create"
 	AppUpdate            = "app-update"
 	AppDelete            = "app-delete"
+	AppExport            = "app-export"
+	AppImport            = "app-import"
 )
 
 const (
@@ -303,6 +305,20 @@ var commandFlags = map[string][]string{
 	},
 
 	AppDelete: {
+		url,
+		user,
+		accessToken,
+		serverId,
+	},
+
+	AppExport: {
+		url,
+		user,
+		accessToken,
+		serverId,
+	},
+
+	AppImport: {
 		url,
 		user,
 		accessToken,
