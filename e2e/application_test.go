@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -110,4 +111,31 @@ func TestDeleteApp(t *testing.T) {
 	_, statusCode, err := utils.GetApplication(appKey)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, statusCode)
+}
+
+func TestExportImportApp(t *testing.T) {
+	projectKey := utils.GetTestProjectKey(t)
+	appKey := utils.GenerateUniqueKey("app-export")
+	utils.CreateBasicApplication(t, appKey)
+
+	exportPath := filepath.Join(t.TempDir(), "export.json")
+	err := utils.AppTrustCli.Exec("app-export", appKey, exportPath)
+	assert.NoError(t, err)
+
+	err = utils.AppTrustCli.Exec("app-delete", appKey)
+	assert.NoError(t, err)
+
+	_, statusCode, err := utils.GetApplication(appKey)
+	assert.NoError(t, err)
+	assert.Equal(t, 404, statusCode)
+
+	err = utils.AppTrustCli.Exec("app-import", exportPath)
+	assert.NoError(t, err)
+	defer utils.DeleteApplication(t, appKey)
+
+	app, _, err := utils.GetApplication(appKey)
+	assert.NoError(t, err)
+	assert.Equal(t, appKey, app.ApplicationKey)
+	assert.Equal(t, appKey, app.ApplicationName)
+	assert.Equal(t, projectKey, app.ProjectKey)
 }
