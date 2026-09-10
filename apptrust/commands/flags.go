@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"strconv"
+
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	pluginsCommon "github.com/jfrog/jfrog-cli-core/v2/plugins/common"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
@@ -18,6 +20,8 @@ const (
 	VersionUpdateSources = "version-update-sources"
 	VersionDistribute    = "version-distribute"
 	VersionRemoteDelete  = "version-delete-remote"
+	VersionExport        = "version-export"
+	VersionImport        = "version-import"
 	PackageBind          = "package-bind"
 	PackageUnbind        = "package-unbind"
 	AppCreate            = "app-create"
@@ -77,6 +81,14 @@ const (
 	MappingPatternFlag                = "mapping-pattern"
 	MappingTargetFlag                 = "mapping-target"
 	QuietFlag                         = "quiet"
+	MinSplitFlag                      = "min-split"
+	SplitCountFlag                    = "split-count"
+	UnpromotedFlag                    = "unpromoted"
+)
+
+const (
+	DefaultDownloadMinSplitKb = 5120
+	DefaultDownloadSplitCount = 3
 )
 
 // Flag keys mapped to their corresponding components.Flag definition.
@@ -131,6 +143,9 @@ var flagsMap = map[string]components.Flag{
 	MappingPatternFlag:                components.NewStringFlag(MappingPatternFlag, "Specify along with "+MappingTargetFlag+" to distribute artifacts to a different path on the edge node. You can use wildcards to specify multiple artifacts.", func(f *components.StringFlag) { f.Mandatory = false }),
 	MappingTargetFlag:                 components.NewStringFlag(MappingTargetFlag, "The target path for distributed artifacts on the edge node. If not specified, the artifacts will have the same path and name on the edge node, as on the source Artifactory server. For flexibility in specifying the distribution path, you can include placeholders in the form of {1}, {2} which are replaced by corresponding tokens in the pattern path that are enclosed in parenthesis.", func(f *components.StringFlag) { f.Mandatory = false }),
 	QuietFlag:                         components.NewBoolFlag(QuietFlag, "Set to true to skip the confirmation message. When $CI is true, the default value is true.", components.WithBoolDefaultValueFalse()),
+	MinSplitFlag:                      components.NewStringFlag(MinSplitFlag, "Minimum file size in KB to split into ranges when downloading. Set to -1 for no splits.", func(f *components.StringFlag) { f.DefaultValue = strconv.Itoa(DefaultDownloadMinSplitKb) }),
+	SplitCountFlag:                    components.NewStringFlag(SplitCountFlag, "Number of parts to split a file when downloading. Set to 0 for no splits.", func(f *components.StringFlag) { f.DefaultValue = strconv.Itoa(DefaultDownloadSplitCount) }),
+	UnpromotedFlag:                    components.NewBoolFlag(UnpromotedFlag, "Import the version without placing its artifacts in any repository.", components.WithBoolDefaultValueFalse()),
 }
 
 var commandFlags = map[string][]string{
@@ -247,6 +262,23 @@ var commandFlags = map[string][]string{
 		SiteFlag,
 		CityFlag,
 		CountryCodesFlag,
+	},
+	VersionExport: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		MinSplitFlag,
+		SplitCountFlag,
+	},
+	VersionImport: {
+		url,
+		user,
+		accessToken,
+		serverId,
+		MappingPatternFlag,
+		MappingTargetFlag,
+		UnpromotedFlag,
 	},
 
 	PackageBind: {

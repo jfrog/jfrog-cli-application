@@ -84,6 +84,36 @@ func (mr *MockVersionServiceMockRecorder) DistributeAppVersion(ctx, applicationK
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DistributeAppVersion", reflect.TypeOf((*MockVersionService)(nil).DistributeAppVersion), ctx, applicationKey, version, request)
 }
 
+// GetExportStatus mocks base method.
+func (m *MockVersionService) GetExportStatus(ctx service.Context, applicationKey, version string) (*model.AppVersionExportStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExportStatus", ctx, applicationKey, version)
+	ret0, _ := ret[0].(*model.AppVersionExportStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExportStatus indicates an expected call of GetExportStatus.
+func (mr *MockVersionServiceMockRecorder) GetExportStatus(ctx, applicationKey, version any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExportStatus", reflect.TypeOf((*MockVersionService)(nil).GetExportStatus), ctx, applicationKey, version)
+}
+
+// ImportAppVersion mocks base method.
+func (m *MockVersionService) ImportAppVersion(ctx service.Context, applicationKey, archivePath string, options *model.ImportAppVersionOptions) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImportAppVersion", ctx, applicationKey, archivePath, options)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImportAppVersion indicates an expected call of ImportAppVersion.
+func (mr *MockVersionServiceMockRecorder) ImportAppVersion(ctx, applicationKey, archivePath, options any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportAppVersion", reflect.TypeOf((*MockVersionService)(nil).ImportAppVersion), ctx, applicationKey, archivePath, options)
+}
+
 // PromoteAppVersion mocks base method.
 func (m *MockVersionService) PromoteAppVersion(ctx service.Context, applicationKey, version string, payload *model.PromoteAppVersionRequest, sync bool) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -141,6 +171,20 @@ func (m *MockVersionService) RollbackAppVersion(ctx service.Context, application
 func (mr *MockVersionServiceMockRecorder) RollbackAppVersion(ctx, applicationKey, version, request, sync any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RollbackAppVersion", reflect.TypeOf((*MockVersionService)(nil).RollbackAppVersion), ctx, applicationKey, version, request, sync)
+}
+
+// TriggerExport mocks base method.
+func (m *MockVersionService) TriggerExport(ctx service.Context, applicationKey, version string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TriggerExport", ctx, applicationKey, version)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TriggerExport indicates an expected call of TriggerExport.
+func (mr *MockVersionServiceMockRecorder) TriggerExport(ctx, applicationKey, version any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerExport", reflect.TypeOf((*MockVersionService)(nil).TriggerExport), ctx, applicationKey, version)
 }
 
 // UpdateAppVersion mocks base method.

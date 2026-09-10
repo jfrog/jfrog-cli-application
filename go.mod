@@ -42,7 +42,7 @@ require (
 	github.com/gookit/color v1.6.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.8.0 // indirect
-	github.com/jfrog/archiver/v3 v3.6.3 // indirect
+	github.com/jfrog/archiver/v3 v3.6.4 // indirect
 	github.com/jfrog/gofrog v1.7.6 // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
@@ -86,3 +86,5 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/jfrog/jfrog-client-go => github.com/asafgabai/jfrog-client-go v0.18.1-0.20260909171220-b99ca2968275

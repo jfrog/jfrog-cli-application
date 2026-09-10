@@ -5,7 +5,12 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
+	"os"
+	"path/filepath"
 
 	"github.com/jfrog/jfrog-client-go/utils/log"
 
@@ -21,9 +26,18 @@ import (
 
 const apptrustApiPath = "apptrust/api"
 
+type MultipartPart struct {
+	Name        string
+	Filename    string
+	ContentType string
+	Body        []byte
+	Path        string
+}
+
 type ApptrustHttpClient interface {
 	GetHttpClient() *jfroghttpclient.JfrogHttpClient
 	Post(path string, requestBody interface{}, params map[string]string) (resp *http.Response, body []byte, err error)
+	PostMultipart(path string, parts []MultipartPart, params map[string]string) (resp *http.Response, body []byte, err error)
 	Get(path string, params map[string]string) (resp *http.Response, body []byte, err error)
 	Patch(path string, requestBody interface{}, params map[string]string) (resp *http.Response, body []byte, err error)
 	Delete(path string, params map[string]string) (resp *http.Response, body []byte, err error)
@@ -99,6 +113,84 @@ func (c *apptrustHttpClient) Post(path string, requestBody interface{}, params m
 
 	log.Debug("Sending POST request to:", url)
 	return c.client.SendPost(url, requestContent, c.getJsonHttpClientDetails())
+}
+
+func (c *apptrustHttpClient) PostMultipart(path string, parts []MultipartPart, params map[string]string) (resp *http.Response, body []byte, err error) {
+	url, err := utils.BuildUrl(c.serverDetails.Url, apptrustApiPath+path, params)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	contentType := mw.FormDataContentType()
+	writeErrCh := make(chan error, 1)
+	go func() {
+		writeErr := writeMultipartParts(mw, parts)
+		_ = pw.CloseWithError(writeErr)
+		writeErrCh <- writeErr
+	}()
+
+	log.Debug("Sending multipart POST request to:", url)
+	resp, body, err = c.sendMultipartPost(url, pr, contentType)
+	_ = pr.Close()
+	if writeErr := <-writeErrCh; writeErr != nil {
+		return nil, nil, writeErr
+	}
+	return resp, body, err
+}
+
+func writeMultipartParts(mw *multipart.Writer, parts []MultipartPart) error {
+	for _, part := range parts {
+		if err := writeMultipartPart(mw, part); err != nil {
+			return err
+		}
+	}
+	return mw.Close()
+}
+
+func writeMultipartPart(mw *multipart.Writer, part MultipartPart) (err error) {
+	filename := part.Filename
+	if filename == "" && part.Path != "" {
+		filename = filepath.Base(part.Path)
+	}
+
+	header := make(textproto.MIMEHeader)
+	filenamePart := ""
+	if filename != "" {
+		filenamePart = fmt.Sprintf(`; filename="%s"`, filename)
+	}
+	header.Set("Content-Disposition", fmt.Sprintf(`form-data; name=%q%s`, part.Name, filenamePart))
+	if part.ContentType != "" {
+		header.Set("Content-Type", part.ContentType)
+	}
+	writer, err := mw.CreatePart(header)
+	if err != nil {
+		return err
+	}
+	if part.Path == "" {
+		_, err = writer.Write(part.Body)
+		return err
+	}
+
+	// File part
+	file, err := os.Open(part.Path)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if cerr := file.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
+	_, err = io.Copy(writer, file)
+	return err
+}
+
+func (c *apptrustHttpClient) sendMultipartPost(url string, body io.Reader, contentType string) (*http.Response, []byte, error) {
+	details := c.authDetails.CreateHttpClientDetails()
+	details.AddHeader("Content-Type", contentType)
+	return c.client.SendPostFromReader(url, body, &details)
 }
 
 func (c *apptrustHttpClient) Get(path string, params map[string]string) (resp *http.Response, body []byte, err error) {
