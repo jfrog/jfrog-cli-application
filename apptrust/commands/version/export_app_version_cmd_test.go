@@ -126,6 +126,11 @@ func TestShouldStopExportPolling(t *testing.T) {
 			wantStop: false,
 		},
 		{
+			name:     "not triggered keeps polling",
+			status:   &model.AppVersionExportStatus{Status: "NOT_TRIGGERED"},
+			wantStop: false,
+		},
+		{
 			name: "completed stops",
 			status: &model.AppVersionExportStatus{
 				Status:              "COMPLETED",

@@ -156,11 +156,11 @@ func writeMultipartPart(mw *multipart.Writer, part MultipartPart) (err error) {
 	}
 
 	header := make(textproto.MIMEHeader)
-	filenamePart := ""
+	disposition := fmt.Sprintf(`form-data; name=%q`, part.Name)
 	if filename != "" {
-		filenamePart = fmt.Sprintf(`; filename="%s"`, filename)
+		disposition += fmt.Sprintf(`; filename=%q`, filename)
 	}
-	header.Set("Content-Disposition", fmt.Sprintf(`form-data; name=%q%s`, part.Name, filenamePart))
+	header.Set("Content-Disposition", disposition)
 	if part.ContentType != "" {
 		header.Set("Content-Type", part.ContentType)
 	}

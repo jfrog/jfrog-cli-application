@@ -26,9 +26,10 @@ import (
 )
 
 const (
-	exportStatusCompleted  = "COMPLETED"
-	exportStatusInProgress = "IN_PROGRESS"
-	exportStatusFailed     = "FAILED"
+	exportStatusCompleted    = "COMPLETED"
+	exportStatusInProgress   = "IN_PROGRESS"
+	exportStatusNotTriggered = "NOT_TRIGGERED"
+	exportStatusFailed       = "FAILED"
 
 	exportPollInterval = 10 * time.Second
 	exportPollTimeout  = 60 * time.Minute
@@ -107,7 +108,7 @@ func (eac *exportAppVersionCommand) waitForExport(ctx service.Context) (*model.A
 
 func shouldStopExportPolling(status *model.AppVersionExportStatus) (shouldStop bool, err error) {
 	switch status.Status {
-	case exportStatusInProgress:
+	case exportStatusInProgress, exportStatusNotTriggered:
 		return false, nil
 	case exportStatusFailed:
 		return true, errorutils.CheckErrorf("application version export failed: %s", status.Message)
