@@ -1,11 +1,13 @@
 package versions
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"testing"
 
+	apphttp "github.com/jfrog/jfrog-cli-application/apptrust/http"
 	mockhttp "github.com/jfrog/jfrog-cli-application/apptrust/http/mocks"
 	mockservice "github.com/jfrog/jfrog-cli-application/apptrust/service/mocks"
 	"go.uber.org/mock/gomock"
@@ -842,6 +844,224 @@ func TestRemoteDeleteAppVersion(t *testing.T) {
 			err := service.RemoteDeleteAppVersion(mockCtx, tt.applicationKey, tt.version, request)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestTriggerExport(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewVersionService()
+	emptyBody := map[string]any{}
+
+	tests := []struct {
+		name             string
+		applicationKey   string
+		version          string
+		mockResponse     *http.Response
+		mockResponseBody string
+		mockError        error
+		expectedError    string
+	}{
+		{
+			name:             "success",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponseBody: `{"export_id":"test-app-application-versions/test-app/1.0.0"}`,
+			expectedError:    "",
+		},
+		{
+			name:             "failure",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusBadRequest},
+			mockResponseBody: "error",
+			expectedError:    "failed to trigger application version export",
+		},
+		{
+			name:           "http client error",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			mockResponse:   nil,
+			mockError:      errors.New("http client error"),
+			expectedError:  "http client error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/export"
+			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
+			mockHttpClient.EXPECT().Post(expectedEndpoint, emptyBody, nil).
+				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+
+			mockCtx := mockservice.NewMockContext(ctrl)
+			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
+
+			err := service.TriggerExport(mockCtx, tt.applicationKey, tt.version)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestGetExportStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewVersionService()
+
+	tests := []struct {
+		name             string
+		applicationKey   string
+		version          string
+		mockResponse     *http.Response
+		mockResponseBody string
+		mockError        error
+		expectedError    string
+		expectedStatus   *model.AppVersionExportStatus
+	}{
+		{
+			name:             "success - status of completed export",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
+			mockResponseBody: `{"status":"COMPLETED","download_url":"https://example.com/artifactory/repo/test-app/1.0.0/test-app-1.0.0.zip","relative_download_url":"/repo/test-app/1.0.0/test-app-1.0.0.zip"}`,
+			expectedStatus: &model.AppVersionExportStatus{
+				Status:              "COMPLETED",
+				DownloadURL:         "https://example.com/artifactory/repo/test-app/1.0.0/test-app-1.0.0.zip",
+				RelativeDownloadURL: "/repo/test-app/1.0.0/test-app-1.0.0.zip",
+			},
+		},
+		{
+			name:             "success - status of failed export",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
+			mockResponseBody: `{"status":"FAILED","message":"export failed"}`,
+			expectedStatus: &model.AppVersionExportStatus{
+				Status:  "FAILED",
+				Message: "export failed",
+			},
+		},
+		{
+			name:             "failure",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusNotFound},
+			mockResponseBody: "not found",
+			expectedError:    "failed to get application version export status",
+		},
+		{
+			name:           "http client error",
+			applicationKey: "test-app",
+			version:        "1.0.0",
+			mockResponse:   nil,
+			mockError:      errors.New("http client error"),
+			expectedError:  "http client error",
+		},
+		{
+			name:             "invalid json",
+			applicationKey:   "test-app",
+			version:          "1.0.0",
+			mockResponse:     &http.Response{StatusCode: http.StatusOK},
+			mockResponseBody: `{not-json`,
+			expectedError:    "failed to parse application version export status",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/" + tt.version + "/export/status"
+			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
+			mockHttpClient.EXPECT().Get(expectedEndpoint, nil).
+				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+
+			mockCtx := mockservice.NewMockContext(ctrl)
+			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
+
+			status, err := service.GetExportStatus(mockCtx, tt.applicationKey, tt.version)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedStatus, status)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestImportAppVersion(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	service := NewVersionService()
+	options := &model.ImportAppVersionOptions{Mode: "path_mapping"}
+	optionsJSON, err := json.Marshal(options)
+	assert.NoError(t, err)
+	archivePath := "/tmp/archive.zip"
+	expectedParts := []apphttp.MultipartPart{
+		{Name: "options", ContentType: "application/json", Body: optionsJSON},
+		{Name: "file", ContentType: "application/zip", Path: archivePath},
+	}
+
+	tests := []struct {
+		name             string
+		applicationKey   string
+		mockResponse     *http.Response
+		mockResponseBody string
+		mockError        error
+		expectedError    string
+		expectedBody     string
+	}{
+		{
+			name:             "success",
+			applicationKey:   "test-app",
+			mockResponse:     &http.Response{StatusCode: http.StatusAccepted},
+			mockResponseBody: `{"name":"test-app","version":"1.0.0"}`,
+			expectedBody:     `{"name":"test-app","version":"1.0.0"}`,
+		},
+		{
+			name:             "failure",
+			applicationKey:   "test-app",
+			mockResponse:     &http.Response{StatusCode: http.StatusBadRequest},
+			mockResponseBody: "application key does not match archive",
+			expectedError:    "failed to import application version",
+		},
+		{
+			name:           "http client error",
+			applicationKey: "test-app",
+			mockResponse:   nil,
+			mockError:      errors.New("http client error"),
+			expectedError:  "http client error",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expectedEndpoint := "/v1/applications/" + tt.applicationKey + "/versions/import"
+			mockHttpClient := mockhttp.NewMockApptrustHttpClient(ctrl)
+			mockHttpClient.EXPECT().PostMultipart(expectedEndpoint, expectedParts, nil).
+				Return(tt.mockResponse, []byte(tt.mockResponseBody), tt.mockError).Times(1)
+
+			mockCtx := mockservice.NewMockContext(ctrl)
+			mockCtx.EXPECT().GetHttpClient().Return(mockHttpClient).Times(1)
+
+			body, err := service.ImportAppVersion(mockCtx, tt.applicationKey, archivePath, options)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedBody, string(body))
 			} else {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)

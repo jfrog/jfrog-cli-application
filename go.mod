@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	github.com/jfrog/build-info-go v1.13.1-0.20260429070557-93b98034d295
 	github.com/jfrog/jfrog-cli-core/v2 v2.60.1-0.20260601130310-8d52a530da18
-	github.com/jfrog/jfrog-client-go v1.55.1-0.20251223101502-1a13a993b0c7
+	github.com/jfrog/jfrog-client-go v1.55.1-0.20260915142606-7325e7217b20
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli v1.22.17
 	go.uber.org/mock v0.6.0
@@ -42,7 +42,7 @@ require (
 	github.com/gookit/color v1.6.1 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.8.0 // indirect
-	github.com/jfrog/archiver/v3 v3.6.3 // indirect
+	github.com/jfrog/archiver/v3 v3.6.4 // indirect
 	github.com/jfrog/gofrog v1.7.6 // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect

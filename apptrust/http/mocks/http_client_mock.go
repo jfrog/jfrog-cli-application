@@ -10,9 +10,10 @@
 package mock_http
 
 import (
-	http "net/http"
+	http0 "net/http"
 	reflect "reflect"
 
+	http "github.com/jfrog/jfrog-cli-application/apptrust/http"
 	jfroghttpclient "github.com/jfrog/jfrog-client-go/http/jfroghttpclient"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -42,10 +43,10 @@ func (m *MockApptrustHttpClient) EXPECT() *MockApptrustHttpClientMockRecorder {
 }
 
 // Delete mocks base method.
-func (m *MockApptrustHttpClient) Delete(path string, params map[string]string) (*http.Response, []byte, error) {
+func (m *MockApptrustHttpClient) Delete(path string, params map[string]string) (*http0.Response, []byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", path, params)
-	ret0, _ := ret[0].(*http.Response)
+	ret0, _ := ret[0].(*http0.Response)
 	ret1, _ := ret[1].([]byte)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -58,10 +59,10 @@ func (mr *MockApptrustHttpClientMockRecorder) Delete(path, params any) *gomock.C
 }
 
 // Get mocks base method.
-func (m *MockApptrustHttpClient) Get(path string, params map[string]string) (*http.Response, []byte, error) {
+func (m *MockApptrustHttpClient) Get(path string, params map[string]string) (*http0.Response, []byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", path, params)
-	ret0, _ := ret[0].(*http.Response)
+	ret0, _ := ret[0].(*http0.Response)
 	ret1, _ := ret[1].([]byte)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -88,10 +89,10 @@ func (mr *MockApptrustHttpClientMockRecorder) GetHttpClient() *gomock.Call {
 }
 
 // Patch mocks base method.
-func (m *MockApptrustHttpClient) Patch(path string, requestBody any, params map[string]string) (*http.Response, []byte, error) {
+func (m *MockApptrustHttpClient) Patch(path string, requestBody any, params map[string]string) (*http0.Response, []byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Patch", path, requestBody, params)
-	ret0, _ := ret[0].(*http.Response)
+	ret0, _ := ret[0].(*http0.Response)
 	ret1, _ := ret[1].([]byte)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -104,10 +105,10 @@ func (mr *MockApptrustHttpClientMockRecorder) Patch(path, requestBody, params an
 }
 
 // Post mocks base method.
-func (m *MockApptrustHttpClient) Post(path string, requestBody any, params map[string]string) (*http.Response, []byte, error) {
+func (m *MockApptrustHttpClient) Post(path string, requestBody any, params map[string]string) (*http0.Response, []byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Post", path, requestBody, params)
-	ret0, _ := ret[0].(*http.Response)
+	ret0, _ := ret[0].(*http0.Response)
 	ret1, _ := ret[1].([]byte)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -117,4 +118,20 @@ func (m *MockApptrustHttpClient) Post(path string, requestBody any, params map[s
 func (mr *MockApptrustHttpClientMockRecorder) Post(path, requestBody, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Post", reflect.TypeOf((*MockApptrustHttpClient)(nil).Post), path, requestBody, params)
+}
+
+// PostMultipart mocks base method.
+func (m *MockApptrustHttpClient) PostMultipart(path string, parts []http.MultipartPart, params map[string]string) (*http0.Response, []byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PostMultipart", path, parts, params)
+	ret0, _ := ret[0].(*http0.Response)
+	ret1, _ := ret[1].([]byte)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// PostMultipart indicates an expected call of PostMultipart.
+func (mr *MockApptrustHttpClientMockRecorder) PostMultipart(path, parts, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostMultipart", reflect.TypeOf((*MockApptrustHttpClient)(nil).PostMultipart), path, parts, params)
 }
