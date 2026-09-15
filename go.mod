@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	github.com/jfrog/build-info-go v1.13.1-0.20260429070557-93b98034d295
 	github.com/jfrog/jfrog-cli-core/v2 v2.60.1-0.20260601130310-8d52a530da18
-	github.com/jfrog/jfrog-client-go v1.55.1-0.20251223101502-1a13a993b0c7
+	github.com/jfrog/jfrog-client-go v1.55.1-0.20260915142606-7325e7217b20
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli v1.22.17
 	go.uber.org/mock v0.6.0
@@ -86,5 +86,3 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/jfrog/jfrog-client-go => github.com/asafgabai/jfrog-client-go v0.18.1-0.20260909171220-b99ca2968275
