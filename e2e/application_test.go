@@ -22,7 +22,6 @@ func TestCreateApp(t *testing.T) {
 	userOwners := []string{"admin", "developer"}
 	groupOwners := []string{"devops-team", "security-team"}
 	monitorPolicyValue := 5
-	autoPromoteStages := []string{"DEV", "PROD"}
 
 	err := utils.AppTrustCli.Exec("app-create", appKey,
 		"--project="+projectKey,
@@ -33,8 +32,7 @@ func TestCreateApp(t *testing.T) {
 		"--labels=env=prod;team=devops",
 		"--user-owners="+strings.Join(userOwners, ";"),
 		"--group-owners="+strings.Join(groupOwners, ";"),
-		"--monitor-policy=type=version_count, value=5",
-		"--auto-promote-stages="+strings.Join(autoPromoteStages, ";"))
+		"--monitor-policy=type=version_count, value=5")
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was created correctly
@@ -50,7 +48,6 @@ func TestCreateApp(t *testing.T) {
 	assert.Equal(t, userOwners, *app.UserOwners)
 	assert.Equal(t, groupOwners, *app.GroupOwners)
 	assert.Equal(t, &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue}, app.MonitorPolicy)
-	assert.Equal(t, autoPromoteStages, *app.AutoPromoteStages)
 
 	utils.DeleteApplication(t, appKey)
 }
@@ -68,7 +65,6 @@ func TestUpdateApp(t *testing.T) {
 	updatedUserOwners := []string{"app-admin", "frog"}
 	updatedGroupOwners := []string{"dev-team", "security-team"}
 	monitorPolicyValue := 6
-	updatedAutoPromoteStages := []string{"DEV", "PROD"}
 
 	err := utils.AppTrustCli.Exec("app-update", appKey,
 		"--application-name="+updatedAppName,
@@ -78,8 +74,7 @@ func TestUpdateApp(t *testing.T) {
 		"--labels=env=qa;team=dev",
 		"--user-owners="+strings.Join(updatedUserOwners, ";"),
 		"--group-owners="+strings.Join(updatedGroupOwners, ";"),
-		"--monitor-policy=type=time_frame_in_months, value=6",
-		"--auto-promote-stages="+strings.Join(updatedAutoPromoteStages, ";"))
+		"--monitor-policy=type=time_frame_in_months, value=6")
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was updated correctly
@@ -95,14 +90,6 @@ func TestUpdateApp(t *testing.T) {
 	assert.Equal(t, updatedUserOwners, *app.UserOwners)
 	assert.Equal(t, updatedGroupOwners, *app.GroupOwners)
 	assert.Equal(t, &model.MonitorPolicy{Type: model.MonitorPolicyTypeTimeframe, Value: &monitorPolicyValue}, app.MonitorPolicy)
-	assert.Equal(t, updatedAutoPromoteStages, *app.AutoPromoteStages)
-
-	err = utils.AppTrustCli.Exec("app-update", appKey, "--auto-promote-stages=")
-	assert.NoError(t, err)
-
-	app, _, err = utils.GetApplication(appKey)
-	assert.NoError(t, err)
-	assert.Nil(t, app.AutoPromoteStages)
 
 	utils.DeleteApplication(t, appKey)
 }
