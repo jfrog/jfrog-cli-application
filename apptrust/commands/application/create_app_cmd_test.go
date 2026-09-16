@@ -7,6 +7,7 @@ import (
 
 	"github.com/urfave/cli"
 
+	"github.com/jfrog/jfrog-cli-application/apptrust/commands"
 	"github.com/jfrog/jfrog-cli-application/apptrust/model"
 	mockapps "github.com/jfrog/jfrog-cli-application/apptrust/service/applications/mocks"
 	"github.com/jfrog/jfrog-cli-core/v2/plugins/components"
@@ -23,6 +24,7 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	businessCriticality := "high"
 	maturityLevel := "production"
 	monitorPolicyValue := 5
+	autoPromoteStages := []string{"DEV", "PROD"}
 
 	ctx := &components.Context{
 		Arguments: []string{"app-key"},
@@ -36,6 +38,7 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	ctx.AddStringFlag("user-owners", "john.doe;jane.smith")
 	ctx.AddStringFlag("group-owners", "devops;security")
 	ctx.AddStringFlag("monitor-policy", "type=version_count, value=5")
+	ctx.AddStringFlag("auto-promote-stages", "DEV;PROD")
 	ctx.AddStringFlag("url", "https://example.com")
 
 	requestPayload := &model.AppDescriptor{
@@ -49,9 +52,10 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 			{Key: "env", Value: "prod"},
 			{Key: "region", Value: "us-east"},
 		},
-		UserOwners:    &[]string{"john.doe", "jane.smith"},
-		GroupOwners:   &[]string{"devops", "security"},
-		MonitorPolicy: &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue},
+		UserOwners:        &[]string{"john.doe", "jane.smith"},
+		GroupOwners:       &[]string{"devops", "security"},
+		MonitorPolicy:     &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue},
+		AutoPromoteStages: &autoPromoteStages,
 	}
 
 	mockAppService := mockapps.NewMockApplicationService(ctrl)
@@ -145,6 +149,7 @@ func TestCreateAppCommand_Run_FullSpecFile(t *testing.T) {
 	expectedDescription := "A comprehensive test application"
 	expectedMaturityLevel := "production"
 	expectedBusinessCriticality := "high"
+	expectedAutoPromoteStages := []string{"DEV", "PROD"}
 	expectedPayload := &model.AppDescriptor{
 		ApplicationKey:      "app-full",
 		ApplicationName:     "test-app-full",
@@ -152,6 +157,7 @@ func TestCreateAppCommand_Run_FullSpecFile(t *testing.T) {
 		Description:         &expectedDescription,
 		MaturityLevel:       &expectedMaturityLevel,
 		BusinessCriticality: &expectedBusinessCriticality,
+		AutoPromoteStages:   &expectedAutoPromoteStages,
 		Labels: &[]model.LabelEntry{
 			{Key: "environment", Value: "production"},
 			{Key: "environment", Value: "staging"},
@@ -336,4 +342,14 @@ func TestCreateAppCommand_Error_SpecAndFlags(t *testing.T) {
 	err := cmd.prepareAndRunCommand(ctx)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "the flag --project is not allowed when --spec is provided")
+}
+
+func TestCreateAppCommand_Error_SpecAndAutoPromoteStages(t *testing.T) {
+	ctx := &components.Context{}
+	ctx.AddStringFlag(commands.SpecFlag, "./testfiles/minimal-spec.json")
+	ctx.AddStringFlag(commands.AutoPromoteStagesFlag, "DEV;PROD")
+
+	err := validateNoSpecAndFlagsTogether(ctx)
+
+	assert.EqualError(t, err, "the flag --auto-promote-stages is not allowed when --spec is provided.")
 }

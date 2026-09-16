@@ -4,6 +4,10 @@
   "description": "A comprehensive test application",
   "maturity_level": "production",
   "criticality": "high",
+  "auto_promote_stages": [
+    "DEV",
+    "PROD"
+  ],
   "labels": [
     {
       "key": "environment",

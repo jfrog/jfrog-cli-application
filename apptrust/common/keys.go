@@ -20,4 +20,5 @@ var OrderedAppKeys = []string{
 	"description",
 	"criticality",
 	"maturity_level",
+	"auto_promote_stages",
 }
