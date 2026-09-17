@@ -93,7 +93,7 @@ func GetUpdateAppCommand(appContext app.Context) components.Command {
 	return components.Command{
 		Name:        commands.AppUpdate,
 		Description: "Update an existing application",
-		AIDescription: `Update metadata (display name, description, criticality, maturity, labels, owners) of an existing application identified by its key.
+		AIDescription: `Update metadata (display name, description, criticality, maturity, labels, owners, auto-promotion stages) of an existing application identified by its key.
 
 When to use:
 - Change display attributes (name, description, criticality, maturity) of an existing application.
@@ -110,11 +110,14 @@ Common patterns:
   $ jf apptrust app-update my-app --remove-labels="env=staging"
   $ jf apptrust app-update my-app --user-owners="alice;bob" --group-owners="platform-team"
   $ jf apptrust app-update my-app --monitor-policy="type=version_count, value=5"
+  $ jf apptrust app-update my-app --auto-promote-stages="DEV;PROD"
+  $ jf apptrust app-update my-app --auto-promote-stages=""
 
 Gotchas:
 - --labels replaces the full label set; --add-labels and --remove-labels modify incrementally.
 - --user-owners / --group-owners take a semicolon-separated list and send exactly the owners you specify; there are no incremental add/remove-owner flags (unlike --add-labels / --remove-labels for labels).
 - --monitor-policy takes 'type=<type>[, value=<n>]'. 'value' is required (positive integer) when type is "time_frame_in_months" or "version_count", and must be omitted when type is "none". When --monitor-policy is not provided, the current policy is left unchanged.
+- --auto-promote-stages uses semicolon separators. Pass an empty value to disable auto-promotion; omit the flag to leave the current stages unchanged.
 - Application key cannot be changed; use app-delete and app-create if you need a different key.
 
 Related: jf apptrust app-create, jf apptrust app-delete`,

@@ -67,4 +67,5 @@ type AppDescriptor struct {
 	UserOwners          *[]string      `json:"user_owners,omitempty"`
 	GroupOwners         *[]string      `json:"group_owners,omitempty"`
 	MonitorPolicy       *MonitorPolicy `json:"monitor_policy,omitempty"`
+	AutoPromoteStages   *[]string      `json:"auto_promote_stages,omitempty"`
 }

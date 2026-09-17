@@ -269,6 +269,28 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 			},
 		},
 		{
+			name: "auto-promote-stages",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key"}
+				ctx.AddStringFlag("auto-promote-stages", "DEV;PROD")
+			},
+			expectsPayload: &model.AppDescriptor{
+				ApplicationKey:    "app-key",
+				AutoPromoteStages: &[]string{"DEV", "PROD"},
+			},
+		},
+		{
+			name: "empty auto-promote-stages clears configuration",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key"}
+				ctx.AddStringFlag("auto-promote-stages", "")
+			},
+			expectsPayload: &model.AppDescriptor{
+				ApplicationKey:    "app-key",
+				AutoPromoteStages: &[]string{},
+			},
+		},
+		{
 			name: "invalid add-labels format - missing equals",
 			ctxSetup: func(ctx *components.Context) {
 				ctx.Arguments = []string{"app-key"}

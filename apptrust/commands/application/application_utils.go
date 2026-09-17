@@ -92,5 +92,10 @@ func populateApplicationFromFlags(ctx *components.Context, descriptor *model.App
 		descriptor.MonitorPolicy = monitorPolicy
 	}
 
+	if ctx.IsFlagSet(commands.AutoPromoteStagesFlag) {
+		autoPromoteStages := utils.ParseSliceFlag(ctx.GetStringFlagValue(commands.AutoPromoteStagesFlag))
+		descriptor.AutoPromoteStages = &autoPromoteStages
+	}
+
 	return nil
 }
