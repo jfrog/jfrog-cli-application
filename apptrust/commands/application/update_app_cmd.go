@@ -117,7 +117,7 @@ Gotchas:
 - --labels replaces the full label set; --add-labels and --remove-labels modify incrementally.
 - --user-owners / --group-owners take a semicolon-separated list and send exactly the owners you specify; there are no incremental add/remove-owner flags (unlike --add-labels / --remove-labels for labels).
 - --monitor-policy takes 'type=<type>[, value=<n>]'. 'value' is required (positive integer) when type is "time_frame_in_months" or "version_count", and must be omitted when type is "none". When --monitor-policy is not provided, the current policy is left unchanged.
-- --auto-promote-stages uses semicolon separators and preserves the supplied stage order. Pass an empty value to disable auto-promotion; omit the flag to leave the current stages unchanged.
+- --auto-promote-stages uses semicolon separators. Pass an empty value to disable auto-promotion; omit the flag to leave the current stages unchanged.
 - Application key cannot be changed; use app-delete and app-create if you need a different key.
 
 Related: jf apptrust app-create, jf apptrust app-delete`,

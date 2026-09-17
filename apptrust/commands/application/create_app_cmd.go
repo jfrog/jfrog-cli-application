@@ -208,7 +208,6 @@ Gotchas:
 - If --application-name is omitted, the application-key is used as the display name.
 - --labels uses semicolon separators (not commas) and key=value pairs.
 - --monitor-policy takes 'type=<type>[, value=<n>]'. 'value' is required (positive integer) when type is "time_frame_in_months" or "version_count", and must be omitted when type is "none".
-- --auto-promote-stages uses semicolon separators and preserves the supplied stage order.
 
 Related: jf apptrust app-update, jf apptrust app-delete, jf apptrust version-create`,
 		Category:         common.CategoryApplication,
