@@ -175,9 +175,10 @@ func ParseMonitorPolicyFlag(flagValue string) (*model.MonitorPolicy, error) {
 		return nil, err
 	}
 
+	numberFields := []string{"value", "minor_versions", "patches_per_minor"}
 	for key := range fields {
-		if key != "type" && key != "value" {
-			return nil, errorutils.CheckErrorf("invalid field '%s' (supported fields: type, value)", key)
+		if key != "type" && !slices.Contains(numberFields, key) {
+			return nil, errorutils.CheckErrorf("invalid field '%s' (supported fields: type, %s)", key, strings.Join(numberFields, ", "))
 		}
 	}
 
@@ -189,28 +190,50 @@ func ParseMonitorPolicyFlag(flagValue string) (*model.MonitorPolicy, error) {
 		return nil, errorutils.CheckErrorf("invalid type '%s' (supported types: %s)", policyType, coreutils.ListToText(model.MonitorPolicyTypeValues))
 	}
 
-	valueStr, valueSet := fields["value"]
-	isNone := policyType == model.MonitorPolicyTypeNone
-	if isNone && valueSet {
-		return nil, errorutils.CheckErrorf("'value' must not be set when type is '%s'", model.MonitorPolicyTypeNone)
+	var required, allowed []string
+	switch policyType {
+	case model.MonitorPolicyTypeTimeframe, model.MonitorPolicyTypeVersionCount:
+		required, allowed = []string{"value"}, []string{"value"}
+	case model.MonitorPolicyTypeVersionCountMinorPatch:
+		required, allowed = []string{"minor_versions"}, []string{"minor_versions", "patches_per_minor"}
 	}
-	if !isNone && !valueSet {
-		return nil, errorutils.CheckErrorf("'value' is required when type is '%s'", policyType)
+	for _, key := range numberFields {
+		_, set := fields[key]
+		if set && !slices.Contains(allowed, key) {
+			return nil, errorutils.CheckErrorf("'%s' must not be set when type is '%s'", key, policyType)
+		}
+		if !set && slices.Contains(required, key) {
+			return nil, errorutils.CheckErrorf("'%s' is required when type is '%s'", key, policyType)
+		}
 	}
 
 	policy := &model.MonitorPolicy{Type: policyType}
-	if valueSet {
-		value, err := strconv.Atoi(valueStr)
-		if err != nil {
-			return nil, errorutils.CheckErrorf("'value' must be an integer: %s", err.Error())
-		}
-		if value <= 0 {
-			return nil, errorutils.CheckErrorf("'value' must be a positive integer")
-		}
-		policy.Value = &value
+	if policy.Value, err = parsePositiveIntField(fields, "value"); err != nil {
+		return nil, err
 	}
-
+	if policy.MinorVersions, err = parsePositiveIntField(fields, "minor_versions"); err != nil {
+		return nil, err
+	}
+	if policy.PatchesPerMinor, err = parsePositiveIntField(fields, "patches_per_minor"); err != nil {
+		return nil, err
+	}
 	return policy, nil
+}
+
+// parsePositiveIntField returns nil when the field is not set.
+func parsePositiveIntField(fields map[string]string, key string) (*int, error) {
+	valueStr, set := fields[key]
+	if !set {
+		return nil, nil
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return nil, errorutils.CheckErrorf("'%s' must be an integer: %s", key, err.Error())
+	}
+	if value <= 0 {
+		return nil, errorutils.CheckErrorf("'%s' must be a positive integer", key)
+	}
+	return &value, nil
 }
 
 func ParseLabelKeyValuePairs(flagValue string) ([]model.LabelEntry, error) {

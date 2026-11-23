@@ -200,6 +200,7 @@ Common patterns:
   $ jf apptrust app-create my-app --project=default --business-criticality=high --maturity-level=production
   $ jf apptrust app-create my-app --project=default --labels="team=core;area=platform" --user-owners="alice;bob"
   $ jf apptrust app-create my-app --project=default --monitor-policy="type=version_count, value=5"
+  $ jf apptrust app-create my-app --project=default --monitor-policy="type=version_count_minor_patch, minor_versions=2, patches_per_minor=1"
   $ jf apptrust app-create my-app --project=default --auto-promote-stages="DEV;PROD"
   $ jf apptrust app-create my-app --spec=app-spec.json --spec-vars="ENV=prod"
 
@@ -208,6 +209,7 @@ Gotchas:
 - If --application-name is omitted, the application-key is used as the display name.
 - --labels uses semicolon separators (not commas) and key=value pairs.
 - --monitor-policy takes 'type=<type>[, value=<n>]'. 'value' is required (positive integer) when type is "time_frame_in_months" or "version_count", and must be omitted when type is "none".
+- --monitor-policy with type "version_count_minor_patch" takes 'minor_versions=<n>[, patches_per_minor=<n>]' instead of 'value' (positive integers; patches_per_minor defaults to 1). Versions are ordered by semantic version; only released versions in strict MAJOR.MINOR.PATCH format count.
 
 Related: jf apptrust app-update, jf apptrust app-delete, jf apptrust version-create`,
 		Category:         common.CategoryApplication,

@@ -112,6 +112,8 @@ func TestUpdateAppCommand_WrongNumberOfArguments(t *testing.T) {
 
 func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 	monitorPolicyValue := 5
+	minorVersions := 2
+	patchesPerMinor := 1
 
 	tests := []struct {
 		name           string
@@ -267,6 +269,30 @@ func TestUpdateAppCommand_FlagsSuite(t *testing.T) {
 				ApplicationKey: "app-key",
 				MonitorPolicy:  &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue},
 			},
+		},
+		{
+			name: "monitor-policy minor patch",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key"}
+				ctx.AddStringFlag(commands.MonitorPolicyFlag, "type=version_count_minor_patch, minor_versions=2, patches_per_minor=1")
+			},
+			expectsPayload: &model.AppDescriptor{
+				ApplicationKey: "app-key",
+				MonitorPolicy: &model.MonitorPolicy{
+					Type:            model.MonitorPolicyTypeVersionCountMinorPatch,
+					MinorVersions:   &minorVersions,
+					PatchesPerMinor: &patchesPerMinor,
+				},
+			},
+		},
+		{
+			name: "monitor-policy minor patch with value is rejected before the call",
+			ctxSetup: func(ctx *components.Context) {
+				ctx.Arguments = []string{"app-key"}
+				ctx.AddStringFlag(commands.MonitorPolicyFlag, "type=version_count_minor_patch, minor_versions=2, value=5")
+			},
+			expectsError:  true,
+			errorContains: "'value' must not be set when type is 'version_count_minor_patch'",
 		},
 		{
 			name: "auto-promote-stages",

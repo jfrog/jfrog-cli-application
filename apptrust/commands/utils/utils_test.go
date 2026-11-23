@@ -168,6 +168,8 @@ func TestParseNameVersionPairs(t *testing.T) {
 func TestParseMonitorPolicyFlag(t *testing.T) {
 	valueFive := 5
 	valueThree := 3
+	valueTwo := 2
+	valueOne := 1
 
 	tests := []struct {
 		name      string
@@ -237,7 +239,7 @@ func TestParseMonitorPolicyFlag(t *testing.T) {
 			name:      "unknown field",
 			input:     "type=version_count, value=5, foo=bar",
 			expectErr: true,
-			errorMsg:  "invalid field 'foo'",
+			errorMsg:  "invalid field 'foo' (supported fields: type, value, minor_versions, patches_per_minor)",
 		},
 		{
 			name:      "empty string",
@@ -250,6 +252,64 @@ func TestParseMonitorPolicyFlag(t *testing.T) {
 			input:     "type",
 			expectErr: true,
 			errorMsg:  "invalid key-value pair",
+		},
+		{
+			name:     "minor patch with minor versions and patches per minor",
+			input:    "type=version_count_minor_patch, minor_versions=2, patches_per_minor=1",
+			expected: &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCountMinorPatch, MinorVersions: &valueTwo, PatchesPerMinor: &valueOne},
+		},
+		{
+			name:     "minor patch without patches per minor",
+			input:    "type=version_count_minor_patch, minor_versions=3",
+			expected: &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCountMinorPatch, MinorVersions: &valueThree},
+		},
+		{
+			name:      "minor patch without minor versions",
+			input:     "type=version_count_minor_patch, patches_per_minor=1",
+			expectErr: true,
+			errorMsg:  "'minor_versions' is required when type is 'version_count_minor_patch'",
+		},
+		{
+			name:      "minor patch with value",
+			input:     "type=version_count_minor_patch, minor_versions=2, value=5",
+			expectErr: true,
+			errorMsg:  "'value' must not be set when type is 'version_count_minor_patch'",
+		},
+		{
+			name:      "minor versions with version count",
+			input:     "type=version_count, value=5, minor_versions=2",
+			expectErr: true,
+			errorMsg:  "'minor_versions' must not be set when type is 'version_count'",
+		},
+		{
+			name:      "patches per minor with time frame",
+			input:     "type=time_frame_in_months, value=3, patches_per_minor=1",
+			expectErr: true,
+			errorMsg:  "'patches_per_minor' must not be set when type is 'time_frame_in_months'",
+		},
+		{
+			name:      "minor versions with none",
+			input:     "type=none, minor_versions=2",
+			expectErr: true,
+			errorMsg:  "'minor_versions' must not be set when type is 'none'",
+		},
+		{
+			name:      "zero minor versions",
+			input:     "type=version_count_minor_patch, minor_versions=0",
+			expectErr: true,
+			errorMsg:  "'minor_versions' must be a positive integer",
+		},
+		{
+			name:      "negative patches per minor",
+			input:     "type=version_count_minor_patch, minor_versions=2, patches_per_minor=-1",
+			expectErr: true,
+			errorMsg:  "'patches_per_minor' must be a positive integer",
+		},
+		{
+			name:      "non-integer minor versions",
+			input:     "type=version_count_minor_patch, minor_versions=two",
+			expectErr: true,
+			errorMsg:  "'minor_versions' must be an integer",
 		},
 	}
 

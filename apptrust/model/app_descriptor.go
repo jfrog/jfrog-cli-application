@@ -12,9 +12,10 @@ const (
 	MaturityLevelProduction   = "production"
 	MaturityLevelEndOfLife    = "end_of_life"
 
-	MonitorPolicyTypeNone         = "none"
-	MonitorPolicyTypeTimeframe    = "time_frame_in_months"
-	MonitorPolicyTypeVersionCount = "version_count"
+	MonitorPolicyTypeNone                   = "none"
+	MonitorPolicyTypeTimeframe              = "time_frame_in_months"
+	MonitorPolicyTypeVersionCount           = "version_count"
+	MonitorPolicyTypeVersionCountMinorPatch = "version_count_minor_patch"
 )
 
 var (
@@ -37,6 +38,7 @@ var (
 		MonitorPolicyTypeNone,
 		MonitorPolicyTypeTimeframe,
 		MonitorPolicyTypeVersionCount,
+		MonitorPolicyTypeVersionCountMinorPatch,
 	}
 )
 
@@ -46,8 +48,10 @@ type LabelEntry struct {
 }
 
 type MonitorPolicy struct {
-	Type  string `json:"type"`
-	Value *int   `json:"value,omitempty"`
+	Type            string `json:"type"`
+	Value           *int   `json:"value,omitempty"`
+	MinorVersions   *int   `json:"minor_versions,omitempty"`
+	PatchesPerMinor *int   `json:"patches_per_minor,omitempty"`
 }
 
 type LabelUpdates struct {

@@ -23,7 +23,8 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	description := "Test application"
 	businessCriticality := "high"
 	maturityLevel := "production"
-	monitorPolicyValue := 5
+	minorVersions := 2
+	patchesPerMinor := 1
 	autoPromoteStages := []string{"DEV", "PROD"}
 
 	ctx := &components.Context{
@@ -37,7 +38,7 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 	ctx.AddStringFlag("labels", "env=prod;region=us-east")
 	ctx.AddStringFlag("user-owners", "john.doe;jane.smith")
 	ctx.AddStringFlag("group-owners", "devops;security")
-	ctx.AddStringFlag("monitor-policy", "type=version_count, value=5")
+	ctx.AddStringFlag("monitor-policy", "type=version_count_minor_patch, minor_versions=2, patches_per_minor=1")
 	ctx.AddStringFlag("auto-promote-stages", "DEV;PROD")
 	ctx.AddStringFlag("url", "https://example.com")
 
@@ -52,9 +53,13 @@ func TestCreateAppCommand_Run_Flags(t *testing.T) {
 			{Key: "env", Value: "prod"},
 			{Key: "region", Value: "us-east"},
 		},
-		UserOwners:        &[]string{"john.doe", "jane.smith"},
-		GroupOwners:       &[]string{"devops", "security"},
-		MonitorPolicy:     &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue},
+		UserOwners:  &[]string{"john.doe", "jane.smith"},
+		GroupOwners: &[]string{"devops", "security"},
+		MonitorPolicy: &model.MonitorPolicy{
+			Type:            model.MonitorPolicyTypeVersionCountMinorPatch,
+			MinorVersions:   &minorVersions,
+			PatchesPerMinor: &patchesPerMinor,
+		},
 		AutoPromoteStages: &autoPromoteStages,
 	}
 

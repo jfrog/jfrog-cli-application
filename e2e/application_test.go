@@ -21,7 +21,8 @@ func TestCreateApp(t *testing.T) {
 	maturityLevel := "production"
 	userOwners := []string{"admin", "developer"}
 	groupOwners := []string{"devops-team", "security-team"}
-	monitorPolicyValue := 5
+	minorVersions := 2
+	patchesPerMinor := 3
 
 	err := utils.AppTrustCli.Exec("app-create", appKey,
 		"--project="+projectKey,
@@ -32,7 +33,7 @@ func TestCreateApp(t *testing.T) {
 		"--labels=env=prod;team=devops",
 		"--user-owners="+strings.Join(userOwners, ";"),
 		"--group-owners="+strings.Join(groupOwners, ";"),
-		"--monitor-policy=type=version_count, value=5")
+		"--monitor-policy=type=version_count_minor_patch, minor_versions=2, patches_per_minor=3")
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was created correctly
@@ -47,7 +48,11 @@ func TestCreateApp(t *testing.T) {
 	assert.ElementsMatch(t, []model.LabelEntry{{Key: "env", Value: "prod"}, {Key: "team", Value: "devops"}}, *app.Labels)
 	assert.Equal(t, userOwners, *app.UserOwners)
 	assert.Equal(t, groupOwners, *app.GroupOwners)
-	assert.Equal(t, &model.MonitorPolicy{Type: model.MonitorPolicyTypeVersionCount, Value: &monitorPolicyValue}, app.MonitorPolicy)
+	assert.Equal(t, &model.MonitorPolicy{
+		Type:            model.MonitorPolicyTypeVersionCountMinorPatch,
+		MinorVersions:   &minorVersions,
+		PatchesPerMinor: &patchesPerMinor,
+	}, app.MonitorPolicy)
 
 	utils.DeleteApplication(t, appKey)
 }
@@ -64,7 +69,8 @@ func TestUpdateApp(t *testing.T) {
 	updatedMaturityLevel := "production"
 	updatedUserOwners := []string{"app-admin", "frog"}
 	updatedGroupOwners := []string{"dev-team", "security-team"}
-	monitorPolicyValue := 6
+	minorVersions := 4
+	defaultPatchesPerMinor := 1
 
 	err := utils.AppTrustCli.Exec("app-update", appKey,
 		"--application-name="+updatedAppName,
@@ -74,7 +80,7 @@ func TestUpdateApp(t *testing.T) {
 		"--labels=env=qa;team=dev",
 		"--user-owners="+strings.Join(updatedUserOwners, ";"),
 		"--group-owners="+strings.Join(updatedGroupOwners, ";"),
-		"--monitor-policy=type=time_frame_in_months, value=6")
+		"--monitor-policy=type=version_count_minor_patch, minor_versions=4")
 	assert.NoError(t, err)
 
 	// Fetch and verify the application was updated correctly
@@ -89,7 +95,11 @@ func TestUpdateApp(t *testing.T) {
 	assert.ElementsMatch(t, []model.LabelEntry{{Key: "env", Value: "qa"}, {Key: "team", Value: "dev"}}, *app.Labels)
 	assert.Equal(t, updatedUserOwners, *app.UserOwners)
 	assert.Equal(t, updatedGroupOwners, *app.GroupOwners)
-	assert.Equal(t, &model.MonitorPolicy{Type: model.MonitorPolicyTypeTimeframe, Value: &monitorPolicyValue}, app.MonitorPolicy)
+	assert.Equal(t, &model.MonitorPolicy{
+		Type:            model.MonitorPolicyTypeVersionCountMinorPatch,
+		MinorVersions:   &minorVersions,
+		PatchesPerMinor: &defaultPatchesPerMinor,
+	}, app.MonitorPolicy)
 
 	utils.DeleteApplication(t, appKey)
 }

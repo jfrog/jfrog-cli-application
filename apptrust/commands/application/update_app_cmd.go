@@ -110,6 +110,7 @@ Common patterns:
   $ jf apptrust app-update my-app --remove-labels="env=staging"
   $ jf apptrust app-update my-app --user-owners="alice;bob" --group-owners="platform-team"
   $ jf apptrust app-update my-app --monitor-policy="type=version_count, value=5"
+  $ jf apptrust app-update my-app --monitor-policy="type=version_count_minor_patch, minor_versions=2, patches_per_minor=1"
   $ jf apptrust app-update my-app --auto-promote-stages="DEV;PROD"
   $ jf apptrust app-update my-app --auto-promote-stages=""
 
@@ -117,6 +118,7 @@ Gotchas:
 - --labels replaces the full label set; --add-labels and --remove-labels modify incrementally.
 - --user-owners / --group-owners take a semicolon-separated list and send exactly the owners you specify; there are no incremental add/remove-owner flags (unlike --add-labels / --remove-labels for labels).
 - --monitor-policy takes 'type=<type>[, value=<n>]'. 'value' is required (positive integer) when type is "time_frame_in_months" or "version_count", and must be omitted when type is "none". When --monitor-policy is not provided, the current policy is left unchanged.
+- --monitor-policy with type "version_count_minor_patch" takes 'minor_versions=<n>[, patches_per_minor=<n>]' instead of 'value' (positive integers; patches_per_minor defaults to 1). Versions are ordered by semantic version; only released versions in strict MAJOR.MINOR.PATCH format count.
 - --auto-promote-stages uses semicolon separators. Pass an empty value to disable auto-promotion; omit the flag to leave the current stages unchanged.
 - Application key cannot be changed; use app-delete and app-create if you need a different key.
 
